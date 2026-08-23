@@ -1,0 +1,70 @@
+package io.github.aalsanie.codes
+
+import java.util.Collections
+
+sealed class ValidationResult private constructor() {
+    data object Valid : ValidationResult()
+
+    class Invalid internal constructor(issues: List<Issue>) : ValidationResult() {
+        val issues: List<Issue> = Collections.unmodifiableList(ArrayList(issues))
+
+        init {
+            require(this.issues.isNotEmpty()) {
+                "invalid validation result requires at least one issue"
+            }
+        }
+
+        override fun equals(other: Any?): Boolean =
+            this === other ||
+                other is Invalid && issues == other.issues
+
+        override fun hashCode(): Int = issues.hashCode()
+
+        override fun toString(): String = "Invalid(issues=$issues)"
+    }
+
+    val isValid: Boolean
+        get() = this === Valid
+
+    val isInvalid: Boolean
+        get() = this is Invalid
+
+    fun issues(): List<Issue> =
+        when (this) {
+            Valid -> emptyList()
+            is Invalid -> issues
+        }
+
+    @JvmOverloads
+    fun toOutcome(detail: String? = null): Outcome =
+        when (this) {
+            Valid -> Outcome.of(StandardOutcomes.OK, detail)
+            is Invalid -> Outcome.of(StandardOutcomes.INVALID_ARGUMENT, detail, issues)
+        }
+
+    companion object {
+        @JvmStatic
+        fun valid(): ValidationResult = Valid
+
+        @JvmStatic
+        fun invalid(issue: Issue): ValidationResult = Invalid(listOf(issue))
+
+        @JvmStatic
+        fun invalid(issues: List<Issue>): ValidationResult = Invalid(issues)
+
+        @JvmStatic
+        fun combine(vararg results: ValidationResult): ValidationResult = combine(results.asList())
+
+        @JvmStatic
+        fun combine(results: List<ValidationResult>): ValidationResult {
+            val issues =
+                results.flatMap { result ->
+                    when (result) {
+                        Valid -> emptyList()
+                        is Invalid -> result.issues
+                    }
+                }
+            return if (issues.isEmpty()) Valid else Invalid(issues)
+        }
+    }
+}
