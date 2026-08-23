@@ -23,17 +23,17 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
         with:
           distribution: temurin
           java-version: "17"
       - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb
         with:
           gradle-version: "9.5.0"
-      - uses: github/codeql-action/init@5595ccaf912efad79be6eef63a5619ff05969be3
+      - uses: github/codeql-action/init@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd
         with:
           languages: java-kotlin
           build-mode: manual
       - name: Build
         run: gradle clean testClasses --stacktrace
-      - uses: github/codeql-action/analyze@5595ccaf912efad79be6eef63a5619ff05969be3
+      - uses: github/codeql-action/analyze@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd
