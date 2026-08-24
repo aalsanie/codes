@@ -1,12 +1,12 @@
 package io.github.aalsanie.codes.protocol.http
 
-import io.github.aalsanie.codes.InternalMappings
 import io.github.aalsanie.codes.MappingResult
 import io.github.aalsanie.codes.Outcome
 import io.github.aalsanie.codes.OutcomeCode
 import io.github.aalsanie.codes.OutcomeDefinition
 import io.github.aalsanie.codes.OutcomeMapper
 import io.github.aalsanie.codes.StandardOutcomes
+import io.github.aalsanie.codes.internal.InternalMappings
 
 class HttpOutcomeMapper private constructor(
     private val mappings: InternalMappings<HttpStatusCode>,
@@ -16,15 +16,19 @@ class HttpOutcomeMapper private constructor(
 
     override fun map(definition: OutcomeDefinition): MappingResult<HttpStatusCode> = mappings.map(definition.code)
 
-    fun map(outcome: Outcome): MappingResult<HttpStatusCode> = mappings.map(outcome.code)
+    override fun map(outcome: Outcome): MappingResult<HttpStatusCode> = mappings.map(outcome.code)
 
     fun contains(code: OutcomeCode): Boolean = mappings.contains(code)
 
-    fun withMapping(definition: OutcomeDefinition, status: HttpStatusCode): HttpOutcomeMapper =
-        HttpOutcomeMapper(mappings.add(definition.code, status))
+    fun withMapping(
+        definition: OutcomeDefinition,
+        status: HttpStatusCode,
+    ): HttpOutcomeMapper = HttpOutcomeMapper(mappings.add(definition.code, status))
 
-    fun withOverride(definition: OutcomeDefinition, status: HttpStatusCode): HttpOutcomeMapper =
-        HttpOutcomeMapper(mappings.override(definition.code, status))
+    fun withOverride(
+        definition: OutcomeDefinition,
+        status: HttpStatusCode,
+    ): HttpOutcomeMapper = HttpOutcomeMapper(mappings.override(definition.code, status))
 
     fun mappings(): Map<OutcomeCode, HttpStatusCode> = mappings.entries()
 

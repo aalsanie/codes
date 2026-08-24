@@ -36,11 +36,12 @@ class ValidationResultTest {
     @Test fun combinesAndPreservesValidationIssues() {
         val first = Issue.at("a", "Bad a.")
         val second = Issue.at("b", "Bad b.")
-        val result = ValidationResult.combine(
-            ValidationResult.invalid(first),
-            ValidationResult.valid(),
-            ValidationResult.invalid(second),
-        )
+        val result =
+            ValidationResult.combine(
+                ValidationResult.invalid(first),
+                ValidationResult.valid(),
+                ValidationResult.invalid(second),
+            )
         assertEquals(listOf(first, second), result.issues())
     }
 

@@ -1,13 +1,21 @@
 package io.github.aalsanie.codes
 
 sealed class MappingResult<out T : Any> private constructor() {
-    class Mapped<T : Any> internal constructor(val value: T) : MappingResult<T>() {
+    class Mapped<T : Any> private constructor(
+        val value: T,
+    ) : MappingResult<T>() {
         override fun equals(other: Any?): Boolean =
-            this === other || other is Mapped<*> && value == other.value
+            this === other ||
+                (other is Mapped<*> && value == other.value)
 
         override fun hashCode(): Int = value.hashCode()
 
         override fun toString(): String = "Mapped(value=$value)"
+
+        internal companion object {
+            @JvmSynthetic
+            internal fun <T : Any> create(value: T): Mapped<T> = Mapped(value)
+        }
     }
 
     data object Unmapped : MappingResult<Nothing>()
@@ -24,7 +32,10 @@ sealed class MappingResult<out T : Any> private constructor() {
             Unmapped -> null
         }
 
-    inline fun <R> fold(onMapped: (T) -> R, onUnmapped: () -> R): R =
+    inline fun <R> fold(
+        onMapped: (T) -> R,
+        onUnmapped: () -> R,
+    ): R =
         when (this) {
             is Mapped -> onMapped(value)
             Unmapped -> onUnmapped()
@@ -32,7 +43,7 @@ sealed class MappingResult<out T : Any> private constructor() {
 
     companion object {
         @JvmStatic
-        fun <T : Any> mapped(value: T): MappingResult<T> = Mapped(value)
+        fun <T : Any> mapped(value: T): MappingResult<T> = Mapped.create(value)
 
         @JvmStatic
         fun <T : Any> unmapped(): MappingResult<T> = Unmapped

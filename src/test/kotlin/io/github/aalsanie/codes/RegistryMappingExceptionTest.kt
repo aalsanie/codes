@@ -5,8 +5,13 @@ import org.junit.jupiter.api.Test
 class RegistryMappingExceptionTest {
     private val custom = OutcomeDefinition.custom("com.example", "CUSTOM", OutcomeState.FAILED, "Custom failure.")
 
-    @Test fun emptyRegistryIsEmpty() { assertEquals(0, OutcomeRegistry.empty().size) }
-    @Test fun standardRegistryContainsAllStandards() { assertEquals(StandardOutcomes.all.size, OutcomeRegistry.standard().size) }
+    @Test fun emptyRegistryIsEmpty() {
+        assertEquals(0, OutcomeRegistry.empty().size)
+    }
+
+    @Test fun standardRegistryContainsAllStandards() {
+        assertEquals(StandardOutcomes.all.size, OutcomeRegistry.standard().size)
+    }
 
     @Test fun registryFindsByCodeAndString() {
         val registry = OutcomeRegistry.of(custom)
@@ -15,9 +20,13 @@ class RegistryMappingExceptionTest {
         assertNull(registry.find("invalid"))
     }
 
-    @Test fun registryContainsCode() { assertTrue(OutcomeRegistry.of(custom).contains(custom.code)) }
+    @Test fun registryContainsCode() {
+        assertTrue(OutcomeRegistry.of(custom).contains(custom.code))
+    }
 
-    @Test fun registryRequireReturnsDefinition() { assertSame(custom, OutcomeRegistry.of(custom).require(custom.code)) }
+    @Test fun registryRequireReturnsDefinition() {
+        assertSame(custom, OutcomeRegistry.of(custom).require(custom.code))
+    }
 
     @Test fun registryRequireRejectsMissingCode() {
         assertFails<NoSuchElementException> { OutcomeRegistry.empty().require(custom.code) }

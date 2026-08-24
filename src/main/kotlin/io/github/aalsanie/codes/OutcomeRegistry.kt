@@ -17,11 +17,9 @@ class OutcomeRegistry private constructor(
 
     fun find(value: String): OutcomeDefinition? = OutcomeCode.parseOrNull(value)?.let(::find)
 
-    fun require(code: OutcomeCode): OutcomeDefinition =
-        definitionsByCode[code] ?: throw NoSuchElementException("unknown outcome code: $code")
+    fun require(code: OutcomeCode): OutcomeDefinition = definitionsByCode[code] ?: throw NoSuchElementException("unknown outcome code: $code")
 
-    fun definitions(): List<OutcomeDefinition> =
-        Collections.unmodifiableList(ArrayList(definitionsByCode.values))
+    fun definitions(): List<OutcomeDefinition> = Collections.unmodifiableList(ArrayList(definitionsByCode.values))
 
     fun with(definition: OutcomeDefinition): OutcomeRegistry {
         require(definition.code !in definitionsByCode) {
@@ -45,8 +43,7 @@ class OutcomeRegistry private constructor(
         fun empty(): OutcomeRegistry = OutcomeRegistry(emptyMap())
 
         @JvmStatic
-        fun of(vararg definitions: OutcomeDefinition): OutcomeRegistry =
-            empty().withAll(definitions.asList())
+        fun of(vararg definitions: OutcomeDefinition): OutcomeRegistry = empty().withAll(definitions.asList())
 
         @JvmStatic
         fun standard(): OutcomeRegistry = of(*StandardOutcomes.all.toTypedArray())

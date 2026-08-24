@@ -1,12 +1,13 @@
 package io.github.aalsanie.codes
 
+import io.github.aalsanie.codes.internal.Constraints
+
 class OutcomeDefinition private constructor(
     val code: OutcomeCode,
     val state: OutcomeState,
     val defaultMessage: String,
 ) {
-    override fun toString(): String =
-        "OutcomeDefinition(code=$code, state=$state, defaultMessage=$defaultMessage)"
+    override fun toString(): String = "OutcomeDefinition(code=$code, state=$state, defaultMessage=$defaultMessage)"
 
     companion object {
         private const val ROOT_NAMESPACE = "io.github.aalsanie.codes"
@@ -59,8 +60,8 @@ class OutcomeDefinition private constructor(
             return OutcomeDefinition(code, state, defaultMessage)
         }
 
-        internal fun standard(name: String): OutcomeDefinition =
-            standardDefinitions[name] ?: error("unknown standard outcome: $name")
+        @JvmSynthetic
+        internal fun standard(name: String): OutcomeDefinition = standardDefinitions[name] ?: error("unknown standard outcome: $name")
 
         private fun standardDefinition(
             name: String,
@@ -75,7 +76,6 @@ class OutcomeDefinition private constructor(
             )
         }
 
-        private fun isReservedNamespace(namespace: String): Boolean =
-            namespace == ROOT_NAMESPACE || namespace.startsWith("$ROOT_NAMESPACE.")
+        private fun isReservedNamespace(namespace: String): Boolean = namespace == ROOT_NAMESPACE || namespace.startsWith("$ROOT_NAMESPACE.")
     }
 }

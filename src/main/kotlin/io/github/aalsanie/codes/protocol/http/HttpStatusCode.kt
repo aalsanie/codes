@@ -23,8 +23,7 @@ class HttpStatusCode private constructor(
 
     override fun compareTo(other: HttpStatusCode): Int = value.compareTo(other.value)
 
-    override fun equals(other: Any?): Boolean =
-        this === other || other is HttpStatusCode && value == other.value
+    override fun equals(other: Any?): Boolean = this === other || (other is HttpStatusCode && value == other.value)
 
     override fun hashCode(): Int = value
 
@@ -32,20 +31,35 @@ class HttpStatusCode private constructor(
 
     companion object {
         @JvmField val OK = HttpStatusCode(200)
+
         @JvmField val CREATED = HttpStatusCode(201)
+
         @JvmField val ACCEPTED = HttpStatusCode(202)
+
         @JvmField val NO_CONTENT = HttpStatusCode(204)
+
         @JvmField val BAD_REQUEST = HttpStatusCode(400)
+
         @JvmField val UNAUTHORIZED = HttpStatusCode(401)
+
         @JvmField val FORBIDDEN = HttpStatusCode(403)
+
         @JvmField val NOT_FOUND = HttpStatusCode(404)
+
         @JvmField val CONFLICT = HttpStatusCode(409)
+
         @JvmField val PRECONDITION_FAILED = HttpStatusCode(412)
+
         @JvmField val PAYLOAD_TOO_LARGE = HttpStatusCode(413)
+
         @JvmField val TOO_MANY_REQUESTS = HttpStatusCode(429)
+
         @JvmField val INTERNAL_SERVER_ERROR = HttpStatusCode(500)
+
         @JvmField val NOT_IMPLEMENTED = HttpStatusCode(501)
+
         @JvmField val SERVICE_UNAVAILABLE = HttpStatusCode(503)
+
         @JvmField val GATEWAY_TIMEOUT = HttpStatusCode(504)
 
         @JvmStatic

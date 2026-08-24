@@ -6,25 +6,45 @@ object StandardOutcomes {
     const val NAMESPACE = "io.github.aalsanie.codes.standard"
 
     @JvmField val OK = OutcomeDefinition.standard("OK")
+
     @JvmField val CREATED = OutcomeDefinition.standard("CREATED")
+
     @JvmField val ACCEPTED = OutcomeDefinition.standard("ACCEPTED")
+
     @JvmField val NO_CONTENT = OutcomeDefinition.standard("NO_CONTENT")
+
     @JvmField val INVALID_ARGUMENT = OutcomeDefinition.standard("INVALID_ARGUMENT")
+
     @JvmField val UNAUTHENTICATED = OutcomeDefinition.standard("UNAUTHENTICATED")
+
     @JvmField val PERMISSION_DENIED = OutcomeDefinition.standard("PERMISSION_DENIED")
+
     @JvmField val NOT_FOUND = OutcomeDefinition.standard("NOT_FOUND")
+
     @JvmField val ALREADY_EXISTS = OutcomeDefinition.standard("ALREADY_EXISTS")
+
     @JvmField val FAILED_PRECONDITION = OutcomeDefinition.standard("FAILED_PRECONDITION")
+
     @JvmField val OUT_OF_RANGE = OutcomeDefinition.standard("OUT_OF_RANGE")
+
     @JvmField val PAYLOAD_TOO_LARGE = OutcomeDefinition.standard("PAYLOAD_TOO_LARGE")
+
     @JvmField val RATE_LIMITED = OutcomeDefinition.standard("RATE_LIMITED")
+
     @JvmField val CANCELLED = OutcomeDefinition.standard("CANCELLED")
+
     @JvmField val DEADLINE_EXCEEDED = OutcomeDefinition.standard("DEADLINE_EXCEEDED")
+
     @JvmField val ABORTED = OutcomeDefinition.standard("ABORTED")
+
     @JvmField val UNIMPLEMENTED = OutcomeDefinition.standard("UNIMPLEMENTED")
+
     @JvmField val UNAVAILABLE = OutcomeDefinition.standard("UNAVAILABLE")
+
     @JvmField val INTERNAL = OutcomeDefinition.standard("INTERNAL")
+
     @JvmField val DATA_LOSS = OutcomeDefinition.standard("DATA_LOSS")
+
     @JvmField val RESOURCE_EXHAUSTED = OutcomeDefinition.standard("RESOURCE_EXHAUSTED")
 
     @JvmField

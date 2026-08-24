@@ -35,11 +35,25 @@ class IssueOutcomeTest {
         assertNotEquals(Issue.at("a", "Bad."), Issue.at("b", "Bad."))
     }
 
-    @Test fun rejectsBlankIssueMessage() { assertFails<IllegalArgumentException> { Issue.of(" ") } }
-    @Test fun rejectsNulIssueMessage() { assertFails<IllegalArgumentException> { Issue.of("bad\u0000message") } }
-    @Test fun rejectsBlankIssuePath() { assertFails<IllegalArgumentException> { Issue.at(" ", "Bad.") } }
-    @Test fun rejectsOversizedIssuePath() { assertFails<IllegalArgumentException> { Issue.at("x".repeat(257), "Bad.") } }
-    @Test fun rejectsNulIssuePath() { assertFails<IllegalArgumentException> { Issue.at("x\u0000y", "Bad.") } }
+    @Test fun rejectsBlankIssueMessage() {
+        assertFails<IllegalArgumentException> { Issue.of(" ") }
+    }
+
+    @Test fun rejectsNulIssueMessage() {
+        assertFails<IllegalArgumentException> { Issue.of("bad\u0000message") }
+    }
+
+    @Test fun rejectsBlankIssuePath() {
+        assertFails<IllegalArgumentException> { Issue.at(" ", "Bad.") }
+    }
+
+    @Test fun rejectsOversizedIssuePath() {
+        assertFails<IllegalArgumentException> { Issue.at("x".repeat(257), "Bad.") }
+    }
+
+    @Test fun rejectsNulIssuePath() {
+        assertFails<IllegalArgumentException> { Issue.at("x\u0000y", "Bad.") }
+    }
 
     @Test fun createsSuccessfulOutcome() {
         val outcome = Outcome.of(StandardOutcomes.OK)
@@ -80,9 +94,17 @@ class IssueOutcomeTest {
         assertFails<IllegalArgumentException> { Outcome.of(StandardOutcomes.ACCEPTED, issues = listOf(Issue.of("Bad."))) }
     }
 
-    @Test fun rejectsBlankDetail() { assertFails<IllegalArgumentException> { Outcome.of(StandardOutcomes.OK, " ") } }
-    @Test fun rejectsOversizedDetail() { assertFails<IllegalArgumentException> { Outcome.of(StandardOutcomes.OK, "x".repeat(4097)) } }
-    @Test fun rejectsNulDetail() { assertFails<IllegalArgumentException> { Outcome.of(StandardOutcomes.OK, "x\u0000y") } }
+    @Test fun rejectsBlankDetail() {
+        assertFails<IllegalArgumentException> { Outcome.of(StandardOutcomes.OK, " ") }
+    }
+
+    @Test fun rejectsOversizedDetail() {
+        assertFails<IllegalArgumentException> { Outcome.of(StandardOutcomes.OK, "x".repeat(4097)) }
+    }
+
+    @Test fun rejectsNulDetail() {
+        assertFails<IllegalArgumentException> { Outcome.of(StandardOutcomes.OK, "x\u0000y") }
+    }
 
     @Test fun outcomeIssuesAreDefensiveCopy() {
         val source = mutableListOf(Issue.of("Bad."))
@@ -93,6 +115,7 @@ class IssueOutcomeTest {
 
     @Test fun outcomeIssuesAreUnmodifiable() {
         val outcome = Outcome.of(StandardOutcomes.INTERNAL, issues = listOf(Issue.of("Bad.")))
+
         @Suppress("UNCHECKED_CAST")
         val mutable = outcome.issues as MutableList<Issue>
         assertFails<UnsupportedOperationException> { mutable.clear() }
