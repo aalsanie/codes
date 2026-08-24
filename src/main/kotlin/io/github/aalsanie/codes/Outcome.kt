@@ -1,42 +1,42 @@
 package io.github.aalsanie.codes
 
+import io.github.aalsanie.codes.internal.Constraints
 import java.util.Collections
 
-class Outcome private constructor(
-    val definition: OutcomeDefinition,
-    val detail: String?,
+public class Outcome private constructor(
+    public val definition: OutcomeDefinition,
+    public val detail: String?,
     issues: List<Issue>,
 ) {
-    val code: OutcomeCode
+    public val code: OutcomeCode
         get() = definition.code
 
-    val state: OutcomeState
+    public val state: OutcomeState
         get() = definition.state
 
-    val defaultMessage: String
+    public val defaultMessage: String
         get() = definition.defaultMessage
 
-    val message: String
+    public val message: String
         get() = defaultMessage
 
-    val issues: List<Issue> = Collections.unmodifiableList(ArrayList(issues))
+    public val issues: List<Issue> = Collections.unmodifiableList(ArrayList(issues))
 
-    val isSuccessful: Boolean
+    public val isSuccessful: Boolean
         get() = state == OutcomeState.SUCCEEDED
 
-    val isPending: Boolean
+    public val isPending: Boolean
         get() = state == OutcomeState.PENDING
 
-    val isFailed: Boolean
+    public val isFailed: Boolean
         get() = state == OutcomeState.FAILED
 
-    val isTerminal: Boolean
+    public val isTerminal: Boolean
         get() = state != OutcomeState.PENDING
 
-    override fun toString(): String =
-        "Outcome(code=$code, state=$state, message=$message, issues=${issues.size})"
+    public override fun toString(): String = "Outcome(code=$code, state=$state, message=$message, issues=${issues.size})"
 
-    companion object {
+    public companion object {
         @JvmStatic
         @JvmOverloads
         fun of(

@@ -33,16 +33,16 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb
+      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
         with:
-          gradle-version: "9.5.0"
+          cache-provider: basic
       - name: Verify release
-        run: gradle clean check publishToMavenLocal --stacktrace
+        run: ./gradlew clean check publishToMavenLocal --stacktrace
       - name: Verify published artifact consumers
-        run: gradle -p smoke-test clean check -PcodesVersion=${GITHUB_REF_NAME#v} --stacktrace
+        run: ./gradlew -p smoke-test clean check -PcodesVersion=${GITHUB_REF_NAME#v} --stacktrace
         shell: bash
       - name: Publish Maven Central
-        run: gradle publishToMavenCentral --stacktrace
+        run: ./gradlew publishToMavenCentral --stacktrace
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}

@@ -1,12 +1,12 @@
 package io.github.aalsanie.codes.protocol.grpc
 
-import io.github.aalsanie.codes.InternalMappings
 import io.github.aalsanie.codes.MappingResult
 import io.github.aalsanie.codes.Outcome
 import io.github.aalsanie.codes.OutcomeCode
 import io.github.aalsanie.codes.OutcomeDefinition
 import io.github.aalsanie.codes.OutcomeMapper
 import io.github.aalsanie.codes.StandardOutcomes
+import io.github.aalsanie.codes.internal.InternalMappings
 
 class GrpcOutcomeMapper private constructor(
     private val mappings: InternalMappings<GrpcStatusCode>,
@@ -16,15 +16,19 @@ class GrpcOutcomeMapper private constructor(
 
     override fun map(definition: OutcomeDefinition): MappingResult<GrpcStatusCode> = mappings.map(definition.code)
 
-    fun map(outcome: Outcome): MappingResult<GrpcStatusCode> = mappings.map(outcome.code)
+    override fun map(outcome: Outcome): MappingResult<GrpcStatusCode> = mappings.map(outcome.code)
 
     fun contains(code: OutcomeCode): Boolean = mappings.contains(code)
 
-    fun withMapping(definition: OutcomeDefinition, status: GrpcStatusCode): GrpcOutcomeMapper =
-        GrpcOutcomeMapper(mappings.add(definition.code, status))
+    fun withMapping(
+        definition: OutcomeDefinition,
+        status: GrpcStatusCode,
+    ): GrpcOutcomeMapper = GrpcOutcomeMapper(mappings.add(definition.code, status))
 
-    fun withOverride(definition: OutcomeDefinition, status: GrpcStatusCode): GrpcOutcomeMapper =
-        GrpcOutcomeMapper(mappings.override(definition.code, status))
+    fun withOverride(
+        definition: OutcomeDefinition,
+        status: GrpcStatusCode,
+    ): GrpcOutcomeMapper = GrpcOutcomeMapper(mappings.override(definition.code, status))
 
     fun mappings(): Map<OutcomeCode, GrpcStatusCode> = mappings.entries()
 

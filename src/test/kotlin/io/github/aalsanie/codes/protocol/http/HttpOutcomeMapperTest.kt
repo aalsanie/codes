@@ -7,33 +7,104 @@ import io.github.aalsanie.codes.StandardOutcomes
 import io.github.aalsanie.codes.assertEquals
 import io.github.aalsanie.codes.assertFails
 import io.github.aalsanie.codes.assertFalse
+import io.github.aalsanie.codes.assertNotSame
 import io.github.aalsanie.codes.assertNull
 import io.github.aalsanie.codes.assertSame
 import io.github.aalsanie.codes.assertTrue
 import org.junit.jupiter.api.Test
 
 class HttpOutcomeMapperTest {
-    @Test fun validatesHttpCodeRange() {
-        assertFails<IllegalArgumentException> { HttpStatusCode.of(99) }
-        assertFails<IllegalArgumentException> { HttpStatusCode.of(600) }
+    @Test
+    fun validatesHttpCodeRangeBoundaries() {
+        assertFails<IllegalArgumentException> {
+            HttpStatusCode.of(99)
+        }
+
+        assertEquals(100, HttpStatusCode.of(100).value)
+        assertEquals(599, HttpStatusCode.of(599).value)
+
+        assertFails<IllegalArgumentException> {
+            HttpStatusCode.of(600)
+        }
     }
 
-    @Test fun canonicalizesKnownHttpCodes() { assertSame(HttpStatusCode.OK, HttpStatusCode.of(200)) }
-    @Test fun supportsValidUnknownHttpCode() { assertEquals(418, HttpStatusCode.of(418).value) }
+    @Test
+    fun canonicalizesEveryKnownHttpCode() {
+        val knownStatuses =
+            listOf(
+                200 to HttpStatusCode.OK,
+                201 to HttpStatusCode.CREATED,
+                202 to HttpStatusCode.ACCEPTED,
+                204 to HttpStatusCode.NO_CONTENT,
+                400 to HttpStatusCode.BAD_REQUEST,
+                401 to HttpStatusCode.UNAUTHORIZED,
+                403 to HttpStatusCode.FORBIDDEN,
+                404 to HttpStatusCode.NOT_FOUND,
+                409 to HttpStatusCode.CONFLICT,
+                412 to HttpStatusCode.PRECONDITION_FAILED,
+                413 to HttpStatusCode.PAYLOAD_TOO_LARGE,
+                429 to HttpStatusCode.TOO_MANY_REQUESTS,
+                500 to HttpStatusCode.INTERNAL_SERVER_ERROR,
+                501 to HttpStatusCode.NOT_IMPLEMENTED,
+                503 to HttpStatusCode.SERVICE_UNAVAILABLE,
+                504 to HttpStatusCode.GATEWAY_TIMEOUT,
+            )
 
-    @Test fun exposesHttpFamilies() {
-        assertTrue(HttpStatusCode.of(100).isInformational)
-        assertTrue(HttpStatusCode.OK.isSuccessful)
-        assertTrue(HttpStatusCode.of(302).isRedirection)
-        assertTrue(HttpStatusCode.BAD_REQUEST.isClientError)
-        assertTrue(HttpStatusCode.INTERNAL_SERVER_ERROR.isServerError)
+        knownStatuses.forEach { (value, expected) ->
+            assertSame(expected, HttpStatusCode.of(value))
+        }
     }
 
-    @Test fun statusEqualityComparisonAndString() {
-        assertEquals(HttpStatusCode.of(418), HttpStatusCode.of(418))
-        assertEquals(HttpStatusCode.of(418).hashCode(), 418)
+    @Test
+    fun createsValidNonCanonicalHttpCode() {
+        val status = HttpStatusCode.of(418)
+
+        assertEquals(418, status.value)
+        assertNotSame(status, HttpStatusCode.of(418))
+    }
+
+    @Test
+    fun exposesHttpStatusFamilies() {
+        val informational = HttpStatusCode.of(100)
+        val successful = HttpStatusCode.OK
+        val redirection = HttpStatusCode.of(302)
+        val clientError = HttpStatusCode.BAD_REQUEST
+        val serverError = HttpStatusCode.INTERNAL_SERVER_ERROR
+
+        assertTrue(informational.isInformational)
+        assertFalse(informational.isSuccessful)
+        assertFalse(informational.isRedirection)
+        assertFalse(informational.isClientError)
+        assertFalse(informational.isServerError)
+
+        assertFalse(successful.isInformational)
+        assertTrue(successful.isSuccessful)
+
+        assertFalse(redirection.isSuccessful)
+        assertTrue(redirection.isRedirection)
+
+        assertFalse(clientError.isRedirection)
+        assertTrue(clientError.isClientError)
+
+        assertFalse(serverError.isClientError)
+        assertTrue(serverError.isServerError)
+    }
+
+    @Test
+    fun implementsValueEqualityComparisonHashCodeAndString() {
+        val status = HttpStatusCode.of(418)
+        val equal = HttpStatusCode.of(418)
+        val different = HttpStatusCode.of(419)
+
+        assertTrue(status.equals(status))
+        assertEquals(status, equal)
+        assertFalse(status.equals(different))
+        assertFalse(status.equals("418"))
+        assertFalse(status.equals(null))
+
+        assertEquals(418, status.hashCode())
         assertTrue(HttpStatusCode.OK < HttpStatusCode.BAD_REQUEST)
-        assertEquals("418", HttpStatusCode.of(418).toString())
+        assertEquals("418", status.toString())
     }
 
     @Test fun standardMapsUnambiguousSuccesses() {
@@ -57,6 +128,10 @@ class HttpOutcomeMapperTest {
         assertEquals(HttpStatusCode.CONFLICT, mapper.map(StandardOutcomes.ALREADY_EXISTS).orNull())
         assertEquals(HttpStatusCode.PAYLOAD_TOO_LARGE, mapper.map(StandardOutcomes.PAYLOAD_TOO_LARGE).orNull())
         assertEquals(HttpStatusCode.TOO_MANY_REQUESTS, mapper.map(StandardOutcomes.RATE_LIMITED).orNull())
+        assertEquals(
+            HttpStatusCode.BAD_REQUEST,
+            mapper.map(StandardOutcomes.OUT_OF_RANGE).orNull(),
+        )
     }
 
     @Test fun standardMapsServerFailures() {

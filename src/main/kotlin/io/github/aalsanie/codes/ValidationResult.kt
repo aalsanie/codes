@@ -5,7 +5,9 @@ import java.util.Collections
 sealed class ValidationResult private constructor() {
     data object Valid : ValidationResult()
 
-    class Invalid internal constructor(issues: List<Issue>) : ValidationResult() {
+    class Invalid private constructor(
+        issues: List<Issue>,
+    ) : ValidationResult() {
         val issues: List<Issue> = Collections.unmodifiableList(ArrayList(issues))
 
         init {
@@ -16,11 +18,16 @@ sealed class ValidationResult private constructor() {
 
         override fun equals(other: Any?): Boolean =
             this === other ||
-                other is Invalid && issues == other.issues
+                (other is Invalid && issues == other.issues)
 
         override fun hashCode(): Int = issues.hashCode()
 
         override fun toString(): String = "Invalid(issues=$issues)"
+
+        internal companion object {
+            @JvmSynthetic
+            internal fun create(issues: List<Issue>): Invalid = Invalid(issues)
+        }
     }
 
     val isValid: Boolean
@@ -47,10 +54,10 @@ sealed class ValidationResult private constructor() {
         fun valid(): ValidationResult = Valid
 
         @JvmStatic
-        fun invalid(issue: Issue): ValidationResult = Invalid(listOf(issue))
+        fun invalid(issue: Issue): ValidationResult = Invalid.create(listOf(issue))
 
         @JvmStatic
-        fun invalid(issues: List<Issue>): ValidationResult = Invalid(issues)
+        fun invalid(issues: List<Issue>): ValidationResult = Invalid.create(issues)
 
         @JvmStatic
         fun combine(vararg results: ValidationResult): ValidationResult = combine(results.asList())
@@ -64,7 +71,7 @@ sealed class ValidationResult private constructor() {
                         is Invalid -> result.issues
                     }
                 }
-            return if (issues.isEmpty()) Valid else Invalid(issues)
+            return if (issues.isEmpty()) Valid else Invalid.create(issues)
         }
     }
 }

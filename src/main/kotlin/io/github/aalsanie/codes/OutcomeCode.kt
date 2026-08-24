@@ -1,5 +1,7 @@
 package io.github.aalsanie.codes
 
+import io.github.aalsanie.codes.internal.Constraints
+
 class OutcomeCode private constructor(
     val namespace: String,
     val name: String,
@@ -10,9 +12,11 @@ class OutcomeCode private constructor(
 
     override fun equals(other: Any?): Boolean =
         this === other ||
-            other is OutcomeCode &&
-            namespace == other.namespace &&
-            name == other.name
+            (
+                other is OutcomeCode &&
+                    namespace == other.namespace &&
+                    name == other.name
+            )
 
     override fun hashCode(): Int = 31 * namespace.hashCode() + name.hashCode()
 
@@ -22,7 +26,10 @@ class OutcomeCode private constructor(
         private const val DELIMITER = ':'
 
         @JvmStatic
-        fun of(namespace: String, name: String): OutcomeCode {
+        fun of(
+            namespace: String,
+            name: String,
+        ): OutcomeCode {
             Constraints.requireNamespace(namespace)
             Constraints.requireName(name)
             return OutcomeCode(namespace, name)

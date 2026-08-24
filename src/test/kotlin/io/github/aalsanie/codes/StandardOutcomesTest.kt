@@ -4,10 +4,18 @@ import org.junit.jupiter.api.Test
 
 class StandardOutcomesTest {
     @Test fun containsUniqueDefinitions() {
-        assertEquals(StandardOutcomes.all.size, StandardOutcomes.all.map { it.code }.toSet().size)
+        assertEquals(
+            StandardOutcomes.all.size,
+            StandardOutcomes.all
+                .map { it.code }
+                .toSet()
+                .size,
+        )
     }
 
-    @Test fun exposesExpectedCount() { assertEquals(21, StandardOutcomes.all.size) }
+    @Test fun exposesExpectedCount() {
+        assertEquals(21, StandardOutcomes.all.size)
+    }
 
     @Test fun allDefinitionsUseReservedNamespace() {
         assertTrue(StandardOutcomes.all.all { it.code.namespace == StandardOutcomes.NAMESPACE })
@@ -19,9 +27,13 @@ class StandardOutcomesTest {
         assertEquals(OutcomeState.SUCCEEDED, StandardOutcomes.NO_CONTENT.state)
     }
 
-    @Test fun acceptedIsPending() { assertEquals(OutcomeState.PENDING, StandardOutcomes.ACCEPTED.state) }
+    @Test fun acceptedIsPending() {
+        assertEquals(OutcomeState.PENDING, StandardOutcomes.ACCEPTED.state)
+    }
 
-    @Test fun cancellationIsFailure() { assertEquals(OutcomeState.FAILED, StandardOutcomes.CANCELLED.state) }
+    @Test fun cancellationIsFailure() {
+        assertEquals(OutcomeState.FAILED, StandardOutcomes.CANCELLED.state)
+    }
 
     @Test fun failureDefinitionsAreFailures() {
         val nonFailures = setOf(StandardOutcomes.OK, StandardOutcomes.CREATED, StandardOutcomes.ACCEPTED, StandardOutcomes.NO_CONTENT)
