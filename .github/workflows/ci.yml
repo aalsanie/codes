@@ -33,6 +33,8 @@ jobs:
         run: ./gradlew publishToMavenLocal --stacktrace
       - name: Verify published artifact consumers
         run: ./gradlew -p smoke-test clean check -PcodesVersion=0.1.0 --stacktrace
+      - name: Verify pure Java consumer
+        run: ./gradlew -p smoke-test-java clean check -PcodesVersion=0.1.0 --stacktrace
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
