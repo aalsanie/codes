@@ -25,10 +25,20 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
           version=$(awk -F= '$1 == "VERSION_NAME" { print $2 }' gradle.properties)
+
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "Invalid release version: $version"
+            exit 1
+          }
+
           test "${GITHUB_REF_NAME}" = "v${version}"
+
           git fetch --no-tags origin main
-          git merge-base --is-ancestor "${GITHUB_SHA}" origin/main
+
+          test "$(git rev-parse "${GITHUB_SHA}^{commit}")" = \
+               "$(git rev-parse "origin/main^{commit}")"
       - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
         with:
           distribution: temurin
@@ -40,6 +50,9 @@ jobs:
         run: ./gradlew clean check publishToMavenLocal --stacktrace
       - name: Verify published artifact consumers
         run: ./gradlew -p smoke-test clean check -PcodesVersion=${GITHUB_REF_NAME#v} --stacktrace
+        shell: bash
+      - name: Verify pure Java consumer
+        run: ./gradlew -p smoke-test-java clean check -PcodesVersion=${GITHUB_REF_NAME#v} --stacktrace
         shell: bash
       - name: Publish Maven Central
         run: ./gradlew publishToMavenCentral --stacktrace

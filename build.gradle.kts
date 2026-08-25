@@ -2,10 +2,13 @@ import kotlinx.kover.gradle.plugin.dsl.AggregationType
 import kotlinx.kover.gradle.plugin.dsl.CoverageUnit
 import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.dsl.abi.BinariesSource
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
+    `java-library`
+
     kotlin("jvm") version "2.4.10"
     id("org.jetbrains.kotlinx.kover") version "0.9.9"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
@@ -23,8 +26,9 @@ kotlin {
 
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
+        languageVersion.set(KotlinVersion.KOTLIN_2_2)
+        apiVersion.set(KotlinVersion.KOTLIN_2_2)
         allWarningsAsErrors.set(true)
-        progressiveMode.set(true)
         freeCompilerArgs.add("-Xjdk-release=17")
         jvmDefault.set(JvmDefaultMode.NO_COMPATIBILITY)
     }
@@ -42,6 +46,8 @@ tasks.withType<KotlinJvmCompile>().configureEach {
 }
 
 dependencies {
+    api("org.jetbrains.kotlin:kotlin-stdlib:2.2.0")
+
     testImplementation(platform("org.junit:junit-bom:6.1.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -82,6 +88,12 @@ tasks.withType<AbstractArchiveTask>().configureEach {
     isReproducibleFileOrder = true
 }
 
+tasks.jar {
+    manifest {
+        attributes["Automatic-Module-Name"] = "io.github.aalsanie.codes"
+    }
+}
+
 val signingConfigured = providers.gradleProperty("signingInMemoryKey").isPresent
 
 mavenPublishing {
@@ -90,34 +102,11 @@ mavenPublishing {
         providers.gradleProperty("POM_ARTIFACT_ID").get(),
         providers.gradleProperty("VERSION_NAME").get(),
     )
+
     publishToMavenCentral(automaticRelease = true)
+
     if (signingConfigured) {
         signAllPublications()
-    }
-    pom {
-        name.set(providers.gradleProperty("POM_NAME"))
-        description.set(providers.gradleProperty("POM_DESCRIPTION"))
-        inceptionYear.set(providers.gradleProperty("POM_INCEPTION_YEAR"))
-        url.set(providers.gradleProperty("POM_URL"))
-        licenses {
-            license {
-                name.set(providers.gradleProperty("POM_LICENSE_NAME"))
-                url.set(providers.gradleProperty("POM_LICENSE_URL"))
-                distribution.set(providers.gradleProperty("POM_LICENSE_DIST"))
-            }
-        }
-        developers {
-            developer {
-                id.set(providers.gradleProperty("POM_DEVELOPER_ID"))
-                name.set(providers.gradleProperty("POM_DEVELOPER_NAME"))
-                url.set(providers.gradleProperty("POM_DEVELOPER_URL"))
-            }
-        }
-        scm {
-            url.set(providers.gradleProperty("POM_SCM_URL"))
-            connection.set(providers.gradleProperty("POM_SCM_CONNECTION"))
-            developerConnection.set(providers.gradleProperty("POM_SCM_DEV_CONNECTION"))
-        }
     }
 }
 

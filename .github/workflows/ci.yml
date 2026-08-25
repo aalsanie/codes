@@ -20,19 +20,36 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+
       - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
         with:
           distribution: temurin
           java-version: "17"
+
       - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
         with:
           cache-provider: basic
+
+      - name: Read project version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(awk -F= '$1 == "VERSION_NAME" { print $2 }' gradle.properties)
+          test -n "${version}"
+          echo "CODES_VERSION=${version}" >> "${GITHUB_ENV}"
+
       - name: Verify
         run: ./gradlew clean check --stacktrace
+
       - name: Publish locally
         run: ./gradlew publishToMavenLocal --stacktrace
+
       - name: Verify published artifact consumers
-        run: ./gradlew -p smoke-test clean check -PcodesVersion=0.1.0 --stacktrace
+        run: ./gradlew -p smoke-test clean check -PcodesVersion=${CODES_VERSION} --stacktrace
+
+      - name: Verify pure Java consumer
+        run: ./gradlew -p smoke-test-java clean check -PcodesVersion=${CODES_VERSION} --stacktrace
+
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
@@ -52,13 +69,16 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+
       - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
+
       - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
         with:
           cache-provider: basic
+
       - name: Test
         run: ./gradlew test --stacktrace
 
@@ -73,12 +93,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+
       - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
         with:
           distribution: temurin
           java-version: "17"
+
       - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
         with:
           cache-provider: basic
+
       - name: Test
         run: ./gradlew test --stacktrace
