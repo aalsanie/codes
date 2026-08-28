@@ -160,10 +160,8 @@ public final class io/github/aalsanie/codes/OutcomeState : java/lang/Enum {
 
 public final class io/github/aalsanie/codes/StandardOutcomes {
 	public static final field ABORTED Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final field ACCEPTED Lio/github/aalsanie/codes/OutcomeDefinition;
 	public static final field ALREADY_EXISTS Lio/github/aalsanie/codes/OutcomeDefinition;
 	public static final field CANCELLED Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final field CREATED Lio/github/aalsanie/codes/OutcomeDefinition;
 	public static final field DATA_LOSS Lio/github/aalsanie/codes/OutcomeDefinition;
 	public static final field DEADLINE_EXCEEDED Lio/github/aalsanie/codes/OutcomeDefinition;
 	public static final field FAILED_PRECONDITION Lio/github/aalsanie/codes/OutcomeDefinition;
@@ -172,10 +170,8 @@ public final class io/github/aalsanie/codes/StandardOutcomes {
 	public static final field INVALID_ARGUMENT Lio/github/aalsanie/codes/OutcomeDefinition;
 	public static final field NAMESPACE Ljava/lang/String;
 	public static final field NOT_FOUND Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final field NO_CONTENT Lio/github/aalsanie/codes/OutcomeDefinition;
 	public static final field OK Lio/github/aalsanie/codes/OutcomeDefinition;
 	public static final field OUT_OF_RANGE Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final field PAYLOAD_TOO_LARGE Lio/github/aalsanie/codes/OutcomeDefinition;
 	public static final field PERMISSION_DENIED Lio/github/aalsanie/codes/OutcomeDefinition;
 	public static final field RATE_LIMITED Lio/github/aalsanie/codes/OutcomeDefinition;
 	public static final field RESOURCE_EXHAUSTED Lio/github/aalsanie/codes/OutcomeDefinition;
@@ -194,9 +190,9 @@ public abstract class io/github/aalsanie/codes/ValidationResult {
 	public final fun isInvalid ()Z
 	public final fun isValid ()Z
 	public final fun issues ()Ljava/util/List;
-	public final fun toOutcome ()Lio/github/aalsanie/codes/Outcome;
-	public final fun toOutcome (Ljava/lang/String;)Lio/github/aalsanie/codes/Outcome;
-	public static synthetic fun toOutcome$default (Lio/github/aalsanie/codes/ValidationResult;Ljava/lang/String;ILjava/lang/Object;)Lio/github/aalsanie/codes/Outcome;
+	public final fun toOutcome (Lio/github/aalsanie/codes/OutcomeDefinition;)Lio/github/aalsanie/codes/Outcome;
+	public final fun toOutcome (Lio/github/aalsanie/codes/OutcomeDefinition;Ljava/lang/String;)Lio/github/aalsanie/codes/Outcome;
+	public static synthetic fun toOutcome$default (Lio/github/aalsanie/codes/ValidationResult;Lio/github/aalsanie/codes/OutcomeDefinition;Ljava/lang/String;ILjava/lang/Object;)Lio/github/aalsanie/codes/Outcome;
 	public static final fun valid ()Lio/github/aalsanie/codes/ValidationResult;
 }
 

@@ -1,0 +1,17 @@
+io.github.aalsanie.codes.standard:ABORTED|FAILED
+io.github.aalsanie.codes.standard:ALREADY_EXISTS|FAILED
+io.github.aalsanie.codes.standard:CANCELLED|FAILED
+io.github.aalsanie.codes.standard:DATA_LOSS|FAILED
+io.github.aalsanie.codes.standard:DEADLINE_EXCEEDED|FAILED
+io.github.aalsanie.codes.standard:FAILED_PRECONDITION|FAILED
+io.github.aalsanie.codes.standard:INTERNAL|FAILED
+io.github.aalsanie.codes.standard:INVALID_ARGUMENT|FAILED
+io.github.aalsanie.codes.standard:NOT_FOUND|FAILED
+io.github.aalsanie.codes.standard:OK|SUCCEEDED
+io.github.aalsanie.codes.standard:OUT_OF_RANGE|FAILED
+io.github.aalsanie.codes.standard:PERMISSION_DENIED|FAILED
+io.github.aalsanie.codes.standard:RATE_LIMITED|FAILED
+io.github.aalsanie.codes.standard:RESOURCE_EXHAUSTED|FAILED
+io.github.aalsanie.codes.standard:UNAUTHENTICATED|FAILED
+io.github.aalsanie.codes.standard:UNAVAILABLE|FAILED
+io.github.aalsanie.codes.standard:UNIMPLEMENTED|FAILED

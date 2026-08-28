@@ -1,13 +1,24 @@
+import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     kotlin("jvm") version "2.4.10"
 }
 
-val codesVersion = providers.gradleProperty("codesVersion").orElse("0.1.0")
+val codesVersion =
+    Properties().run {
+        rootProject.projectDir
+            .parentFile
+            .resolve("gradle.properties")
+            .inputStream()
+            .use { load(it) }
+
+        getProperty("VERSION_NAME")
+            ?: error("VERSION_NAME is missing from gradle.properties")
+    }
 
 dependencies {
-    implementation("io.github.aalsanie:codes:${codesVersion.get()}")
+    implementation("io.github.aalsanie:codes:$codesVersion")
 }
 
 kotlin {

@@ -13,15 +13,16 @@ fun main() {
     check(HttpOutcomeMapper.standard().map(StandardOutcomes.NOT_FOUND).orNull() == HttpStatusCode.NOT_FOUND)
     check(GrpcOutcomeMapper.standard().map(StandardOutcomes.NOT_FOUND).orNull() == GrpcStatusCode.NOT_FOUND)
 
-    val declined = OutcomeDefinition.custom(
-        "com.example.payments",
-        "PAYMENT_DECLINED",
-        OutcomeState.FAILED,
-        "The payment was declined.",
-    )
+    val declined =
+        OutcomeDefinition.custom(
+            "com.example.payments",
+            "PAYMENT_DECLINED",
+            OutcomeState.FAILED,
+            "The payment was declined.",
+        )
     val mapper = HttpOutcomeMapper.standard().withMapping(declined, HttpStatusCode.of(422))
     check(mapper.map(Outcome.of(declined, "issuer response omitted")).orNull() == HttpStatusCode.of(422))
 
     val validation = ValidationResult.invalid(Issue.at("email", "The email address is invalid."))
-    check(validation.toOutcome().definition === StandardOutcomes.INVALID_ARGUMENT)
+    check(validation.toOutcome(StandardOutcomes.INVALID_ARGUMENT).definition === StandardOutcomes.INVALID_ARGUMENT)
 }

@@ -42,16 +42,12 @@ class HttpOutcomeMapper private constructor(
                 InternalMappings.from(
                     linkedMapOf(
                         StandardOutcomes.OK.code to HttpStatusCode.OK,
-                        StandardOutcomes.CREATED.code to HttpStatusCode.CREATED,
-                        StandardOutcomes.ACCEPTED.code to HttpStatusCode.ACCEPTED,
-                        StandardOutcomes.NO_CONTENT.code to HttpStatusCode.NO_CONTENT,
                         StandardOutcomes.INVALID_ARGUMENT.code to HttpStatusCode.BAD_REQUEST,
                         StandardOutcomes.UNAUTHENTICATED.code to HttpStatusCode.UNAUTHORIZED,
                         StandardOutcomes.PERMISSION_DENIED.code to HttpStatusCode.FORBIDDEN,
                         StandardOutcomes.NOT_FOUND.code to HttpStatusCode.NOT_FOUND,
                         StandardOutcomes.ALREADY_EXISTS.code to HttpStatusCode.CONFLICT,
                         StandardOutcomes.OUT_OF_RANGE.code to HttpStatusCode.BAD_REQUEST,
-                        StandardOutcomes.PAYLOAD_TOO_LARGE.code to HttpStatusCode.PAYLOAD_TOO_LARGE,
                         StandardOutcomes.RATE_LIMITED.code to HttpStatusCode.TOO_MANY_REQUESTS,
                         StandardOutcomes.UNIMPLEMENTED.code to HttpStatusCode.NOT_IMPLEMENTED,
                         StandardOutcomes.UNAVAILABLE.code to HttpStatusCode.SERVICE_UNAVAILABLE,

@@ -7,12 +7,6 @@ object StandardOutcomes {
 
     @JvmField val OK = OutcomeDefinition.standard("OK")
 
-    @JvmField val CREATED = OutcomeDefinition.standard("CREATED")
-
-    @JvmField val ACCEPTED = OutcomeDefinition.standard("ACCEPTED")
-
-    @JvmField val NO_CONTENT = OutcomeDefinition.standard("NO_CONTENT")
-
     @JvmField val INVALID_ARGUMENT = OutcomeDefinition.standard("INVALID_ARGUMENT")
 
     @JvmField val UNAUTHENTICATED = OutcomeDefinition.standard("UNAUTHENTICATED")
@@ -26,8 +20,6 @@ object StandardOutcomes {
     @JvmField val FAILED_PRECONDITION = OutcomeDefinition.standard("FAILED_PRECONDITION")
 
     @JvmField val OUT_OF_RANGE = OutcomeDefinition.standard("OUT_OF_RANGE")
-
-    @JvmField val PAYLOAD_TOO_LARGE = OutcomeDefinition.standard("PAYLOAD_TOO_LARGE")
 
     @JvmField val RATE_LIMITED = OutcomeDefinition.standard("RATE_LIMITED")
 
@@ -52,9 +44,6 @@ object StandardOutcomes {
         Collections.unmodifiableList(
             listOf(
                 OK,
-                CREATED,
-                ACCEPTED,
-                NO_CONTENT,
                 INVALID_ARGUMENT,
                 UNAUTHENTICATED,
                 PERMISSION_DENIED,
@@ -62,7 +51,6 @@ object StandardOutcomes {
                 ALREADY_EXISTS,
                 FAILED_PRECONDITION,
                 OUT_OF_RANGE,
-                PAYLOAD_TOO_LARGE,
                 RATE_LIMITED,
                 CANCELLED,
                 DEADLINE_EXCEEDED,

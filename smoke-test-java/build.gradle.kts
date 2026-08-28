@@ -1,15 +1,23 @@
+import java.util.Properties
+
 plugins {
     java
 }
 
 val codesVersion =
-    providers.gradleProperty("codesVersion")
-        .orElse("0.1.0")
+    Properties().run {
+        rootProject.projectDir
+            .parentFile
+            .resolve("gradle.properties")
+            .inputStream()
+            .use { load(it) }
+
+        getProperty("VERSION_NAME")
+            ?: error("VERSION_NAME is missing from gradle.properties")
+    }
 
 dependencies {
-    implementation(
-        "io.github.aalsanie:codes:${codesVersion.get()}",
-    )
+    implementation("io.github.aalsanie:codes:$codesVersion")
 }
 
 java {

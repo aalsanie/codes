@@ -53,7 +53,10 @@ final class JavaInteropTest {
         ));
         require(result.isInvalid());
         require(result.issues().size() == 1);
-        require(result.toOutcome().getDefinition() == StandardOutcomes.INVALID_ARGUMENT);
+        require(
+            result.toOutcome(StandardOutcomes.INVALID_ARGUMENT).getDefinition()
+                == StandardOutcomes.INVALID_ARGUMENT
+        );
     }
 
     @Test

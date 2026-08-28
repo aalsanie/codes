@@ -50,17 +50,49 @@ class ValidationResultTest {
         assertEquals(listOf(issue), ValidationResult.combine(listOf(ValidationResult.invalid(issue))).issues())
     }
 
-    @Test fun validConvertsToSuccessOutcome() {
-        val outcome = ValidationResult.valid().toOutcome()
+    @Test fun validConvertsToOkWithExplicitFailureDefinition() {
+        val outcome = ValidationResult.valid().toOutcome(StandardOutcomes.INVALID_ARGUMENT)
         assertSame(StandardOutcomes.OK, outcome.definition)
     }
 
-    @Test fun invalidConvertsOnlyToInvalidArgument() {
+    @Test fun invalidConvertsToExplicitFailureDefinition() {
         val issue = Issue.of("Bad.")
-        val outcome = ValidationResult.invalid(issue).toOutcome("input rejected")
-        assertSame(StandardOutcomes.INVALID_ARGUMENT, outcome.definition)
+        val outcome =
+            ValidationResult
+                .invalid(issue)
+                .toOutcome(StandardOutcomes.FAILED_PRECONDITION, "validation rejected")
+        assertSame(StandardOutcomes.FAILED_PRECONDITION, outcome.definition)
         assertEquals(listOf(issue), outcome.issues)
-        assertEquals("input rejected", outcome.detail)
+        assertEquals("validation rejected", outcome.detail)
+    }
+
+    @Test fun invalidCanUseCustomFailureDefinition() {
+        val definition =
+            OutcomeDefinition.custom(
+                "com.example.validation",
+                "ORDER_NOT_MODIFIABLE",
+                OutcomeState.FAILED,
+                "The order cannot be modified.",
+            )
+        val outcome = ValidationResult.invalid(Issue.of("Locked.")).toOutcome(definition)
+        assertSame(definition, outcome.definition)
+    }
+
+    @Test fun conversionRejectsNonFailureDefinitionDeterministically() {
+        val pending =
+            OutcomeDefinition.custom(
+                "com.example.validation",
+                "VALIDATION_PENDING",
+                OutcomeState.PENDING,
+                "Validation is pending.",
+            )
+
+        assertFails<IllegalArgumentException> {
+            ValidationResult.valid().toOutcome(StandardOutcomes.OK)
+        }
+        assertFails<IllegalArgumentException> {
+            ValidationResult.invalid(Issue.of("Bad.")).toOutcome(pending)
+        }
     }
 
     @Test fun invalidHasValueEquality() {

@@ -4,7 +4,7 @@
 [![CI](https://github.com/aalsanie/codes/actions/workflows/ci.yml/badge.svg)](https://github.com/aalsanie/codes/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-Typed application outcomes, validation, and explicit HTTP/gRPC mappings for Kotlin and Java.
+Codes provides stable application outcome identities and explicit boundary mappings for JVM applications. Applications keep their own domain error model and use Codes where multiple parts of a system need to agree on outcome meaning without coupling that meaning to HTTP, gRPC, serialization, or a framework.
 
 ## Install
 
@@ -12,7 +12,7 @@ Gradle:
 
 ```kotlin
 dependencies {
-    implementation("io.github.aalsanie:codes:0.1.0")
+    implementation("io.github.aalsanie:codes:0.2.0")
 }
 ```
 
@@ -22,7 +22,7 @@ Maven:
 <dependency>
     <groupId>io.github.aalsanie</groupId>
     <artifactId>codes</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
 </dependency>
 ```
 
@@ -45,7 +45,34 @@ if (outcome.isFailed) {
 }
 ```
 
-`message` is stable and comes from the definition. `detail` is per-occurrence context.
+`OutcomeCode` is the stable machine identity. `message` comes from the outcome definition and `detail` is per-occurrence context.
+
+## Standard outcomes
+
+A common outcome catalog:
+
+```text
+OK
+
+INVALID_ARGUMENT
+UNAUTHENTICATED
+PERMISSION_DENIED
+NOT_FOUND
+ALREADY_EXISTS
+FAILED_PRECONDITION
+OUT_OF_RANGE
+RATE_LIMITED
+CANCELLED
+DEADLINE_EXCEEDED
+ABORTED
+UNIMPLEMENTED
+UNAVAILABLE
+INTERNAL
+DATA_LOSS
+RESOURCE_EXHAUSTED
+```
+
+`OK` is the standard successful outcome. Applications can define their own success, pending, or failure outcomes when the standard catalog does not match the operation.
 
 ## Validation
 
@@ -54,16 +81,22 @@ val validation = ValidationResult.invalid(
     Issue.at("email", "Invalid email address."),
 )
 
-val outcome = validation.toOutcome("Request validation failed")
+val outcome = validation.toOutcome(
+    StandardOutcomes.INVALID_ARGUMENT,
+    "Request validation failed",
+)
 ```
 
 Combine independent validation results when needed:
 
 ```kotlin
-val result = ValidationResult.combine(emailValidation, nameValidation)
+val result = ValidationResult.combine(
+    emailValidation,
+    nameValidation,
+)
 ```
 
-A valid result converts to `StandardOutcomes.OK`. An invalid result converts to `StandardOutcomes.INVALID_ARGUMENT` and keeps its issues.
+A valid result converts to `StandardOutcomes.OK`. An invalid result converts to the supplied failed outcome and keeps its issues.
 
 ## Custom outcomes
 
@@ -83,9 +116,9 @@ val outcome = Outcome.of(
 
 Custom codes use `namespace:NAME`:
 
-- namespaces are lowercase dot-separated names such as `com.example.payments`
-- names use uppercase letters, digits, and underscores such as `PAYMENT_DECLINED`
-- `io.github.aalsanie.codes` and its child namespaces are reserved
+* namespaces are lowercase dot-separated names such as `com.example.payments`
+* names use uppercase letters, digits, and underscores such as `PAYMENT_DECLINED`
+* `io.github.aalsanie.codes` and its child namespaces are reserved
 
 ## HTTP
 
@@ -106,7 +139,11 @@ val mapper = HttpOutcomeMapper.standard()
     .withMapping(paymentDeclined, HttpStatusCode.of(422))
 ```
 
-Some standard outcomes are deliberately left unmapped for HTTP because their HTTP representation is application-specific. See [Protocol mappings](docs/protocol-mappings.md).
+Some standard outcomes are left unmapped for HTTP where the correct status depends on the application.
+
+HTTP status codes such as `CREATED`, `ACCEPTED`, `NO_CONTENT`, and `PAYLOAD_TOO_LARGE` remain available for custom mappings.
+
+See [HTTP and gRPC mappings](docs/protocol-mappings.md).
 
 ## gRPC
 
@@ -119,6 +156,15 @@ check(status == GrpcStatusCode.NOT_FOUND)
 ```
 
 The standard gRPC mapper covers all standard outcomes.
+
+For example:
+
+```text
+RATE_LIMITED        -> RESOURCE_EXHAUSTED
+RESOURCE_EXHAUSTED  -> RESOURCE_EXHAUSTED
+```
+
+Different application outcomes can map to the same protocol status while keeping their own identity inside the application.
 
 ## Java
 
@@ -133,11 +179,18 @@ Outcome outcome = Outcome.of(
 HttpStatusCode status = HttpOutcomeMapper.standard()
     .map(outcome)
     .orNull();
+
+ValidationResult validation =
+    ValidationResult.invalid(Issue.at("email", "Invalid email address."));
+
+Outcome validationOutcome =
+    validation.toOutcome(StandardOutcomes.INVALID_ARGUMENT);
 ```
 
 ## Reference
 
-- [Standard HTTP and gRPC mappings](docs/protocol-mappings.md)
+* [Semantic contract](docs/semantic-contract.md)
+* [HTTP and gRPC mappings](docs/protocol-mappings.md)
 
 ## License
 

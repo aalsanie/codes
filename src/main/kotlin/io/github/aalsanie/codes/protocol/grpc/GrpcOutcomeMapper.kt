@@ -42,9 +42,6 @@ class GrpcOutcomeMapper private constructor(
                 InternalMappings.from(
                     linkedMapOf(
                         StandardOutcomes.OK.code to GrpcStatusCode.OK,
-                        StandardOutcomes.CREATED.code to GrpcStatusCode.OK,
-                        StandardOutcomes.ACCEPTED.code to GrpcStatusCode.OK,
-                        StandardOutcomes.NO_CONTENT.code to GrpcStatusCode.OK,
                         StandardOutcomes.INVALID_ARGUMENT.code to GrpcStatusCode.INVALID_ARGUMENT,
                         StandardOutcomes.UNAUTHENTICATED.code to GrpcStatusCode.UNAUTHENTICATED,
                         StandardOutcomes.PERMISSION_DENIED.code to GrpcStatusCode.PERMISSION_DENIED,
@@ -52,7 +49,6 @@ class GrpcOutcomeMapper private constructor(
                         StandardOutcomes.ALREADY_EXISTS.code to GrpcStatusCode.ALREADY_EXISTS,
                         StandardOutcomes.FAILED_PRECONDITION.code to GrpcStatusCode.FAILED_PRECONDITION,
                         StandardOutcomes.OUT_OF_RANGE.code to GrpcStatusCode.OUT_OF_RANGE,
-                        StandardOutcomes.PAYLOAD_TOO_LARGE.code to GrpcStatusCode.RESOURCE_EXHAUSTED,
                         StandardOutcomes.RATE_LIMITED.code to GrpcStatusCode.RESOURCE_EXHAUSTED,
                         StandardOutcomes.CANCELLED.code to GrpcStatusCode.CANCELLED,
                         StandardOutcomes.DEADLINE_EXCEEDED.code to GrpcStatusCode.DEADLINE_EXCEEDED,
