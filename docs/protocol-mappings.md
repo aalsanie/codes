@@ -2,8 +2,7 @@
 
 Standard mappings provided by `HttpOutcomeMapper.standard()` and `GrpcOutcomeMapper.standard()`.
 
-Mappings are explicit projections from application semantics to protocol status. They do not define the identity or state
-of an outcome.
+Mappings convert application outcomes to protocol status. They do not change the outcome identity or state.
 
 | Outcome               | HTTP                        | gRPC                  |
 |-----------------------|-----------------------------|-----------------------|
@@ -27,7 +26,7 @@ of an outcome.
 
 ## Why some HTTP mappings are absent
 
-Codes only supplies a standard HTTP mapping when the projection is broadly unambiguous.
+Codes only supplies a standard HTTP mapping when the status is broadly applicable.
 
 For example, `FAILED_PRECONDITION` is not universally HTTP `412 Precondition Failed`: HTTP 412 has specific conditional
 request semantics. `DEADLINE_EXCEEDED` is not universally `504 Gateway Timeout`: HTTP 504 specifically describes a

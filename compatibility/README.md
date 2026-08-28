@@ -1,22 +1,15 @@
 # Semantic compatibility fixtures
 
-These snapshots protect Codes' public semantic behavior independently of the JVM ABI dump in `api/codes.api`.
+These snapshots protect Codes' semantic contract alongside the JVM API baseline in `api/codes.api`.
 
-They intentionally cover:
+They cover:
 
-- standard outcome code membership and `OutcomeState`;
-- built-in HTTP mappings;
-- built-in gRPC mappings.
+* standard outcome codes and states;
+* built-in HTTP mappings;
+* built-in gRPC mappings.
 
-They intentionally do **not** cover:
+Human-readable messages, occurrence details, and issue paths are not part of these snapshots.
 
-- `defaultMessage`;
-- per-occurrence `detail`;
-- `Issue.message`;
-- `Issue.path` syntax beyond the public validation rules.
+A snapshot change represents a change to the semantic contract and should be reviewed together with the code that requires it.
 
-A snapshot change is a semantic API change. Review it intentionally and document the migration impact before updating the
-fixture. Before 1.0, an intentional semantic break may ship in a minor release with migration notes. After 1.0, breaking
-semantic changes require a major version.
-
-For HTTP, absence from `http-mappings.snapshot` means `HttpOutcomeMapper.standard()` deliberately returns `Unmapped`.
+For HTTP, absence from `http-mappings.snapshot` means `HttpOutcomeMapper.standard()` returns `Unmapped`.
