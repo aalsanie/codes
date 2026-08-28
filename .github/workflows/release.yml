@@ -6,7 +6,7 @@ on:
       - "v*.*.*"
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: maven-central-release
@@ -61,3 +61,31 @@ jobs:
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_IN_MEMORY_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_IN_MEMORY_KEY_PASSWORD }}
+      - name: Create GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          version="${GITHUB_REF_NAME#v}"
+
+          awk -v version="$version" '
+            $0 == "## " version {
+              capture = 1
+              next
+            }
+
+            capture && /^## / {
+              exit
+            }
+
+            capture {
+              print
+            }
+          ' CHANGELOG.md > release-notes.md
+
+          gh release create "$GITHUB_REF_NAME" \
+            --verify-tag \
+            --title "Codes $version" \
+            --notes-file release-notes.md
