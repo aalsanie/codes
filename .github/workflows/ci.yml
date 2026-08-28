@@ -30,14 +30,6 @@ jobs:
         with:
           cache-provider: basic
 
-      - name: Read project version
-        shell: bash
-        run: |
-          set -euo pipefail
-          version=$(awk -F= '$1 == "VERSION_NAME" { print $2 }' gradle.properties)
-          test -n "${version}"
-          echo "CODES_VERSION=${version}" >> "${GITHUB_ENV}"
-
       - name: Verify
         run: ./gradlew clean check --stacktrace
 
@@ -45,10 +37,10 @@ jobs:
         run: ./gradlew publishToMavenLocal --stacktrace
 
       - name: Verify published artifact consumers
-        run: ./gradlew -p smoke-test clean check -PcodesVersion=${CODES_VERSION} --stacktrace
+        run: ./gradlew -p smoke-test clean check --stacktrace
 
       - name: Verify pure Java consumer
-        run: ./gradlew -p smoke-test-java clean check -PcodesVersion=${CODES_VERSION} --stacktrace
+        run: ./gradlew -p smoke-test-java clean check --stacktrace
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
