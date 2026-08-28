@@ -6,7 +6,7 @@ on:
       - "v*.*.*"
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: maven-central-release
@@ -16,11 +16,13 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 90
+
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
           persist-credentials: false
+
       - name: Verify release tag
         shell: bash
         run: |
@@ -39,21 +41,25 @@ jobs:
 
           test "$(git rev-parse "${GITHUB_SHA}^{commit}")" = \
                "$(git rev-parse "origin/main^{commit}")"
+
       - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
         with:
           distribution: temurin
           java-version: "17"
+
       - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
         with:
           cache-provider: basic
+
       - name: Verify release
         run: ./gradlew clean check publishToMavenLocal --stacktrace
+
       - name: Verify published artifact consumers
-        run: ./gradlew -p smoke-test clean check -PcodesVersion=${GITHUB_REF_NAME#v} --stacktrace
-        shell: bash
+        run: ./gradlew -p smoke-test clean check --stacktrace
+
       - name: Verify pure Java consumer
-        run: ./gradlew -p smoke-test-java clean check -PcodesVersion=${GITHUB_REF_NAME#v} --stacktrace
-        shell: bash
+        run: ./gradlew -p smoke-test-java clean check --stacktrace
+
       - name: Publish Maven Central
         run: ./gradlew publishToMavenCentral --no-configuration-cache --stacktrace
         env:
@@ -61,6 +67,19 @@ jobs:
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_IN_MEMORY_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_IN_MEMORY_KEY_PASSWORD }}
+
+  github-release:
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
       - name: Create GitHub Release
         shell: bash
         env:
@@ -84,6 +103,8 @@ jobs:
               print
             }
           ' CHANGELOG.md > release-notes.md
+
+          test -s release-notes.md
 
           gh release create "$GITHUB_REF_NAME" \
             --verify-tag \
