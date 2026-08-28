@@ -3,6 +3,14 @@ package io.github.aalsanie.codes
 import org.junit.jupiter.api.Test
 
 class IssueOutcomeTest {
+    private val pendingDefinition =
+        OutcomeDefinition.custom(
+            "com.example.jobs",
+            "JOB_PROCESSING",
+            OutcomeState.PENDING,
+            "The job is processing.",
+        )
+
     @Test fun createsMessageOnlyIssue() {
         val issue = Issue.of("Invalid value.")
         assertNull(issue.code)
@@ -64,8 +72,8 @@ class IssueOutcomeTest {
         assertEquals(StandardOutcomes.OK.defaultMessage, outcome.message)
     }
 
-    @Test fun createsPendingOutcome() {
-        val outcome = Outcome.of(StandardOutcomes.ACCEPTED)
+    @Test fun createsPendingOutcomeFromApplicationDefinition() {
+        val outcome = Outcome.of(pendingDefinition)
         assertFalse(outcome.isSuccessful)
         assertTrue(outcome.isPending)
         assertFalse(outcome.isFailed)
@@ -91,7 +99,7 @@ class IssueOutcomeTest {
     }
 
     @Test fun rejectsIssuesOnPendingOutcome() {
-        assertFails<IllegalArgumentException> { Outcome.of(StandardOutcomes.ACCEPTED, issues = listOf(Issue.of("Bad."))) }
+        assertFails<IllegalArgumentException> { Outcome.of(pendingDefinition, issues = listOf(Issue.of("Bad."))) }
     }
 
     @Test fun rejectsBlankDetail() {

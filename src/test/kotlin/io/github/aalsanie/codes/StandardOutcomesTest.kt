@@ -14,30 +14,24 @@ class StandardOutcomesTest {
     }
 
     @Test fun exposesExpectedCount() {
-        assertEquals(21, StandardOutcomes.all.size)
+        assertEquals(17, StandardOutcomes.all.size)
     }
 
     @Test fun allDefinitionsUseReservedNamespace() {
         assertTrue(StandardOutcomes.all.all { it.code.namespace == StandardOutcomes.NAMESPACE })
     }
 
-    @Test fun successDefinitionsHaveExpectedStates() {
+    @Test fun okIsTheOnlyStandardSuccess() {
         assertEquals(OutcomeState.SUCCEEDED, StandardOutcomes.OK.state)
-        assertEquals(OutcomeState.SUCCEEDED, StandardOutcomes.CREATED.state)
-        assertEquals(OutcomeState.SUCCEEDED, StandardOutcomes.NO_CONTENT.state)
+        assertEquals(listOf(StandardOutcomes.OK), StandardOutcomes.all.filter { it.state == OutcomeState.SUCCEEDED })
     }
 
-    @Test fun acceptedIsPending() {
-        assertEquals(OutcomeState.PENDING, StandardOutcomes.ACCEPTED.state)
+    @Test fun standardCatalogContainsNoPendingOutcome() {
+        assertTrue(StandardOutcomes.all.none { it.state == OutcomeState.PENDING })
     }
 
-    @Test fun cancellationIsFailure() {
-        assertEquals(OutcomeState.FAILED, StandardOutcomes.CANCELLED.state)
-    }
-
-    @Test fun failureDefinitionsAreFailures() {
-        val nonFailures = setOf(StandardOutcomes.OK, StandardOutcomes.CREATED, StandardOutcomes.ACCEPTED, StandardOutcomes.NO_CONTENT)
-        assertTrue(StandardOutcomes.all.filterNot { it in nonFailures }.all { it.state == OutcomeState.FAILED })
+    @Test fun allNonOkStandardsAreFailures() {
+        assertTrue(StandardOutcomes.all.filterNot { it === StandardOutcomes.OK }.all { it.state == OutcomeState.FAILED })
     }
 
     @Test fun allListIsNotMutableFromJavaView() {

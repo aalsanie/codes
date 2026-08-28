@@ -27,7 +27,10 @@ public final class SmokeJava {
         require(outcome.getMessage().equals("The order was rejected."));
 
         ValidationResult result = ValidationResult.invalid(Issue.at("quantity", "Quantity must be positive."));
-        require(result.toOutcome().getDefinition() == StandardOutcomes.INVALID_ARGUMENT);
+        require(
+            result.toOutcome(StandardOutcomes.INVALID_ARGUMENT).getDefinition()
+                == StandardOutcomes.INVALID_ARGUMENT
+        );
     }
 
     private static void require(boolean value) {

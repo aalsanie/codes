@@ -81,7 +81,8 @@ public final class SmokeJava {
         require(result.issues().size() == 1);
 
         require(
-            result.toOutcome().getDefinition()
+            result.toOutcome(StandardOutcomes.INVALID_ARGUMENT)
+                .getDefinition()
                 == StandardOutcomes.INVALID_ARGUMENT
         );
     }

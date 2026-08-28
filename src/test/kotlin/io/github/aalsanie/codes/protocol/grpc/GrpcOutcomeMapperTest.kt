@@ -27,12 +27,8 @@ class GrpcOutcomeMapperTest {
         StandardOutcomes.all.forEach { assertTrue(mapper.map(it).isMapped) }
     }
 
-    @Test fun standardMapsSuccessAndPendingToOk() {
-        val mapper = GrpcOutcomeMapper.standard()
-        assertEquals(GrpcStatusCode.OK, mapper.map(StandardOutcomes.OK).orNull())
-        assertEquals(GrpcStatusCode.OK, mapper.map(StandardOutcomes.CREATED).orNull())
-        assertEquals(GrpcStatusCode.OK, mapper.map(StandardOutcomes.ACCEPTED).orNull())
-        assertEquals(GrpcStatusCode.OK, mapper.map(StandardOutcomes.NO_CONTENT).orNull())
+    @Test fun standardMapsGenericSuccessToOk() {
+        assertEquals(GrpcStatusCode.OK, GrpcOutcomeMapper.standard().map(StandardOutcomes.OK).orNull())
     }
 
     @Test fun standardMapsFailureSemantics() {
@@ -55,7 +51,6 @@ class GrpcOutcomeMapperTest {
 
     @Test fun resourceFailuresMapToResourceExhausted() {
         val mapper = GrpcOutcomeMapper.standard()
-        assertEquals(GrpcStatusCode.RESOURCE_EXHAUSTED, mapper.map(StandardOutcomes.PAYLOAD_TOO_LARGE).orNull())
         assertEquals(GrpcStatusCode.RESOURCE_EXHAUSTED, mapper.map(StandardOutcomes.RATE_LIMITED).orNull())
         assertEquals(GrpcStatusCode.RESOURCE_EXHAUSTED, mapper.map(StandardOutcomes.RESOURCE_EXHAUSTED).orNull())
     }

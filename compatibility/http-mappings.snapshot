@@ -1,0 +1,12 @@
+io.github.aalsanie.codes.standard:ALREADY_EXISTS|409
+io.github.aalsanie.codes.standard:DATA_LOSS|500
+io.github.aalsanie.codes.standard:INTERNAL|500
+io.github.aalsanie.codes.standard:INVALID_ARGUMENT|400
+io.github.aalsanie.codes.standard:NOT_FOUND|404
+io.github.aalsanie.codes.standard:OK|200
+io.github.aalsanie.codes.standard:OUT_OF_RANGE|400
+io.github.aalsanie.codes.standard:PERMISSION_DENIED|403
+io.github.aalsanie.codes.standard:RATE_LIMITED|429
+io.github.aalsanie.codes.standard:UNAUTHENTICATED|401
+io.github.aalsanie.codes.standard:UNAVAILABLE|503
+io.github.aalsanie.codes.standard:UNIMPLEMENTED|501

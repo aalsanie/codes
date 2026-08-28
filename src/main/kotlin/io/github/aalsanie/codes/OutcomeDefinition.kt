@@ -16,26 +16,97 @@ class OutcomeDefinition private constructor(
         private val standardDefinitions: Map<String, OutcomeDefinition> by lazy(LazyThreadSafetyMode.PUBLICATION) {
             linkedMapOf(
                 "OK" to standardDefinition("OK", OutcomeState.SUCCEEDED, "The operation completed successfully."),
-                "CREATED" to standardDefinition("CREATED", OutcomeState.SUCCEEDED, "The resource was created."),
-                "ACCEPTED" to standardDefinition("ACCEPTED", OutcomeState.PENDING, "The operation was accepted and is pending completion."),
-                "NO_CONTENT" to standardDefinition("NO_CONTENT", OutcomeState.SUCCEEDED, "The operation completed successfully with no response content."),
-                "INVALID_ARGUMENT" to standardDefinition("INVALID_ARGUMENT", OutcomeState.FAILED, "The request contains invalid input."),
-                "UNAUTHENTICATED" to standardDefinition("UNAUTHENTICATED", OutcomeState.FAILED, "Authentication is required or invalid."),
-                "PERMISSION_DENIED" to standardDefinition("PERMISSION_DENIED", OutcomeState.FAILED, "The authenticated caller does not have permission."),
+                "INVALID_ARGUMENT" to
+                    standardDefinition(
+                        "INVALID_ARGUMENT",
+                        OutcomeState.FAILED,
+                        "An argument supplied to the operation is invalid.",
+                    ),
+                "UNAUTHENTICATED" to
+                    standardDefinition(
+                        "UNAUTHENTICATED",
+                        OutcomeState.FAILED,
+                        "Authentication is required or invalid.",
+                    ),
+                "PERMISSION_DENIED" to
+                    standardDefinition(
+                        "PERMISSION_DENIED",
+                        OutcomeState.FAILED,
+                        "The authenticated caller does not have permission.",
+                    ),
                 "NOT_FOUND" to standardDefinition("NOT_FOUND", OutcomeState.FAILED, "The requested resource was not found."),
-                "ALREADY_EXISTS" to standardDefinition("ALREADY_EXISTS", OutcomeState.FAILED, "The resource already exists."),
-                "FAILED_PRECONDITION" to standardDefinition("FAILED_PRECONDITION", OutcomeState.FAILED, "A required precondition was not satisfied."),
-                "OUT_OF_RANGE" to standardDefinition("OUT_OF_RANGE", OutcomeState.FAILED, "A value is outside the allowed range."),
-                "PAYLOAD_TOO_LARGE" to standardDefinition("PAYLOAD_TOO_LARGE", OutcomeState.FAILED, "The request payload exceeds the allowed size."),
-                "RATE_LIMITED" to standardDefinition("RATE_LIMITED", OutcomeState.FAILED, "The caller exceeded an allowed request rate."),
-                "CANCELLED" to standardDefinition("CANCELLED", OutcomeState.FAILED, "The operation was cancelled before completion."),
-                "DEADLINE_EXCEEDED" to standardDefinition("DEADLINE_EXCEEDED", OutcomeState.FAILED, "The operation exceeded its deadline."),
-                "ABORTED" to standardDefinition("ABORTED", OutcomeState.FAILED, "The operation was aborted before completion."),
-                "UNIMPLEMENTED" to standardDefinition("UNIMPLEMENTED", OutcomeState.FAILED, "The requested operation is not implemented."),
-                "UNAVAILABLE" to standardDefinition("UNAVAILABLE", OutcomeState.FAILED, "The service is temporarily unavailable."),
-                "INTERNAL" to standardDefinition("INTERNAL", OutcomeState.FAILED, "The service encountered an internal error."),
-                "DATA_LOSS" to standardDefinition("DATA_LOSS", OutcomeState.FAILED, "Unrecoverable data loss or corruption was detected."),
-                "RESOURCE_EXHAUSTED" to standardDefinition("RESOURCE_EXHAUSTED", OutcomeState.FAILED, "A required resource limit was exhausted."),
+                "ALREADY_EXISTS" to
+                    standardDefinition(
+                        "ALREADY_EXISTS",
+                        OutcomeState.FAILED,
+                        "The resource already exists.",
+                    ),
+                "FAILED_PRECONDITION" to
+                    standardDefinition(
+                        "FAILED_PRECONDITION",
+                        OutcomeState.FAILED,
+                        "A required precondition was not satisfied.",
+                    ),
+                "OUT_OF_RANGE" to
+                    standardDefinition(
+                        "OUT_OF_RANGE",
+                        OutcomeState.FAILED,
+                        "A value is outside the allowed range.",
+                    ),
+                "RATE_LIMITED" to
+                    standardDefinition(
+                        "RATE_LIMITED",
+                        OutcomeState.FAILED,
+                        "The caller exceeded an allowed operation rate.",
+                    ),
+                "CANCELLED" to
+                    standardDefinition(
+                        "CANCELLED",
+                        OutcomeState.FAILED,
+                        "The operation was cancelled before completion.",
+                    ),
+                "DEADLINE_EXCEEDED" to
+                    standardDefinition(
+                        "DEADLINE_EXCEEDED",
+                        OutcomeState.FAILED,
+                        "The operation exceeded its deadline.",
+                    ),
+                "ABORTED" to
+                    standardDefinition(
+                        "ABORTED",
+                        OutcomeState.FAILED,
+                        "The operation was aborted before completion.",
+                    ),
+                "UNIMPLEMENTED" to
+                    standardDefinition(
+                        "UNIMPLEMENTED",
+                        OutcomeState.FAILED,
+                        "The requested operation is not implemented.",
+                    ),
+                "UNAVAILABLE" to
+                    standardDefinition(
+                        "UNAVAILABLE",
+                        OutcomeState.FAILED,
+                        "The service is temporarily unavailable.",
+                    ),
+                "INTERNAL" to
+                    standardDefinition(
+                        "INTERNAL",
+                        OutcomeState.FAILED,
+                        "The service encountered an internal error.",
+                    ),
+                "DATA_LOSS" to
+                    standardDefinition(
+                        "DATA_LOSS",
+                        OutcomeState.FAILED,
+                        "Unrecoverable data loss or corruption was detected.",
+                    ),
+                "RESOURCE_EXHAUSTED" to
+                    standardDefinition(
+                        "RESOURCE_EXHAUSTED",
+                        OutcomeState.FAILED,
+                        "A required resource limit was exhausted.",
+                    ),
             )
         }
 

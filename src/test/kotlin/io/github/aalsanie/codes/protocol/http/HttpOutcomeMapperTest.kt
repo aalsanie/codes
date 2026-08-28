@@ -107,12 +107,9 @@ class HttpOutcomeMapperTest {
         assertEquals("418", status.toString())
     }
 
-    @Test fun standardMapsUnambiguousSuccesses() {
+    @Test fun standardMapsOnlyGenericSuccess() {
         val mapper = HttpOutcomeMapper.standard()
         assertEquals(HttpStatusCode.OK, mapper.map(StandardOutcomes.OK).orNull())
-        assertEquals(HttpStatusCode.CREATED, mapper.map(StandardOutcomes.CREATED).orNull())
-        assertEquals(HttpStatusCode.ACCEPTED, mapper.map(StandardOutcomes.ACCEPTED).orNull())
-        assertEquals(HttpStatusCode.NO_CONTENT, mapper.map(StandardOutcomes.NO_CONTENT).orNull())
     }
 
     @Test fun standardMapsAuthenticationCorrectly() {
@@ -126,7 +123,6 @@ class HttpOutcomeMapperTest {
         assertEquals(HttpStatusCode.BAD_REQUEST, mapper.map(StandardOutcomes.INVALID_ARGUMENT).orNull())
         assertEquals(HttpStatusCode.NOT_FOUND, mapper.map(StandardOutcomes.NOT_FOUND).orNull())
         assertEquals(HttpStatusCode.CONFLICT, mapper.map(StandardOutcomes.ALREADY_EXISTS).orNull())
-        assertEquals(HttpStatusCode.PAYLOAD_TOO_LARGE, mapper.map(StandardOutcomes.PAYLOAD_TOO_LARGE).orNull())
         assertEquals(HttpStatusCode.TOO_MANY_REQUESTS, mapper.map(StandardOutcomes.RATE_LIMITED).orNull())
         assertEquals(
             HttpStatusCode.BAD_REQUEST,
@@ -140,6 +136,10 @@ class HttpOutcomeMapperTest {
         assertEquals(HttpStatusCode.SERVICE_UNAVAILABLE, mapper.map(StandardOutcomes.UNAVAILABLE).orNull())
         assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, mapper.map(StandardOutcomes.INTERNAL).orNull())
         assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, mapper.map(StandardOutcomes.DATA_LOSS).orNull())
+    }
+
+    @Test fun standardContainsOnlyExplicitMappings() {
+        assertEquals(12, HttpOutcomeMapper.standard().size)
     }
 
     @Test fun ambiguousFailuresAreDeliberatelyUnmapped() {
@@ -182,7 +182,7 @@ class HttpOutcomeMapperTest {
     @Test fun overrideChangesOnlySpecifiedMapping() {
         val mapper = HttpOutcomeMapper.standard().withOverride(StandardOutcomes.NOT_FOUND, HttpStatusCode.of(410))
         assertEquals(HttpStatusCode.of(410), mapper.map(StandardOutcomes.NOT_FOUND).orNull())
-        assertEquals(HttpStatusCode.CREATED, mapper.map(StandardOutcomes.CREATED).orNull())
+        assertEquals(HttpStatusCode.UNAUTHORIZED, mapper.map(StandardOutcomes.UNAUTHENTICATED).orNull())
     }
 
     @Test fun rejectsOverrideOfMissingMapping() {

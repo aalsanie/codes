@@ -43,11 +43,18 @@ sealed class ValidationResult private constructor() {
         }
 
     @JvmOverloads
-    fun toOutcome(detail: String? = null): Outcome =
-        when (this) {
-            Valid -> Outcome.of(StandardOutcomes.OK, detail)
-            is Invalid -> Outcome.of(StandardOutcomes.INVALID_ARGUMENT, detail, issues)
+    fun toOutcome(
+        failureDefinition: OutcomeDefinition,
+        detail: String? = null,
+    ): Outcome {
+        require(failureDefinition.state == OutcomeState.FAILED) {
+            "validation failure definition must have FAILED state"
         }
+        return when (this) {
+            Valid -> Outcome.of(StandardOutcomes.OK, detail)
+            is Invalid -> Outcome.of(failureDefinition, detail, issues)
+        }
+    }
 
     companion object {
         @JvmStatic

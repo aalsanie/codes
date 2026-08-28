@@ -1,0 +1,17 @@
+io.github.aalsanie.codes.standard:ABORTED|ABORTED
+io.github.aalsanie.codes.standard:ALREADY_EXISTS|ALREADY_EXISTS
+io.github.aalsanie.codes.standard:CANCELLED|CANCELLED
+io.github.aalsanie.codes.standard:DATA_LOSS|DATA_LOSS
+io.github.aalsanie.codes.standard:DEADLINE_EXCEEDED|DEADLINE_EXCEEDED
+io.github.aalsanie.codes.standard:FAILED_PRECONDITION|FAILED_PRECONDITION
+io.github.aalsanie.codes.standard:INTERNAL|INTERNAL
+io.github.aalsanie.codes.standard:INVALID_ARGUMENT|INVALID_ARGUMENT
+io.github.aalsanie.codes.standard:NOT_FOUND|NOT_FOUND
+io.github.aalsanie.codes.standard:OK|OK
+io.github.aalsanie.codes.standard:OUT_OF_RANGE|OUT_OF_RANGE
+io.github.aalsanie.codes.standard:PERMISSION_DENIED|PERMISSION_DENIED
+io.github.aalsanie.codes.standard:RATE_LIMITED|RESOURCE_EXHAUSTED
+io.github.aalsanie.codes.standard:RESOURCE_EXHAUSTED|RESOURCE_EXHAUSTED
+io.github.aalsanie.codes.standard:UNAUTHENTICATED|UNAUTHENTICATED
+io.github.aalsanie.codes.standard:UNAVAILABLE|UNAVAILABLE
+io.github.aalsanie.codes.standard:UNIMPLEMENTED|UNIMPLEMENTED
