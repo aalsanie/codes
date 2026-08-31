@@ -20,7 +20,7 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 dependencies {
-    api("org.jspecify:jspecify:1.0.0")
+    api("org.jspecify:jspecify:1.0.1")
     testImplementation(platform("org.junit:junit-bom:${providers.gradleProperty("junitVersion").get()}"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -72,7 +72,7 @@ tasks.register("verifyCoreRuntimeDependencies") {
             .map { it.name }
             .sorted()
 
-        check(runtimeFiles == listOf("jspecify-1.0.0.jar")) {
+        check(runtimeFiles == listOf("jspecify-1.0.1.jar")) {
             "Codes core runtime dependencies must be limited to JSpecify: ${
                 runtimeFiles.joinToString()
             }"
@@ -117,7 +117,7 @@ tasks.register("verifyPublishedPomDependencies") {
                 && value("scope") == "compile"
                 && value("optional").isEmpty()
         ) {
-            "Codes core Maven POM must expose org.jspecify:jspecify:1.0.0 as a non-optional compile dependency."
+            "Codes core Maven POM must expose org.jspecify:jspecify:1.0.1 as a non-optional compile dependency."
         }
     }
 }
