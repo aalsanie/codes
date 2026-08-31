@@ -45,7 +45,10 @@ class OutcomeCodeTest {
         assertThrows(IllegalArgumentException.class, () -> OutcomeCode.parse(":CODE"));
         assertThrows(IllegalArgumentException.class, () -> OutcomeCode.parse("com:example:CODE"));
         assertThrows(IllegalArgumentException.class, () -> OutcomeCode.parse("com.example:"));
-        assertNull(OutcomeCode.parseOrNull(null));
+        assertThrows(
+            NullPointerException.class,
+            () -> OutcomeCode.parseOrNull(null)
+        );
         assertNull(OutcomeCode.parseOrNull("bad"));
     }
 

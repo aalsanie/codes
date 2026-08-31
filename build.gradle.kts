@@ -11,8 +11,6 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
-    withSourcesJar()
-    withJavadocJar()
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -22,6 +20,7 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 dependencies {
+    compileOnlyApi("org.jspecify:jspecify:1.0.0")
     testImplementation(platform("org.junit:junit-bom:${providers.gradleProperty("junitVersion").get()}"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -63,10 +62,17 @@ tasks.jacocoTestCoverageVerification {
 tasks.register("verifyCoreRuntimeDependencies") {
     group = "verification"
     description = "Fails when the Codes core artifact gains a runtime dependency."
+
+    val runtimeClasspath: Provider<out FileCollection> = configurations.runtimeClasspath
+    inputs.files(runtimeClasspath)
+
     doLast {
-        val firstLevel = configurations.runtimeClasspath.get().resolvedConfiguration.firstLevelModuleDependencies
-        check(firstLevel.isEmpty()) {
-            "Codes core must remain dependency-free at runtime: ${firstLevel.joinToString { "${it.moduleGroup}:${it.moduleName}:${it.moduleVersion}" }}"
+        val runtimeFiles = runtimeClasspath.get().files
+
+        check(runtimeFiles.isEmpty()) {
+            "Codes core must remain dependency-free at runtime: ${
+                runtimeFiles.joinToString { it.name }
+            }"
         }
     }
 }

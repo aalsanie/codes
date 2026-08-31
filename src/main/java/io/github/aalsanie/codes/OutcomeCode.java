@@ -1,5 +1,7 @@
 package io.github.aalsanie.codes;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Objects;
 
 public final class OutcomeCode implements Comparable<OutcomeCode> {
@@ -30,10 +32,11 @@ public final class OutcomeCode implements Comparable<OutcomeCode> {
         return of(value.substring(0, delimiterIndex), value.substring(delimiterIndex + 1));
     }
 
-    public static OutcomeCode parseOrNull(String value) {
+    public static @Nullable OutcomeCode parseOrNull(String value) {
+        Objects.requireNonNull(value, "value");
         try {
             return parse(value);
-        } catch (IllegalArgumentException | NullPointerException ignored) {
+        } catch (IllegalArgumentException ignored) {
             return null;
         }
     }

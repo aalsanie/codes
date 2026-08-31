@@ -1,5 +1,7 @@
 package io.github.aalsanie.codes;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -49,7 +51,10 @@ public abstract sealed class ValidationResult permits ValidationResult.Valid, Va
         return toOutcome(failureDefinition, null);
     }
 
-    public final Outcome toOutcome(OutcomeDefinition failureDefinition, String detail) {
+    public final Outcome toOutcome(
+        OutcomeDefinition failureDefinition,
+        @Nullable String detail
+    ) {
         Objects.requireNonNull(failureDefinition, "failureDefinition");
         if (failureDefinition.getState() != OutcomeState.FAILED) {
             throw new IllegalArgumentException("validation failure definition must have FAILED state");

@@ -1,5 +1,7 @@
 package io.github.aalsanie.codes;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -36,11 +38,11 @@ public final class OutcomeRegistry {
         return definitionsByCode.containsKey(Objects.requireNonNull(code, "code"));
     }
 
-    public OutcomeDefinition find(OutcomeCode code) {
+    public @Nullable OutcomeDefinition find(OutcomeCode code) {
         return definitionsByCode.get(Objects.requireNonNull(code, "code"));
     }
 
-    public OutcomeDefinition find(String value) {
+    public @Nullable OutcomeDefinition find(String value) {
         OutcomeCode code = OutcomeCode.parseOrNull(value);
         return code == null ? null : find(code);
     }

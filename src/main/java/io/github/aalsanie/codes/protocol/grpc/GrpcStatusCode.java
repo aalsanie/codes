@@ -1,5 +1,7 @@
 package io.github.aalsanie.codes.protocol.grpc;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,7 +36,7 @@ public enum GrpcStatusCode {
         return value;
     }
 
-    public static GrpcStatusCode fromValue(int value) {
+    public static @Nullable GrpcStatusCode fromValue(int value) {
         return BY_VALUE.get(value);
     }
 

@@ -1,13 +1,14 @@
 package io.github.aalsanie.codes;
 
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public final class Issue {
-    private final OutcomeCode code;
-    private final String path;
+    private final @Nullable OutcomeCode code;
+    private final @Nullable String path;
     private final String message;
 
-    private Issue(OutcomeCode code, String path, String message) {
+    private Issue(@Nullable OutcomeCode code, @Nullable String path, String message) {
         this.code = code;
         this.path = path;
         this.message = message;
@@ -22,18 +23,22 @@ public final class Issue {
     }
 
     public static Issue at(String path, String message) {
-        return create(null, path, message);
+        return create(null, Objects.requireNonNull(path, "path"), message);
     }
 
     public static Issue at(String path, OutcomeCode code, String message) {
-        return create(Objects.requireNonNull(code, "code"), path, message);
+        return create(
+            Objects.requireNonNull(code, "code"),
+            Objects.requireNonNull(path, "path"),
+            message
+        );
     }
 
-    public OutcomeCode getCode() {
+    public @Nullable OutcomeCode getCode() {
         return code;
     }
 
-    public String getPath() {
+    public @Nullable String getPath() {
         return path;
     }
 
@@ -71,7 +76,11 @@ public final class Issue {
         return builder.append(message).toString();
     }
 
-    private static Issue create(OutcomeCode code, String path, String message) {
+    private static Issue create(
+        @Nullable OutcomeCode code,
+        @Nullable String path,
+        String message
+    ) {
         if (path != null) {
             Constraints.requirePath(path);
         }

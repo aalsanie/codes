@@ -1,5 +1,7 @@
 package io.github.aalsanie.codes;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Objects;
 
 public final class OutcomeException extends RuntimeException {
@@ -9,7 +11,7 @@ public final class OutcomeException extends RuntimeException {
         this(outcome, null);
     }
 
-    public OutcomeException(Outcome outcome, Throwable cause) {
+    public OutcomeException(Outcome outcome, @Nullable Throwable cause) {
         super(requireFailed(outcome).getMessage(), cause);
         this.outcome = outcome;
     }

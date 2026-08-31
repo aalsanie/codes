@@ -1,9 +1,9 @@
 package io.github.aalsanie.codes;
 
-import io.github.aalsanie.codes.protocol.grpc.GrpcOutcomeMapper;
-import io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode;
-import io.github.aalsanie.codes.protocol.http.HttpOutcomeMapper;
-import io.github.aalsanie.codes.protocol.http.HttpStatusCode;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -16,37 +16,51 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 final class ApiSnapshot {
-    private static final List<Class<?>> TYPES = List.of(
-        Issue.class,
-        MappingResult.class,
-        MappingResult.Mapped.class,
-        MappingResult.Unmapped.class,
-        Outcome.class,
-        OutcomeCode.class,
-        OutcomeDefinition.class,
-        OutcomeException.class,
-        OutcomeExceptions.class,
-        OutcomeMapper.class,
-        OutcomeRegistry.class,
-        OutcomeState.class,
-        StandardOutcomes.class,
-        ValidationResult.class,
-        ValidationResult.Valid.class,
-        ValidationResult.Invalid.class,
-        HttpStatusCode.class,
-        HttpOutcomeMapper.class,
-        GrpcStatusCode.class,
-        GrpcOutcomeMapper.class
-    );
 
     private ApiSnapshot() {
     }
 
     static String create() {
-        return TYPES.stream()
+        return publicTypes().stream()
             .sorted(Comparator.comparing(Class::getName))
             .map(ApiSnapshot::typeSnapshot)
             .collect(Collectors.joining("\n\n"));
+    }
+
+    private static List<Class<?>> publicTypes() {
+        try {
+            Path classesRoot = Path.of(
+                Issue.class.getProtectionDomain()
+                    .getCodeSource()
+                    .getLocation()
+                    .toURI()
+            );
+
+            try (var paths = Files.walk(classesRoot)) {
+                return paths
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.toString().endsWith(".class"))
+                    .map(classesRoot::relativize)
+                    .map(Path::toString)
+                    .map(name -> name.replace('\\', '.').replace('/', '.'))
+                    .map(name -> name.substring(0, name.length() - ".class".length()))
+                    .filter(name -> name.startsWith("io.github.aalsanie.codes."))
+                    .filter(name -> !name.endsWith("package-info"))
+                    .map(ApiSnapshot::loadClass)
+                    .filter(type -> Modifier.isPublic(type.getModifiers()))
+                    .collect(Collectors.toList());
+            }
+        } catch (IOException | URISyntaxException exception) {
+            throw new IllegalStateException("Failed to discover public API types", exception);
+        }
+    }
+
+    private static Class<?> loadClass(String name) {
+        try {
+            return Class.forName(name, false, Issue.class.getClassLoader());
+        } catch (ClassNotFoundException exception) {
+            throw new IllegalStateException("Failed to load API type: " + name, exception);
+        }
     }
 
     private static String typeSnapshot(Class<?> type) {

@@ -1,5 +1,6 @@
 import io.github.aalsanie.codes.Issue
 import io.github.aalsanie.codes.Outcome
+import io.github.aalsanie.codes.OutcomeCode
 import io.github.aalsanie.codes.OutcomeDefinition
 import io.github.aalsanie.codes.OutcomeRegistry
 import io.github.aalsanie.codes.OutcomeState
@@ -16,8 +17,16 @@ fun main() {
         "Order rejected.",
     )
     val outcome = Outcome.of(rejected, "internal=42", listOf(Issue.at("items[0]", "Unavailable.")))
+    val detail: String? = outcome.detail
+    val issueCode: OutcomeCode? = outcome.issues.first().code
     val mapper = HttpOutcomeMapper.standard().withMapping(rejected, HttpStatusCode.of(422))
-    check(mapper.map(outcome).orNull()?.value == 422)
+    val mappedStatus: HttpStatusCode? = mapper.map(outcome).orNull()
+    val missingDefinition: OutcomeDefinition? =
+        OutcomeRegistry.empty().find("com.example:MISSING")
+    check(mappedStatus?.value == 422)
+    check(detail == "internal=42")
+    check(issueCode == null)
+    check(missingDefinition == null)
     check(outcome.code.value == "com.example.orders:ORDER_REJECTED")
 
     val validation = ValidationResult.combine(

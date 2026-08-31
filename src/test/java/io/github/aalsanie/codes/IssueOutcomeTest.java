@@ -1,14 +1,10 @@
 package io.github.aalsanie.codes;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class IssueOutcomeTest {
     @Test
@@ -23,6 +19,24 @@ class IssueOutcomeTest {
         assertEquals("email", Issue.at("email", code, "Invalid.").getPath());
         assertNull(Issue.of("Invalid.").getCode());
         assertNull(Issue.of("Invalid.").getPath());
+        Issue issue = Issue.at("email", code, "Invalid.");
+
+        assertEquals(issue, issue);
+        assertNotEquals("not-an-issue", issue);
+        assertNotEquals(
+            issue,
+            Issue.at(
+                "email",
+                OutcomeCode.of("com.example.validation", "OTHER"),
+                "Invalid."
+            )
+        );
+        assertNotEquals(issue, Issue.at("name", code, "Invalid."));
+        assertNotEquals(issue, Issue.at("email", code, "Different."));
+        assertEquals(
+            issue.hashCode(),
+            Issue.at("email", code, "Invalid.").hashCode()
+        );
     }
 
     @Test
@@ -36,6 +50,11 @@ class IssueOutcomeTest {
         assertThrows(IllegalArgumentException.class, () -> Issue.at("bad\0path", "Bad."));
         assertThrows(NullPointerException.class, () -> Issue.coded(null, "Bad."));
         assertThrows(NullPointerException.class, () -> Issue.at("field", null, "Bad."));
+        assertThrows(NullPointerException.class, () -> Issue.at(null, "Bad."));
+        assertThrows(
+            NullPointerException.class,
+            () -> Issue.at(null, OutcomeCode.of("com.example", "BAD"), "Bad.")
+        );
     }
 
     @Test

@@ -1,14 +1,20 @@
 package io.github.aalsanie.codes;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.List;
 import java.util.Objects;
 
 public final class Outcome {
     private final OutcomeDefinition definition;
-    private final String detail;
+    private final @Nullable String detail;
     private final List<Issue> issues;
 
-    private Outcome(OutcomeDefinition definition, String detail, List<Issue> issues) {
+    private Outcome(
+        OutcomeDefinition definition,
+        @Nullable String detail,
+        List<Issue> issues
+    ) {
         this.definition = definition;
         this.detail = detail;
         this.issues = issues;
@@ -18,11 +24,18 @@ public final class Outcome {
         return of(definition, null, List.of());
     }
 
-    public static Outcome of(OutcomeDefinition definition, String detail) {
+    public static Outcome of(
+        OutcomeDefinition definition,
+        @Nullable String detail
+    ) {
         return of(definition, detail, List.of());
     }
 
-    public static Outcome of(OutcomeDefinition definition, String detail, List<Issue> issues) {
+    public static Outcome of(
+        OutcomeDefinition definition,
+        @Nullable String detail,
+        List<Issue> issues
+    ) {
         Objects.requireNonNull(definition, "definition");
         Objects.requireNonNull(issues, "issues");
         if (detail != null) {
@@ -54,7 +67,7 @@ public final class Outcome {
         return getDefaultMessage();
     }
 
-    public String getDetail() {
+    public @Nullable String getDetail() {
         return detail;
     }
 

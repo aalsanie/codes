@@ -1,5 +1,7 @@
 package io.github.aalsanie.codes;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -23,7 +25,7 @@ public abstract sealed class MappingResult<T> permits MappingResult.Mapped, Mapp
         return !isMapped();
     }
 
-    public abstract T orNull();
+    public abstract @Nullable T orNull();
 
     public final <R> R fold(Function<? super T, ? extends R> onMapped, Supplier<? extends R> onUnmapped) {
         Objects.requireNonNull(onMapped, "onMapped");
@@ -51,7 +53,7 @@ public abstract sealed class MappingResult<T> permits MappingResult.Mapped, Mapp
         }
 
         @Override
-        public T orNull() {
+        public @Nullable T orNull() {
             return value;
         }
 
@@ -83,7 +85,7 @@ public abstract sealed class MappingResult<T> permits MappingResult.Mapped, Mapp
         }
 
         @Override
-        public T orNull() {
+        public @Nullable T orNull() {
             return null;
         }
 

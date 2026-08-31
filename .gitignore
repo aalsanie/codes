@@ -3,5 +3,4 @@
 .idea/
 *.iml
 out/
-.verify/
 .DS_Store

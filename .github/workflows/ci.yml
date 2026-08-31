@@ -65,7 +65,7 @@ jobs:
         with:
           name: coverage-reports
           path: build/reports/jacoco
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 14
 
   kotlin-consumers:
@@ -102,6 +102,23 @@ jobs:
             -Dcodes.version="$version" \
             -Dkotlin.version="${{ matrix.kotlin }}" \
             clean verify
+
+  kotlin-consumers-gate:
+    name: Kotlin consumers gate
+    if: always()
+    needs: [kotlin-consumers]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify Kotlin consumer matrix
+        env:
+          RESULT: ${{ needs.kotlin-consumers.result }}
+        shell: bash
+        run: |
+          if [ "$RESULT" != "success" ]; then
+            echo "Kotlin consumer matrix result: $RESULT"
+            exit 1
+          fi
 
   runtime-jdks:
     runs-on: ubuntu-latest

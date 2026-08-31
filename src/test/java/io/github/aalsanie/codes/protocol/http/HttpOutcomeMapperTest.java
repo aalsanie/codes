@@ -1,16 +1,12 @@
 package io.github.aalsanie.codes.protocol.http;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import io.github.aalsanie.codes.Outcome;
 import io.github.aalsanie.codes.OutcomeDefinition;
 import io.github.aalsanie.codes.OutcomeState;
 import io.github.aalsanie.codes.StandardOutcomes;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class HttpOutcomeMapperTest {
     @Test
@@ -34,6 +30,30 @@ class HttpOutcomeMapperTest {
         assertTrue(mapper.map(StandardOutcomes.DEADLINE_EXCEEDED).isUnmapped());
         assertTrue(mapper.map(StandardOutcomes.ABORTED).isUnmapped());
         assertTrue(mapper.map(StandardOutcomes.RESOURCE_EXHAUSTED).isUnmapped());
+        assertSame(HttpStatusCode.OK, HttpStatusCode.of(200));
+        assertSame(HttpStatusCode.CREATED, HttpStatusCode.of(201));
+        assertSame(HttpStatusCode.ACCEPTED, HttpStatusCode.of(202));
+        assertSame(HttpStatusCode.NO_CONTENT, HttpStatusCode.of(204));
+        assertSame(HttpStatusCode.BAD_REQUEST, HttpStatusCode.of(400));
+        assertSame(HttpStatusCode.UNAUTHORIZED, HttpStatusCode.of(401));
+        assertSame(HttpStatusCode.FORBIDDEN, HttpStatusCode.of(403));
+        assertSame(HttpStatusCode.NOT_FOUND, HttpStatusCode.of(404));
+        assertSame(HttpStatusCode.CONFLICT, HttpStatusCode.of(409));
+        assertSame(HttpStatusCode.PRECONDITION_FAILED, HttpStatusCode.of(412));
+        assertSame(HttpStatusCode.PAYLOAD_TOO_LARGE, HttpStatusCode.of(413));
+        assertSame(HttpStatusCode.TOO_MANY_REQUESTS, HttpStatusCode.of(429));
+        assertSame(HttpStatusCode.INTERNAL_SERVER_ERROR, HttpStatusCode.of(500));
+        assertSame(HttpStatusCode.NOT_IMPLEMENTED, HttpStatusCode.of(501));
+        assertSame(HttpStatusCode.SERVICE_UNAVAILABLE, HttpStatusCode.of(503));
+        assertSame(HttpStatusCode.GATEWAY_TIMEOUT, HttpStatusCode.of(504));
+        assertFalse(HttpStatusCode.OK.isInformational());
+        assertFalse(HttpStatusCode.BAD_REQUEST.isSuccessful());
+        assertFalse(HttpStatusCode.OK.isRedirection());
+        assertFalse(HttpStatusCode.OK.isClientError());
+        assertFalse(HttpStatusCode.BAD_REQUEST.isServerError());
+        assertEquals(HttpStatusCode.OK, HttpStatusCode.OK);
+        assertNotEquals(HttpStatusCode.OK, HttpStatusCode.CREATED);
+        assertEquals(404, HttpStatusCode.NOT_FOUND.hashCode());
     }
 
     @Test
