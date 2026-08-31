@@ -23,6 +23,7 @@ dependencies {
     compileOnly("org.jspecify:jspecify:1.0.0")
     testImplementation(platform("org.junit:junit-bom:${providers.gradleProperty("junitVersion").get()}"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.jspecify:jspecify:1.0.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
