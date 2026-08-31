@@ -1,86 +1,79 @@
-import kotlinx.kover.gradle.plugin.dsl.AggregationType
-import kotlinx.kover.gradle.plugin.dsl.CoverageUnit
-import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
-import org.jetbrains.kotlin.gradle.dsl.abi.BinariesSource
-import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
-
 plugins {
     `java-library`
-
-    kotlin("jvm") version "2.4.10"
-    id("org.jetbrains.kotlinx.kover") version "0.9.9"
-    id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
+    jacoco
     id("com.vanniktech.maven.publish") version "0.37.0"
 }
 
 group = providers.gradleProperty("GROUP").get()
 version = providers.gradleProperty("VERSION_NAME").get()
 
-kotlin {
-    @OptIn(org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation::class)
-    abiValidation {
-        binariesSource.set(BinariesSource.MAVEN_PUBLICATIONS)
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
     }
-
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
-        languageVersion.set(KotlinVersion.KOTLIN_2_2)
-        apiVersion.set(KotlinVersion.KOTLIN_2_2)
-        allWarningsAsErrors.set(true)
-        freeCompilerArgs.add("-Xjdk-release=17")
-        jvmDefault.set(JvmDefaultMode.NO_COMPATIBILITY)
-    }
+    withSourcesJar()
+    withJavadocJar()
 }
 
 tasks.withType<JavaCompile>().configureEach {
     options.release.set(17)
-    options.compilerArgs.addAll(listOf("-Xlint:all", "-Werror"))
-}
-
-tasks.withType<KotlinJvmCompile>().configureEach {
-    compilerOptions {
-        allWarningsAsErrors.set(true)
-    }
+    options.encoding = "UTF-8"
+    options.compilerArgs.addAll(listOf("-Xlint:all,-serial", "-Werror"))
 }
 
 dependencies {
-    api("org.jetbrains.kotlin:kotlin-stdlib:2.2.0")
-
-    testImplementation(platform("org.junit:junit-bom:6.1.3"))
+    testImplementation(platform("org.junit:junit-bom:${providers.gradleProperty("junitVersion").get()}"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 tasks.test {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
 }
 
-ktlint {
-    version.set("1.8.0")
+jacoco {
+    toolVersion = "0.8.14"
 }
 
-kover {
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
     reports {
-        total {
-            html {
-                onCheck = true
+        html.required.set(true)
+        xml.required.set(true)
+    }
+}
+
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.test)
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                minimum = "0.95".toBigDecimal()
             }
-            xml {
-                onCheck = true
-            }
-            verify {
-                onCheck = true
-                rule("minimum line coverage") {
-                    minBound(95, CoverageUnit.LINE, AggregationType.COVERED_PERCENTAGE)
-                }
-                rule("minimum branch coverage") {
-                    minBound(90, CoverageUnit.BRANCH, AggregationType.COVERED_PERCENTAGE)
-                }
+            limit {
+                counter = "BRANCH"
+                minimum = "0.90".toBigDecimal()
             }
         }
     }
+}
+
+tasks.register("verifyCoreRuntimeDependencies") {
+    group = "verification"
+    description = "Fails when the Codes core artifact gains a runtime dependency."
+    doLast {
+        val firstLevel = configurations.runtimeClasspath.get().resolvedConfiguration.firstLevelModuleDependencies
+        check(firstLevel.isEmpty()) {
+            "Codes core must remain dependency-free at runtime: ${firstLevel.joinToString { "${it.moduleGroup}:${it.moduleName}:${it.moduleVersion}" }}"
+        }
+    }
+}
+
+tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification)
+    dependsOn(tasks.named("verifyCoreRuntimeDependencies"))
 }
 
 tasks.withType<AbstractArchiveTask>().configureEach {
@@ -92,6 +85,18 @@ tasks.jar {
     manifest {
         attributes["Automatic-Module-Name"] = "io.github.aalsanie.codes"
     }
+}
+
+tasks.register("verifyAll") {
+    group = "verification"
+    description = "Verifies the core, incubating adapters, and reference applications."
+    dependsOn(
+        tasks.check,
+        ":codes-spring:check",
+        ":codes-grpc-java:check",
+        ":reference-spring-orders:check",
+        ":reference-grpc-orders:check",
+    )
 }
 
 val signingConfigured = providers.gradleProperty("signingInMemoryKey").isPresent

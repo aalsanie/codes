@@ -18,22 +18,34 @@ concurrency:
 jobs:
   analyze:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+
       - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
         with:
           distribution: temurin
           java-version: "17"
+
       - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
         with:
           cache-provider: basic
+
       - uses: github/codeql-action/init@5595ccaf912efad79be6eef63a5619ff05969be3
         with:
           languages: java-kotlin
           build-mode: manual
-      - name: Build
-        run: ./gradlew clean testClasses --stacktrace
+
+      - name: Build production and reference code
+        run: >-
+          ./gradlew clean
+          :testClasses
+          :codes-spring:testClasses
+          :codes-grpc-java:testClasses
+          :reference-spring-orders:testClasses
+          :reference-grpc-orders:testClasses
+          --stacktrace
+
       - uses: github/codeql-action/analyze@5595ccaf912efad79be6eef63a5619ff05969be3

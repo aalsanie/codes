@@ -4,7 +4,17 @@
 [![CI](https://github.com/aalsanie/codes/actions/workflows/ci.yml/badge.svg)](https://github.com/aalsanie/codes/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-Codes provides stable application outcome identities and explicit boundary mappings for JVM applications. Applications keep their own domain error model and use Codes where multiple parts of a system need to agree on outcome meaning without coupling that meaning to HTTP, gRPC, serialization, or a framework.
+Codes provides stable application outcome identities and explicit boundary mappings for JVM applications. Applications keep their own domain result or error model and use Codes where multiple parts of a system need to agree on outcome meaning without coupling that meaning to HTTP, gRPC, serialization, or a framework.
+
+A domain outcome can keep the same identity across boundaries:
+
+```text
+com.example.payments:PAYMENT_DECLINED
+                    |
+                    +-- HTTP 422
+                    +-- gRPC FAILED_PRECONDITION
+                    +-- logs/metrics keep PAYMENT_DECLINED
+```
 
 ## Install
 
@@ -12,7 +22,7 @@ Gradle:
 
 ```kotlin
 dependencies {
-    implementation("io.github.aalsanie:codes:0.2.0")
+    implementation("io.github.aalsanie:codes:0.3.0")
 }
 ```
 
@@ -22,34 +32,34 @@ Maven:
 <dependency>
     <groupId>io.github.aalsanie</groupId>
     <artifactId>codes</artifactId>
-    <version>0.2.0</version>
+    <version>0.3.0</version>
 </dependency>
 ```
 
-Java 17+. Kotlin language/API baseline: 2.2.
+Java 17+. The core is implemented in Java and has no runtime dependencies. Kotlin applications consume the same Java API without bringing a Codes-owned Kotlin runtime dependency.
 
-## Outcomes
+## Custom outcomes
 
-Use a standard outcome definition and add runtime detail when needed:
+```java
+OutcomeDefinition paymentDeclined = OutcomeDefinition.custom(
+    "com.example.payments",
+    "PAYMENT_DECLINED",
+    OutcomeState.FAILED,
+    "The payment was declined."
+);
 
-```kotlin
-val outcome = Outcome.of(
-    StandardOutcomes.NOT_FOUND,
-    detail = "customerId=123",
-)
+Outcome outcome = Outcome.of(paymentDeclined);
 
-if (outcome.isFailed) {
-    println(outcome.code)     // io.github.aalsanie.codes.standard:NOT_FOUND
-    println(outcome.message)  // The requested resource was not found.
-    println(outcome.detail)   // customerId=123
-}
+HttpOutcomeMapper http = HttpOutcomeMapper.standard()
+    .withMapping(paymentDeclined, HttpStatusCode.of(422));
+
+GrpcOutcomeMapper grpc = GrpcOutcomeMapper.standard()
+    .withMapping(paymentDeclined, GrpcStatusCode.FAILED_PRECONDITION);
 ```
 
-`OutcomeCode` is the stable machine identity. `message` comes from the outcome definition and `detail` is per-occurrence context.
+`OutcomeCode` is the stable machine identity. Protocol mappings do not change that identity.
 
 ## Standard outcomes
-
-A common outcome catalog:
 
 ```text
 OK
@@ -72,125 +82,94 @@ DATA_LOSS
 RESOURCE_EXHAUSTED
 ```
 
-`OK` is the standard successful outcome. Applications can define their own success, pending, or failure outcomes when the standard catalog does not match the operation.
+`OK` is the standard successful outcome. Applications define domain-specific success, pending, and failure outcomes when the standard catalog does not match the operation.
 
-## Validation
-
-```kotlin
-val validation = ValidationResult.invalid(
-    Issue.at("email", "Invalid email address."),
-)
-
-val outcome = validation.toOutcome(
-    StandardOutcomes.INVALID_ARGUMENT,
-    "Request validation failed",
-)
-```
-
-Combine independent validation results when needed:
-
-```kotlin
-val result = ValidationResult.combine(
-    emailValidation,
-    nameValidation,
-)
-```
-
-A valid result converts to `StandardOutcomes.OK`. An invalid result converts to the supplied failed outcome and keeps its issues.
-
-## Custom outcomes
-
-```kotlin
-val paymentDeclined = OutcomeDefinition.custom(
-    namespace = "com.example.payments",
-    name = "PAYMENT_DECLINED",
-    state = OutcomeState.FAILED,
-    defaultMessage = "The payment was declined.",
-)
-
-val outcome = Outcome.of(
-    paymentDeclined,
-    detail = "issuer declined",
-)
-```
-
-Custom codes use `namespace:NAME`:
-
-* namespaces are lowercase dot-separated names such as `com.example.payments`
-* names use uppercase letters, digits, and underscores such as `PAYMENT_DECLINED`
-* `io.github.aalsanie.codes` and its child namespaces are reserved
-
-## HTTP
-
-```kotlin
-val mapper = HttpOutcomeMapper.standard()
-
-val status = mapper
-    .map(StandardOutcomes.NOT_FOUND)
-    .orNull()
-
-check(status == HttpStatusCode.NOT_FOUND)
-```
-
-Add a custom mapping without changing the original mapper:
-
-```kotlin
-val mapper = HttpOutcomeMapper.standard()
-    .withMapping(paymentDeclined, HttpStatusCode.of(422))
-```
-
-Some standard outcomes are left unmapped for HTTP where the correct status depends on the application.
-
-HTTP status codes such as `CREATED`, `ACCEPTED`, `NO_CONTENT`, and `PAYLOAD_TOO_LARGE` remain available for custom mappings.
-
-See [HTTP and gRPC mappings](docs/protocol-mappings.md).
-
-## gRPC
-
-```kotlin
-val status = GrpcOutcomeMapper.standard()
-    .map(StandardOutcomes.NOT_FOUND)
-    .orNull()
-
-check(status == GrpcStatusCode.NOT_FOUND)
-```
-
-The standard gRPC mapper covers all standard outcomes.
-
-For example:
-
-```text
-RATE_LIMITED        -> RESOURCE_EXHAUSTED
-RESOURCE_EXHAUSTED  -> RESOURCE_EXHAUSTED
-```
-
-Different application outcomes can map to the same protocol status while keeping their own identity inside the application.
-
-## Java
-
-The same API is directly usable from Java:
+## Runtime occurrences
 
 ```java
 Outcome outcome = Outcome.of(
     StandardOutcomes.NOT_FOUND,
-    "customer 123"
+    "customerId=123"
 );
 
+System.out.println(outcome.getCode());
+System.out.println(outcome.getMessage());
+System.out.println(outcome.getDetail());
+```
+
+`message` comes from the reusable definition. `detail` belongs to one occurrence and is not exposed by framework adapters unless the application explicitly enables that exposure.
+
+## Structured issues
+
+```java
+ValidationResult validation = ValidationResult.invalid(
+    Issue.at("email", "Invalid email address.")
+);
+
+Outcome outcome = validation.toOutcome(StandardOutcomes.INVALID_ARGUMENT);
+```
+
+`ValidationResult` is a small convenience for aggregating issues. It is not intended to replace an application's result, validation, or functional programming model.
+
+## HTTP
+
+```java
 HttpStatusCode status = HttpOutcomeMapper.standard()
-    .map(outcome)
+    .map(StandardOutcomes.NOT_FOUND)
     .orNull();
 
-ValidationResult validation =
-    ValidationResult.invalid(Issue.at("email", "Invalid email address."));
-
-Outcome validationOutcome =
-    validation.toOutcome(StandardOutcomes.INVALID_ARGUMENT);
+assert status == HttpStatusCode.NOT_FOUND;
 ```
+
+Some standard outcomes are intentionally left unmapped for HTTP when the correct status depends on the application.
+
+## gRPC
+
+```java
+GrpcStatusCode status = GrpcOutcomeMapper.standard()
+    .map(StandardOutcomes.NOT_FOUND)
+    .orNull();
+
+assert status == GrpcStatusCode.NOT_FOUND;
+```
+
+The standard gRPC mapper covers all standard outcomes.
+
+## Kotlin
+
+Java getters and static factories are directly usable as Kotlin properties and calls:
+
+```kotlin
+val outcome = Outcome.of(StandardOutcomes.NOT_FOUND, "customerId=123")
+val status = HttpOutcomeMapper.standard().map(outcome).orNull()
+
+check(outcome.code == StandardOutcomes.NOT_FOUND.code)
+check(status?.value == 404)
+```
+
+The repository contains Gradle and Maven consumer builds. CI also compiles a Kotlin Maven consumer against multiple Kotlin compiler generations; see [compatibility policy](docs/compatibility-policy.md).
+
+## Framework integrations
+
+The `0.3.0` Maven release contains the dependency-free core only.
+
+This repository also contains production-oriented `0.4.0-SNAPSHOT` adapters under:
+
+```text
+codes-spring/
+codes-grpc-java/
+```
+
+They are built and tested in CI but are intentionally not published with `0.3.0`. Reference applications under `reference/` first implement the integration manually and document the policy that the adapters remove.
 
 ## Reference
 
 * [Semantic contract](docs/semantic-contract.md)
 * [HTTP and gRPC mappings](docs/protocol-mappings.md)
+* [Compatibility policy](docs/compatibility-policy.md)
+* [Boundary exposure](docs/boundary-exposure.md)
+* [Integration guide](docs/integration-guide.md)
+* [Roadmap](docs/roadmap.md)
 
 ## License
 

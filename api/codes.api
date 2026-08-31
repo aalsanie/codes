@@ -1,323 +1,223 @@
-public final class io/github/aalsanie/codes/Issue {
-	public static final field Companion Lio/github/aalsanie/codes/Issue$Companion;
-	public static final fun at (Ljava/lang/String;Lio/github/aalsanie/codes/OutcomeCode;Ljava/lang/String;)Lio/github/aalsanie/codes/Issue;
-	public static final fun at (Ljava/lang/String;Ljava/lang/String;)Lio/github/aalsanie/codes/Issue;
-	public static final fun coded (Lio/github/aalsanie/codes/OutcomeCode;Ljava/lang/String;)Lio/github/aalsanie/codes/Issue;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getCode ()Lio/github/aalsanie/codes/OutcomeCode;
-	public final fun getMessage ()Ljava/lang/String;
-	public final fun getPath ()Ljava/lang/String;
-	public fun hashCode ()I
-	public static final fun of (Ljava/lang/String;)Lio/github/aalsanie/codes/Issue;
-	public fun toString ()Ljava/lang/String;
-}
+public final class io.github.aalsanie.codes.Issue
+  method public boolean equals(java.lang.Object)
+  method public int hashCode()
+  method public io.github.aalsanie.codes.OutcomeCode getCode()
+  method public java.lang.String getMessage()
+  method public java.lang.String getPath()
+  method public java.lang.String toString()
+  method public static io.github.aalsanie.codes.Issue at(java.lang.String, io.github.aalsanie.codes.OutcomeCode, java.lang.String)
+  method public static io.github.aalsanie.codes.Issue at(java.lang.String, java.lang.String)
+  method public static io.github.aalsanie.codes.Issue coded(io.github.aalsanie.codes.OutcomeCode, java.lang.String)
+  method public static io.github.aalsanie.codes.Issue of(java.lang.String)
 
-public final class io/github/aalsanie/codes/Issue$Companion {
-	public final fun at (Ljava/lang/String;Lio/github/aalsanie/codes/OutcomeCode;Ljava/lang/String;)Lio/github/aalsanie/codes/Issue;
-	public final fun at (Ljava/lang/String;Ljava/lang/String;)Lio/github/aalsanie/codes/Issue;
-	public final fun coded (Lio/github/aalsanie/codes/OutcomeCode;Ljava/lang/String;)Lio/github/aalsanie/codes/Issue;
-	public final fun of (Ljava/lang/String;)Lio/github/aalsanie/codes/Issue;
-}
+public abstract class io.github.aalsanie.codes.MappingResult<T> permits io.github.aalsanie.codes.MappingResult$Mapped, io.github.aalsanie.codes.MappingResult$Unmapped
+  method public abstract T orNull()
+  method public abstract boolean isMapped()
+  method public final R fold(java.util.function.Function<? super T, ? extends R>, java.util.function.Supplier<? extends R>)
+  method public final boolean isUnmapped()
+  method public static io.github.aalsanie.codes.MappingResult<T> mapped(T)
+  method public static io.github.aalsanie.codes.MappingResult<T> unmapped()
 
-public abstract class io/github/aalsanie/codes/MappingResult {
-	public static final field Companion Lio/github/aalsanie/codes/MappingResult$Companion;
-	public final fun fold (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;)Ljava/lang/Object;
-	public final fun isMapped ()Z
-	public final fun isUnmapped ()Z
-	public static final fun mapped (Ljava/lang/Object;)Lio/github/aalsanie/codes/MappingResult;
-	public final fun orNull ()Ljava/lang/Object;
-	public static final fun unmapped ()Lio/github/aalsanie/codes/MappingResult;
-}
+public static final class io.github.aalsanie.codes.MappingResult$Mapped<T> extends io.github.aalsanie.codes.MappingResult<T>
+  method public T getValue()
+  method public T orNull()
+  method public boolean equals(java.lang.Object)
+  method public boolean isMapped()
+  method public int hashCode()
+  method public java.lang.String toString()
 
-public final class io/github/aalsanie/codes/MappingResult$Companion {
-	public final fun mapped (Ljava/lang/Object;)Lio/github/aalsanie/codes/MappingResult;
-	public final fun unmapped ()Lio/github/aalsanie/codes/MappingResult;
-}
+public static final class io.github.aalsanie.codes.MappingResult$Unmapped<T> extends io.github.aalsanie.codes.MappingResult<T>
+  method public T orNull()
+  method public boolean equals(java.lang.Object)
+  method public boolean isMapped()
+  method public int hashCode()
+  method public java.lang.String toString()
 
-public final class io/github/aalsanie/codes/MappingResult$Mapped : io/github/aalsanie/codes/MappingResult {
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getValue ()Ljava/lang/Object;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
+public final class io.github.aalsanie.codes.Outcome
+  method public boolean isFailed()
+  method public boolean isPending()
+  method public boolean isSuccessful()
+  method public boolean isTerminal()
+  method public io.github.aalsanie.codes.OutcomeCode getCode()
+  method public io.github.aalsanie.codes.OutcomeDefinition getDefinition()
+  method public io.github.aalsanie.codes.OutcomeState getState()
+  method public java.lang.String getDefaultMessage()
+  method public java.lang.String getDetail()
+  method public java.lang.String getMessage()
+  method public java.lang.String toString()
+  method public java.util.List<io.github.aalsanie.codes.Issue> getIssues()
+  method public static io.github.aalsanie.codes.Outcome of(io.github.aalsanie.codes.OutcomeDefinition)
+  method public static io.github.aalsanie.codes.Outcome of(io.github.aalsanie.codes.OutcomeDefinition, java.lang.String)
+  method public static io.github.aalsanie.codes.Outcome of(io.github.aalsanie.codes.OutcomeDefinition, java.lang.String, java.util.List<io.github.aalsanie.codes.Issue>)
 
-public final class io/github/aalsanie/codes/MappingResult$Unmapped : io/github/aalsanie/codes/MappingResult {
-	public static final field INSTANCE Lio/github/aalsanie/codes/MappingResult$Unmapped;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
+public final class io.github.aalsanie.codes.OutcomeCode implements java.lang.Comparable<io.github.aalsanie.codes.OutcomeCode>
+  method public boolean equals(java.lang.Object)
+  method public int compareTo(io.github.aalsanie.codes.OutcomeCode)
+  method public int hashCode()
+  method public java.lang.String getName()
+  method public java.lang.String getNamespace()
+  method public java.lang.String getValue()
+  method public java.lang.String toString()
+  method public static io.github.aalsanie.codes.OutcomeCode of(java.lang.String, java.lang.String)
+  method public static io.github.aalsanie.codes.OutcomeCode parse(java.lang.String)
+  method public static io.github.aalsanie.codes.OutcomeCode parseOrNull(java.lang.String)
 
-public final class io/github/aalsanie/codes/Outcome {
-	public static final field Companion Lio/github/aalsanie/codes/Outcome$Companion;
-	public final fun getCode ()Lio/github/aalsanie/codes/OutcomeCode;
-	public final fun getDefaultMessage ()Ljava/lang/String;
-	public final fun getDefinition ()Lio/github/aalsanie/codes/OutcomeDefinition;
-	public final fun getDetail ()Ljava/lang/String;
-	public final fun getIssues ()Ljava/util/List;
-	public final fun getMessage ()Ljava/lang/String;
-	public final fun getState ()Lio/github/aalsanie/codes/OutcomeState;
-	public final fun isFailed ()Z
-	public final fun isPending ()Z
-	public final fun isSuccessful ()Z
-	public final fun isTerminal ()Z
-	public static final fun of (Lio/github/aalsanie/codes/OutcomeDefinition;)Lio/github/aalsanie/codes/Outcome;
-	public static final fun of (Lio/github/aalsanie/codes/OutcomeDefinition;Ljava/lang/String;)Lio/github/aalsanie/codes/Outcome;
-	public static final fun of (Lio/github/aalsanie/codes/OutcomeDefinition;Ljava/lang/String;Ljava/util/List;)Lio/github/aalsanie/codes/Outcome;
-	public fun toString ()Ljava/lang/String;
-}
+public final class io.github.aalsanie.codes.OutcomeDefinition
+  method public io.github.aalsanie.codes.OutcomeCode getCode()
+  method public io.github.aalsanie.codes.OutcomeState getState()
+  method public java.lang.String getDefaultMessage()
+  method public java.lang.String toString()
+  method public static io.github.aalsanie.codes.OutcomeDefinition custom(io.github.aalsanie.codes.OutcomeCode, io.github.aalsanie.codes.OutcomeState, java.lang.String)
+  method public static io.github.aalsanie.codes.OutcomeDefinition custom(java.lang.String, java.lang.String, io.github.aalsanie.codes.OutcomeState, java.lang.String)
 
-public final class io/github/aalsanie/codes/Outcome$Companion {
-	public final fun of (Lio/github/aalsanie/codes/OutcomeDefinition;)Lio/github/aalsanie/codes/Outcome;
-	public final fun of (Lio/github/aalsanie/codes/OutcomeDefinition;Ljava/lang/String;)Lio/github/aalsanie/codes/Outcome;
-	public final fun of (Lio/github/aalsanie/codes/OutcomeDefinition;Ljava/lang/String;Ljava/util/List;)Lio/github/aalsanie/codes/Outcome;
-	public static synthetic fun of$default (Lio/github/aalsanie/codes/Outcome$Companion;Lio/github/aalsanie/codes/OutcomeDefinition;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lio/github/aalsanie/codes/Outcome;
-}
+public final class io.github.aalsanie.codes.OutcomeException extends java.lang.RuntimeException
+  ctor public (io.github.aalsanie.codes.Outcome)
+  ctor public (io.github.aalsanie.codes.Outcome, java.lang.Throwable)
+  method public io.github.aalsanie.codes.Outcome getOutcome()
 
-public final class io/github/aalsanie/codes/OutcomeCode : java/lang/Comparable {
-	public static final field Companion Lio/github/aalsanie/codes/OutcomeCode$Companion;
-	public fun compareTo (Lio/github/aalsanie/codes/OutcomeCode;)I
-	public synthetic fun compareTo (Ljava/lang/Object;)I
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getName ()Ljava/lang/String;
-	public final fun getNamespace ()Ljava/lang/String;
-	public final fun getValue ()Ljava/lang/String;
-	public fun hashCode ()I
-	public static final fun of (Ljava/lang/String;Ljava/lang/String;)Lio/github/aalsanie/codes/OutcomeCode;
-	public static final fun parse (Ljava/lang/String;)Lio/github/aalsanie/codes/OutcomeCode;
-	public static final fun parseOrNull (Ljava/lang/String;)Lio/github/aalsanie/codes/OutcomeCode;
-	public fun toString ()Ljava/lang/String;
-}
+public final class io.github.aalsanie.codes.OutcomeExceptions
+  method public static io.github.aalsanie.codes.OutcomeException toException(io.github.aalsanie.codes.Outcome)
+  method public static io.github.aalsanie.codes.OutcomeException toException(io.github.aalsanie.codes.Outcome, java.lang.Throwable)
 
-public final class io/github/aalsanie/codes/OutcomeCode$Companion {
-	public final fun of (Ljava/lang/String;Ljava/lang/String;)Lio/github/aalsanie/codes/OutcomeCode;
-	public final fun parse (Ljava/lang/String;)Lio/github/aalsanie/codes/OutcomeCode;
-	public final fun parseOrNull (Ljava/lang/String;)Lio/github/aalsanie/codes/OutcomeCode;
-}
+public abstract interface io.github.aalsanie.codes.OutcomeMapper<T>
+  method public abstract io.github.aalsanie.codes.MappingResult<T> map(io.github.aalsanie.codes.OutcomeDefinition)
+  method public io.github.aalsanie.codes.MappingResult<T> map(io.github.aalsanie.codes.Outcome)
 
-public final class io/github/aalsanie/codes/OutcomeDefinition {
-	public static final field Companion Lio/github/aalsanie/codes/OutcomeDefinition$Companion;
-	public static final fun custom (Lio/github/aalsanie/codes/OutcomeCode;Lio/github/aalsanie/codes/OutcomeState;Ljava/lang/String;)Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final fun custom (Ljava/lang/String;Ljava/lang/String;Lio/github/aalsanie/codes/OutcomeState;Ljava/lang/String;)Lio/github/aalsanie/codes/OutcomeDefinition;
-	public final fun getCode ()Lio/github/aalsanie/codes/OutcomeCode;
-	public final fun getDefaultMessage ()Ljava/lang/String;
-	public final fun getState ()Lio/github/aalsanie/codes/OutcomeState;
-	public fun toString ()Ljava/lang/String;
-}
+public final class io.github.aalsanie.codes.OutcomeRegistry
+  method public boolean contains(io.github.aalsanie.codes.OutcomeCode)
+  method public int getSize()
+  method public io.github.aalsanie.codes.OutcomeDefinition find(io.github.aalsanie.codes.OutcomeCode)
+  method public io.github.aalsanie.codes.OutcomeDefinition find(java.lang.String)
+  method public io.github.aalsanie.codes.OutcomeDefinition require(io.github.aalsanie.codes.OutcomeCode)
+  method public io.github.aalsanie.codes.OutcomeRegistry with(io.github.aalsanie.codes.OutcomeDefinition)
+  method public io.github.aalsanie.codes.OutcomeRegistry withAll(java.lang.Iterable<io.github.aalsanie.codes.OutcomeDefinition>)
+  method public java.util.List<io.github.aalsanie.codes.OutcomeDefinition> definitions()
+  method public static io.github.aalsanie.codes.OutcomeRegistry empty()
+  method public static io.github.aalsanie.codes.OutcomeRegistry of(io.github.aalsanie.codes.OutcomeDefinition[])
+  method public static io.github.aalsanie.codes.OutcomeRegistry standard()
 
-public final class io/github/aalsanie/codes/OutcomeDefinition$Companion {
-	public final fun custom (Lio/github/aalsanie/codes/OutcomeCode;Lio/github/aalsanie/codes/OutcomeState;Ljava/lang/String;)Lio/github/aalsanie/codes/OutcomeDefinition;
-	public final fun custom (Ljava/lang/String;Ljava/lang/String;Lio/github/aalsanie/codes/OutcomeState;Ljava/lang/String;)Lio/github/aalsanie/codes/OutcomeDefinition;
-}
+public final enum io.github.aalsanie.codes.OutcomeState
+  field public static final io.github.aalsanie.codes.OutcomeState FAILED
+  field public static final io.github.aalsanie.codes.OutcomeState PENDING
+  field public static final io.github.aalsanie.codes.OutcomeState SUCCEEDED
+  method public static io.github.aalsanie.codes.OutcomeState valueOf(java.lang.String)
+  method public static io.github.aalsanie.codes.OutcomeState[] values()
 
-public final class io/github/aalsanie/codes/OutcomeException : java/lang/RuntimeException {
-	public fun <init> (Lio/github/aalsanie/codes/Outcome;)V
-	public fun <init> (Lio/github/aalsanie/codes/Outcome;Ljava/lang/Throwable;)V
-	public synthetic fun <init> (Lio/github/aalsanie/codes/Outcome;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun getOutcome ()Lio/github/aalsanie/codes/Outcome;
-}
+public final class io.github.aalsanie.codes.StandardOutcomes
+  field public static final io.github.aalsanie.codes.OutcomeDefinition ABORTED
+  field public static final io.github.aalsanie.codes.OutcomeDefinition ALREADY_EXISTS
+  field public static final io.github.aalsanie.codes.OutcomeDefinition CANCELLED
+  field public static final io.github.aalsanie.codes.OutcomeDefinition DATA_LOSS
+  field public static final io.github.aalsanie.codes.OutcomeDefinition DEADLINE_EXCEEDED
+  field public static final io.github.aalsanie.codes.OutcomeDefinition FAILED_PRECONDITION
+  field public static final io.github.aalsanie.codes.OutcomeDefinition INTERNAL
+  field public static final io.github.aalsanie.codes.OutcomeDefinition INVALID_ARGUMENT
+  field public static final io.github.aalsanie.codes.OutcomeDefinition NOT_FOUND
+  field public static final io.github.aalsanie.codes.OutcomeDefinition OK
+  field public static final io.github.aalsanie.codes.OutcomeDefinition OUT_OF_RANGE
+  field public static final io.github.aalsanie.codes.OutcomeDefinition PERMISSION_DENIED
+  field public static final io.github.aalsanie.codes.OutcomeDefinition RATE_LIMITED
+  field public static final io.github.aalsanie.codes.OutcomeDefinition RESOURCE_EXHAUSTED
+  field public static final io.github.aalsanie.codes.OutcomeDefinition UNAUTHENTICATED
+  field public static final io.github.aalsanie.codes.OutcomeDefinition UNAVAILABLE
+  field public static final io.github.aalsanie.codes.OutcomeDefinition UNIMPLEMENTED
+  field public static final java.lang.String NAMESPACE
+  field public static final java.util.List<io.github.aalsanie.codes.OutcomeDefinition> all
 
-public final class io/github/aalsanie/codes/OutcomeExceptions {
-	public static final fun toException (Lio/github/aalsanie/codes/Outcome;)Lio/github/aalsanie/codes/OutcomeException;
-	public static final fun toException (Lio/github/aalsanie/codes/Outcome;Ljava/lang/Throwable;)Lio/github/aalsanie/codes/OutcomeException;
-	public static synthetic fun toException$default (Lio/github/aalsanie/codes/Outcome;Ljava/lang/Throwable;ILjava/lang/Object;)Lio/github/aalsanie/codes/OutcomeException;
-}
+public abstract class io.github.aalsanie.codes.ValidationResult permits io.github.aalsanie.codes.ValidationResult$Invalid, io.github.aalsanie.codes.ValidationResult$Valid
+  method public abstract java.util.List<io.github.aalsanie.codes.Issue> issues()
+  method public final boolean isInvalid()
+  method public final boolean isValid()
+  method public final io.github.aalsanie.codes.Outcome toOutcome(io.github.aalsanie.codes.OutcomeDefinition)
+  method public final io.github.aalsanie.codes.Outcome toOutcome(io.github.aalsanie.codes.OutcomeDefinition, java.lang.String)
+  method public static io.github.aalsanie.codes.ValidationResult combine(io.github.aalsanie.codes.ValidationResult[])
+  method public static io.github.aalsanie.codes.ValidationResult combine(java.util.List<io.github.aalsanie.codes.ValidationResult>)
+  method public static io.github.aalsanie.codes.ValidationResult invalid(io.github.aalsanie.codes.Issue)
+  method public static io.github.aalsanie.codes.ValidationResult invalid(java.util.List<io.github.aalsanie.codes.Issue>)
+  method public static io.github.aalsanie.codes.ValidationResult valid()
 
-public abstract interface class io/github/aalsanie/codes/OutcomeMapper {
-	public fun map (Lio/github/aalsanie/codes/Outcome;)Lio/github/aalsanie/codes/MappingResult;
-	public abstract fun map (Lio/github/aalsanie/codes/OutcomeDefinition;)Lio/github/aalsanie/codes/MappingResult;
-}
+public static final class io.github.aalsanie.codes.ValidationResult$Invalid extends io.github.aalsanie.codes.ValidationResult
+  method public boolean equals(java.lang.Object)
+  method public int hashCode()
+  method public java.lang.String toString()
+  method public java.util.List<io.github.aalsanie.codes.Issue> getIssues()
+  method public java.util.List<io.github.aalsanie.codes.Issue> issues()
 
-public final class io/github/aalsanie/codes/OutcomeRegistry {
-	public static final field Companion Lio/github/aalsanie/codes/OutcomeRegistry$Companion;
-	public final fun contains (Lio/github/aalsanie/codes/OutcomeCode;)Z
-	public final fun definitions ()Ljava/util/List;
-	public static final fun empty ()Lio/github/aalsanie/codes/OutcomeRegistry;
-	public final fun find (Lio/github/aalsanie/codes/OutcomeCode;)Lio/github/aalsanie/codes/OutcomeDefinition;
-	public final fun find (Ljava/lang/String;)Lio/github/aalsanie/codes/OutcomeDefinition;
-	public final fun getSize ()I
-	public static final fun of ([Lio/github/aalsanie/codes/OutcomeDefinition;)Lio/github/aalsanie/codes/OutcomeRegistry;
-	public final fun require (Lio/github/aalsanie/codes/OutcomeCode;)Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final fun standard ()Lio/github/aalsanie/codes/OutcomeRegistry;
-	public final fun with (Lio/github/aalsanie/codes/OutcomeDefinition;)Lio/github/aalsanie/codes/OutcomeRegistry;
-	public final fun withAll (Ljava/lang/Iterable;)Lio/github/aalsanie/codes/OutcomeRegistry;
-}
+public static final class io.github.aalsanie.codes.ValidationResult$Valid extends io.github.aalsanie.codes.ValidationResult
+  method public boolean equals(java.lang.Object)
+  method public int hashCode()
+  method public java.lang.String toString()
+  method public java.util.List<io.github.aalsanie.codes.Issue> issues()
 
-public final class io/github/aalsanie/codes/OutcomeRegistry$Companion {
-	public final fun empty ()Lio/github/aalsanie/codes/OutcomeRegistry;
-	public final fun of ([Lio/github/aalsanie/codes/OutcomeDefinition;)Lio/github/aalsanie/codes/OutcomeRegistry;
-	public final fun standard ()Lio/github/aalsanie/codes/OutcomeRegistry;
-}
+public final class io.github.aalsanie.codes.protocol.grpc.GrpcOutcomeMapper implements io.github.aalsanie.codes.OutcomeMapper<io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode>
+  method public boolean contains(io.github.aalsanie.codes.OutcomeCode)
+  method public int getSize()
+  method public io.github.aalsanie.codes.MappingResult<io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode> map(io.github.aalsanie.codes.OutcomeDefinition)
+  method public io.github.aalsanie.codes.protocol.grpc.GrpcOutcomeMapper withMapping(io.github.aalsanie.codes.OutcomeDefinition, io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode)
+  method public io.github.aalsanie.codes.protocol.grpc.GrpcOutcomeMapper withOverride(io.github.aalsanie.codes.OutcomeDefinition, io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode)
+  method public java.util.Map<io.github.aalsanie.codes.OutcomeCode, io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode> mappings()
+  method public static io.github.aalsanie.codes.protocol.grpc.GrpcOutcomeMapper empty()
+  method public static io.github.aalsanie.codes.protocol.grpc.GrpcOutcomeMapper standard()
 
-public final class io/github/aalsanie/codes/OutcomeState : java/lang/Enum {
-	public static final field FAILED Lio/github/aalsanie/codes/OutcomeState;
-	public static final field PENDING Lio/github/aalsanie/codes/OutcomeState;
-	public static final field SUCCEEDED Lio/github/aalsanie/codes/OutcomeState;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lio/github/aalsanie/codes/OutcomeState;
-	public static fun values ()[Lio/github/aalsanie/codes/OutcomeState;
-}
+public final enum io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode
+  field public static final io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode ABORTED
+  field public static final io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode ALREADY_EXISTS
+  field public static final io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode CANCELLED
+  field public static final io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode DATA_LOSS
+  field public static final io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode DEADLINE_EXCEEDED
+  field public static final io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode FAILED_PRECONDITION
+  field public static final io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode INTERNAL
+  field public static final io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode INVALID_ARGUMENT
+  field public static final io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode NOT_FOUND
+  field public static final io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode OK
+  field public static final io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode OUT_OF_RANGE
+  field public static final io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode PERMISSION_DENIED
+  field public static final io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode RESOURCE_EXHAUSTED
+  field public static final io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode UNAUTHENTICATED
+  field public static final io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode UNAVAILABLE
+  field public static final io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode UNIMPLEMENTED
+  field public static final io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode UNKNOWN
+  method public int getValue()
+  method public static io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode fromValue(int)
+  method public static io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode valueOf(java.lang.String)
+  method public static io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode[] values()
 
-public final class io/github/aalsanie/codes/StandardOutcomes {
-	public static final field ABORTED Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final field ALREADY_EXISTS Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final field CANCELLED Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final field DATA_LOSS Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final field DEADLINE_EXCEEDED Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final field FAILED_PRECONDITION Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final field INSTANCE Lio/github/aalsanie/codes/StandardOutcomes;
-	public static final field INTERNAL Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final field INVALID_ARGUMENT Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final field NAMESPACE Ljava/lang/String;
-	public static final field NOT_FOUND Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final field OK Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final field OUT_OF_RANGE Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final field PERMISSION_DENIED Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final field RATE_LIMITED Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final field RESOURCE_EXHAUSTED Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final field UNAUTHENTICATED Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final field UNAVAILABLE Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final field UNIMPLEMENTED Lio/github/aalsanie/codes/OutcomeDefinition;
-	public static final field all Ljava/util/List;
-}
+public final class io.github.aalsanie.codes.protocol.http.HttpOutcomeMapper implements io.github.aalsanie.codes.OutcomeMapper<io.github.aalsanie.codes.protocol.http.HttpStatusCode>
+  method public boolean contains(io.github.aalsanie.codes.OutcomeCode)
+  method public int getSize()
+  method public io.github.aalsanie.codes.MappingResult<io.github.aalsanie.codes.protocol.http.HttpStatusCode> map(io.github.aalsanie.codes.OutcomeDefinition)
+  method public io.github.aalsanie.codes.protocol.http.HttpOutcomeMapper withMapping(io.github.aalsanie.codes.OutcomeDefinition, io.github.aalsanie.codes.protocol.http.HttpStatusCode)
+  method public io.github.aalsanie.codes.protocol.http.HttpOutcomeMapper withOverride(io.github.aalsanie.codes.OutcomeDefinition, io.github.aalsanie.codes.protocol.http.HttpStatusCode)
+  method public java.util.Map<io.github.aalsanie.codes.OutcomeCode, io.github.aalsanie.codes.protocol.http.HttpStatusCode> mappings()
+  method public static io.github.aalsanie.codes.protocol.http.HttpOutcomeMapper empty()
+  method public static io.github.aalsanie.codes.protocol.http.HttpOutcomeMapper standard()
 
-public abstract class io/github/aalsanie/codes/ValidationResult {
-	public static final field Companion Lio/github/aalsanie/codes/ValidationResult$Companion;
-	public static final fun combine (Ljava/util/List;)Lio/github/aalsanie/codes/ValidationResult;
-	public static final fun combine ([Lio/github/aalsanie/codes/ValidationResult;)Lio/github/aalsanie/codes/ValidationResult;
-	public static final fun invalid (Lio/github/aalsanie/codes/Issue;)Lio/github/aalsanie/codes/ValidationResult;
-	public static final fun invalid (Ljava/util/List;)Lio/github/aalsanie/codes/ValidationResult;
-	public final fun isInvalid ()Z
-	public final fun isValid ()Z
-	public final fun issues ()Ljava/util/List;
-	public final fun toOutcome (Lio/github/aalsanie/codes/OutcomeDefinition;)Lio/github/aalsanie/codes/Outcome;
-	public final fun toOutcome (Lio/github/aalsanie/codes/OutcomeDefinition;Ljava/lang/String;)Lio/github/aalsanie/codes/Outcome;
-	public static synthetic fun toOutcome$default (Lio/github/aalsanie/codes/ValidationResult;Lio/github/aalsanie/codes/OutcomeDefinition;Ljava/lang/String;ILjava/lang/Object;)Lio/github/aalsanie/codes/Outcome;
-	public static final fun valid ()Lio/github/aalsanie/codes/ValidationResult;
-}
-
-public final class io/github/aalsanie/codes/ValidationResult$Companion {
-	public final fun combine (Ljava/util/List;)Lio/github/aalsanie/codes/ValidationResult;
-	public final fun combine ([Lio/github/aalsanie/codes/ValidationResult;)Lio/github/aalsanie/codes/ValidationResult;
-	public final fun invalid (Lio/github/aalsanie/codes/Issue;)Lio/github/aalsanie/codes/ValidationResult;
-	public final fun invalid (Ljava/util/List;)Lio/github/aalsanie/codes/ValidationResult;
-	public final fun valid ()Lio/github/aalsanie/codes/ValidationResult;
-}
-
-public final class io/github/aalsanie/codes/ValidationResult$Invalid : io/github/aalsanie/codes/ValidationResult {
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getIssues ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class io/github/aalsanie/codes/ValidationResult$Valid : io/github/aalsanie/codes/ValidationResult {
-	public static final field INSTANCE Lio/github/aalsanie/codes/ValidationResult$Valid;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class io/github/aalsanie/codes/protocol/grpc/GrpcOutcomeMapper : io/github/aalsanie/codes/OutcomeMapper {
-	public static final field Companion Lio/github/aalsanie/codes/protocol/grpc/GrpcOutcomeMapper$Companion;
-	public final fun contains (Lio/github/aalsanie/codes/OutcomeCode;)Z
-	public static final fun empty ()Lio/github/aalsanie/codes/protocol/grpc/GrpcOutcomeMapper;
-	public final fun getSize ()I
-	public fun map (Lio/github/aalsanie/codes/Outcome;)Lio/github/aalsanie/codes/MappingResult;
-	public fun map (Lio/github/aalsanie/codes/OutcomeDefinition;)Lio/github/aalsanie/codes/MappingResult;
-	public final fun mappings ()Ljava/util/Map;
-	public static final fun standard ()Lio/github/aalsanie/codes/protocol/grpc/GrpcOutcomeMapper;
-	public final fun withMapping (Lio/github/aalsanie/codes/OutcomeDefinition;Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;)Lio/github/aalsanie/codes/protocol/grpc/GrpcOutcomeMapper;
-	public final fun withOverride (Lio/github/aalsanie/codes/OutcomeDefinition;Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;)Lio/github/aalsanie/codes/protocol/grpc/GrpcOutcomeMapper;
-}
-
-public final class io/github/aalsanie/codes/protocol/grpc/GrpcOutcomeMapper$Companion {
-	public final fun empty ()Lio/github/aalsanie/codes/protocol/grpc/GrpcOutcomeMapper;
-	public final fun standard ()Lio/github/aalsanie/codes/protocol/grpc/GrpcOutcomeMapper;
-}
-
-public final class io/github/aalsanie/codes/protocol/grpc/GrpcStatusCode : java/lang/Enum {
-	public static final field ABORTED Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;
-	public static final field ALREADY_EXISTS Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;
-	public static final field CANCELLED Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;
-	public static final field Companion Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode$Companion;
-	public static final field DATA_LOSS Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;
-	public static final field DEADLINE_EXCEEDED Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;
-	public static final field FAILED_PRECONDITION Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;
-	public static final field INTERNAL Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;
-	public static final field INVALID_ARGUMENT Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;
-	public static final field NOT_FOUND Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;
-	public static final field OK Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;
-	public static final field OUT_OF_RANGE Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;
-	public static final field PERMISSION_DENIED Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;
-	public static final field RESOURCE_EXHAUSTED Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;
-	public static final field UNAUTHENTICATED Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;
-	public static final field UNAVAILABLE Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;
-	public static final field UNIMPLEMENTED Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;
-	public static final field UNKNOWN Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;
-	public static final fun fromValue (I)Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public final fun getValue ()I
-	public static fun valueOf (Ljava/lang/String;)Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;
-	public static fun values ()[Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;
-}
-
-public final class io/github/aalsanie/codes/protocol/grpc/GrpcStatusCode$Companion {
-	public final fun fromValue (I)Lio/github/aalsanie/codes/protocol/grpc/GrpcStatusCode;
-}
-
-public final class io/github/aalsanie/codes/protocol/http/HttpOutcomeMapper : io/github/aalsanie/codes/OutcomeMapper {
-	public static final field Companion Lio/github/aalsanie/codes/protocol/http/HttpOutcomeMapper$Companion;
-	public final fun contains (Lio/github/aalsanie/codes/OutcomeCode;)Z
-	public static final fun empty ()Lio/github/aalsanie/codes/protocol/http/HttpOutcomeMapper;
-	public final fun getSize ()I
-	public fun map (Lio/github/aalsanie/codes/Outcome;)Lio/github/aalsanie/codes/MappingResult;
-	public fun map (Lio/github/aalsanie/codes/OutcomeDefinition;)Lio/github/aalsanie/codes/MappingResult;
-	public final fun mappings ()Ljava/util/Map;
-	public static final fun standard ()Lio/github/aalsanie/codes/protocol/http/HttpOutcomeMapper;
-	public final fun withMapping (Lio/github/aalsanie/codes/OutcomeDefinition;Lio/github/aalsanie/codes/protocol/http/HttpStatusCode;)Lio/github/aalsanie/codes/protocol/http/HttpOutcomeMapper;
-	public final fun withOverride (Lio/github/aalsanie/codes/OutcomeDefinition;Lio/github/aalsanie/codes/protocol/http/HttpStatusCode;)Lio/github/aalsanie/codes/protocol/http/HttpOutcomeMapper;
-}
-
-public final class io/github/aalsanie/codes/protocol/http/HttpOutcomeMapper$Companion {
-	public final fun empty ()Lio/github/aalsanie/codes/protocol/http/HttpOutcomeMapper;
-	public final fun standard ()Lio/github/aalsanie/codes/protocol/http/HttpOutcomeMapper;
-}
-
-public final class io/github/aalsanie/codes/protocol/http/HttpStatusCode : java/lang/Comparable {
-	public static final field ACCEPTED Lio/github/aalsanie/codes/protocol/http/HttpStatusCode;
-	public static final field BAD_REQUEST Lio/github/aalsanie/codes/protocol/http/HttpStatusCode;
-	public static final field CONFLICT Lio/github/aalsanie/codes/protocol/http/HttpStatusCode;
-	public static final field CREATED Lio/github/aalsanie/codes/protocol/http/HttpStatusCode;
-	public static final field Companion Lio/github/aalsanie/codes/protocol/http/HttpStatusCode$Companion;
-	public static final field FORBIDDEN Lio/github/aalsanie/codes/protocol/http/HttpStatusCode;
-	public static final field GATEWAY_TIMEOUT Lio/github/aalsanie/codes/protocol/http/HttpStatusCode;
-	public static final field INTERNAL_SERVER_ERROR Lio/github/aalsanie/codes/protocol/http/HttpStatusCode;
-	public static final field NOT_FOUND Lio/github/aalsanie/codes/protocol/http/HttpStatusCode;
-	public static final field NOT_IMPLEMENTED Lio/github/aalsanie/codes/protocol/http/HttpStatusCode;
-	public static final field NO_CONTENT Lio/github/aalsanie/codes/protocol/http/HttpStatusCode;
-	public static final field OK Lio/github/aalsanie/codes/protocol/http/HttpStatusCode;
-	public static final field PAYLOAD_TOO_LARGE Lio/github/aalsanie/codes/protocol/http/HttpStatusCode;
-	public static final field PRECONDITION_FAILED Lio/github/aalsanie/codes/protocol/http/HttpStatusCode;
-	public static final field SERVICE_UNAVAILABLE Lio/github/aalsanie/codes/protocol/http/HttpStatusCode;
-	public static final field TOO_MANY_REQUESTS Lio/github/aalsanie/codes/protocol/http/HttpStatusCode;
-	public static final field UNAUTHORIZED Lio/github/aalsanie/codes/protocol/http/HttpStatusCode;
-	public fun compareTo (Lio/github/aalsanie/codes/protocol/http/HttpStatusCode;)I
-	public synthetic fun compareTo (Ljava/lang/Object;)I
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getFamily ()I
-	public final fun getValue ()I
-	public fun hashCode ()I
-	public final fun isClientError ()Z
-	public final fun isInformational ()Z
-	public final fun isRedirection ()Z
-	public final fun isServerError ()Z
-	public final fun isSuccessful ()Z
-	public static final fun of (I)Lio/github/aalsanie/codes/protocol/http/HttpStatusCode;
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class io/github/aalsanie/codes/protocol/http/HttpStatusCode$Companion {
-	public final fun of (I)Lio/github/aalsanie/codes/protocol/http/HttpStatusCode;
-}
-
+public final class io.github.aalsanie.codes.protocol.http.HttpStatusCode implements java.lang.Comparable<io.github.aalsanie.codes.protocol.http.HttpStatusCode>
+  field public static final io.github.aalsanie.codes.protocol.http.HttpStatusCode ACCEPTED
+  field public static final io.github.aalsanie.codes.protocol.http.HttpStatusCode BAD_REQUEST
+  field public static final io.github.aalsanie.codes.protocol.http.HttpStatusCode CONFLICT
+  field public static final io.github.aalsanie.codes.protocol.http.HttpStatusCode CREATED
+  field public static final io.github.aalsanie.codes.protocol.http.HttpStatusCode FORBIDDEN
+  field public static final io.github.aalsanie.codes.protocol.http.HttpStatusCode GATEWAY_TIMEOUT
+  field public static final io.github.aalsanie.codes.protocol.http.HttpStatusCode INTERNAL_SERVER_ERROR
+  field public static final io.github.aalsanie.codes.protocol.http.HttpStatusCode NOT_FOUND
+  field public static final io.github.aalsanie.codes.protocol.http.HttpStatusCode NOT_IMPLEMENTED
+  field public static final io.github.aalsanie.codes.protocol.http.HttpStatusCode NO_CONTENT
+  field public static final io.github.aalsanie.codes.protocol.http.HttpStatusCode OK
+  field public static final io.github.aalsanie.codes.protocol.http.HttpStatusCode PAYLOAD_TOO_LARGE
+  field public static final io.github.aalsanie.codes.protocol.http.HttpStatusCode PRECONDITION_FAILED
+  field public static final io.github.aalsanie.codes.protocol.http.HttpStatusCode SERVICE_UNAVAILABLE
+  field public static final io.github.aalsanie.codes.protocol.http.HttpStatusCode TOO_MANY_REQUESTS
+  field public static final io.github.aalsanie.codes.protocol.http.HttpStatusCode UNAUTHORIZED
+  method public boolean equals(java.lang.Object)
+  method public boolean isClientError()
+  method public boolean isInformational()
+  method public boolean isRedirection()
+  method public boolean isServerError()
+  method public boolean isSuccessful()
+  method public int compareTo(io.github.aalsanie.codes.protocol.http.HttpStatusCode)
+  method public int getFamily()
+  method public int getValue()
+  method public int hashCode()
+  method public java.lang.String toString()
+  method public static io.github.aalsanie.codes.protocol.http.HttpStatusCode of(int)

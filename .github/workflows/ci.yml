@@ -15,7 +15,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -30,25 +30,78 @@ jobs:
         with:
           cache-provider: basic
 
-      - name: Verify
-        run: ./gradlew clean check --stacktrace
+      - name: Verify core, adapters, and references
+        run: ./gradlew clean verifyAll publishToMavenLocal --stacktrace
 
-      - name: Publish locally
-        run: ./gradlew publishToMavenLocal --stacktrace
-
-      - name: Verify published artifact consumers
-        run: ./gradlew -p smoke-test clean check --stacktrace
-
-      - name: Verify pure Java consumer
+      - name: Verify Gradle Java consumer
         run: ./gradlew -p smoke-test-java clean check --stacktrace
+
+      - name: Verify Gradle Kotlin consumer
+        run: ./gradlew -p smoke-test-kotlin clean check --stacktrace
+
+      - name: Verify Maven Java consumer
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(./scripts/version.sh)"
+          mvn --batch-mode --no-transfer-progress \
+            -f smoke-test-maven-java/pom.xml \
+            -Dcodes.version="$version" \
+            clean verify
+
+      - name: Verify Maven Kotlin consumer
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(./scripts/version.sh)"
+          mvn --batch-mode --no-transfer-progress \
+            -f smoke-test-maven-kotlin/pom.xml \
+            -Dcodes.version="$version" \
+            -Dkotlin.version=2.4.10 \
+            clean verify
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
           name: coverage-reports
-          path: build/reports/kover
+          path: build/reports/jacoco
           if-no-files-found: error
           retention-days: 14
+
+  kotlin-consumers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        kotlin: ["1.9.24", "2.0.21", "2.1.21", "2.2.20", "2.4.10"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+        with:
+          cache-provider: basic
+
+      - name: Publish core locally
+        run: ./gradlew publishToMavenLocal --stacktrace
+
+      - name: Compile and run Kotlin consumer
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(./scripts/version.sh)"
+          mvn --batch-mode --no-transfer-progress \
+            -f smoke-test-maven-kotlin/pom.xml \
+            -Dcodes.version="$version" \
+            -Dkotlin.version="${{ matrix.kotlin }}" \
+            clean verify
 
   runtime-jdks:
     runs-on: ubuntu-latest
@@ -71,12 +124,12 @@ jobs:
         with:
           cache-provider: basic
 
-      - name: Test
-        run: ./gradlew test --stacktrace
+      - name: Test core on runtime JDK
+        run: ./gradlew :test --stacktrace
 
   operating-systems:
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
@@ -95,5 +148,5 @@ jobs:
         with:
           cache-provider: basic
 
-      - name: Test
-        run: ./gradlew test --stacktrace
+      - name: Test core and adapters
+        run: ./gradlew :test :codes-spring:test :codes-grpc-java:test --stacktrace

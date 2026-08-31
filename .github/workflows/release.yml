@@ -28,7 +28,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          version=$(awk -F= '$1 == "VERSION_NAME" { print $2 }' gradle.properties)
+          version="$(./scripts/version.sh)"
 
           [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
             echo "Invalid release version: $version"
@@ -51,16 +51,31 @@ jobs:
         with:
           cache-provider: basic
 
-      - name: Verify release
-        run: ./gradlew clean check publishToMavenLocal --stacktrace
+      - name: Verify release tree
+        run: ./gradlew clean verifyAll publishToMavenLocal --stacktrace
 
-      - name: Verify published artifact consumers
-        run: ./gradlew -p smoke-test clean check --stacktrace
-
-      - name: Verify pure Java consumer
+      - name: Verify Gradle Java consumer
         run: ./gradlew -p smoke-test-java clean check --stacktrace
 
-      - name: Publish Maven Central
+      - name: Verify Gradle Kotlin consumer
+        run: ./gradlew -p smoke-test-kotlin clean check --stacktrace
+
+      - name: Verify Maven consumers
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(./scripts/version.sh)"
+          mvn --batch-mode --no-transfer-progress \
+            -f smoke-test-maven-java/pom.xml \
+            -Dcodes.version="$version" \
+            clean verify
+          mvn --batch-mode --no-transfer-progress \
+            -f smoke-test-maven-kotlin/pom.xml \
+            -Dcodes.version="$version" \
+            -Dkotlin.version=2.4.10 \
+            clean verify
+
+      - name: Publish Codes core to Maven Central
         run: ./gradlew publishToMavenCentral --no-configuration-cache --stacktrace
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
@@ -94,11 +109,9 @@ jobs:
               capture = 1
               next
             }
-
             capture && /^## / {
               exit
             }
-
             capture {
               print
             }

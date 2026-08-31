@@ -2,57 +2,50 @@
 
 Standard mappings provided by `HttpOutcomeMapper.standard()` and `GrpcOutcomeMapper.standard()`.
 
-Mappings convert application outcomes to protocol status. They do not change the outcome identity or state.
+Mappings convert application outcomes to protocol status. They do not change outcome identity or lifecycle state.
 
-| Outcome               | HTTP                        | gRPC                  |
-|-----------------------|-----------------------------|-----------------------|
-| `OK`                  | `200 OK`                    | `OK`                  |
-| `INVALID_ARGUMENT`    | `400 Bad Request`           | `INVALID_ARGUMENT`    |
-| `UNAUTHENTICATED`     | `401 Unauthorized`          | `UNAUTHENTICATED`     |
-| `PERMISSION_DENIED`   | `403 Forbidden`             | `PERMISSION_DENIED`   |
-| `NOT_FOUND`           | `404 Not Found`             | `NOT_FOUND`           |
-| `ALREADY_EXISTS`      | `409 Conflict`              | `ALREADY_EXISTS`      |
-| `FAILED_PRECONDITION` | unmapped                    | `FAILED_PRECONDITION` |
-| `OUT_OF_RANGE`        | `400 Bad Request`           | `OUT_OF_RANGE`        |
-| `RATE_LIMITED`        | `429 Too Many Requests`     | `RESOURCE_EXHAUSTED`  |
-| `CANCELLED`           | unmapped                    | `CANCELLED`           |
-| `DEADLINE_EXCEEDED`   | unmapped                    | `DEADLINE_EXCEEDED`   |
-| `ABORTED`             | unmapped                    | `ABORTED`             |
-| `UNIMPLEMENTED`       | `501 Not Implemented`       | `UNIMPLEMENTED`       |
-| `UNAVAILABLE`         | `503 Service Unavailable`   | `UNAVAILABLE`         |
-| `INTERNAL`            | `500 Internal Server Error` | `INTERNAL`            |
-| `DATA_LOSS`           | `500 Internal Server Error` | `DATA_LOSS`           |
-| `RESOURCE_EXHAUSTED`  | unmapped                    | `RESOURCE_EXHAUSTED`  |
+| Outcome | HTTP | gRPC |
+|---|---|---|
+| `OK` | `200 OK` | `OK` |
+| `INVALID_ARGUMENT` | `400 Bad Request` | `INVALID_ARGUMENT` |
+| `UNAUTHENTICATED` | `401 Unauthorized` | `UNAUTHENTICATED` |
+| `PERMISSION_DENIED` | `403 Forbidden` | `PERMISSION_DENIED` |
+| `NOT_FOUND` | `404 Not Found` | `NOT_FOUND` |
+| `ALREADY_EXISTS` | `409 Conflict` | `ALREADY_EXISTS` |
+| `FAILED_PRECONDITION` | unmapped | `FAILED_PRECONDITION` |
+| `OUT_OF_RANGE` | `400 Bad Request` | `OUT_OF_RANGE` |
+| `RATE_LIMITED` | `429 Too Many Requests` | `RESOURCE_EXHAUSTED` |
+| `CANCELLED` | unmapped | `CANCELLED` |
+| `DEADLINE_EXCEEDED` | unmapped | `DEADLINE_EXCEEDED` |
+| `ABORTED` | unmapped | `ABORTED` |
+| `UNIMPLEMENTED` | `501 Not Implemented` | `UNIMPLEMENTED` |
+| `UNAVAILABLE` | `503 Service Unavailable` | `UNAVAILABLE` |
+| `INTERNAL` | `500 Internal Server Error` | `INTERNAL` |
+| `DATA_LOSS` | `500 Internal Server Error` | `DATA_LOSS` |
+| `RESOURCE_EXHAUSTED` | unmapped | `RESOURCE_EXHAUSTED` |
 
 ## Why some HTTP mappings are absent
 
-Codes only supplies a standard HTTP mapping when the status is broadly applicable.
+Codes supplies a standard HTTP mapping only when the status is broadly applicable.
 
-For example, `FAILED_PRECONDITION` is not universally HTTP `412 Precondition Failed`: HTTP 412 has specific conditional
-request semantics. `DEADLINE_EXCEEDED` is not universally `504 Gateway Timeout`: HTTP 504 specifically describes a
-gateway or proxy timing out while waiting for an upstream server.
+`FAILED_PRECONDITION` is not universally HTTP `412 Precondition Failed`; HTTP 412 has conditional-request semantics. `DEADLINE_EXCEEDED` is not universally `504 Gateway Timeout`; HTTP 504 describes a gateway or proxy timing out while waiting for an upstream server.
 
-Applications should map such outcomes according to their own HTTP contract.
+Applications map such outcomes according to their own HTTP contract.
 
 ## Custom mappings
 
-Add a mapping:
-
-```kotlin
-val mapper = HttpOutcomeMapper.standard()
-    .withMapping(paymentDeclined, HttpStatusCode.of(422))
+```java
+HttpOutcomeMapper mapper = HttpOutcomeMapper.standard()
+    .withMapping(paymentDeclined, HttpStatusCode.of(422));
 ```
 
 Override an existing mapping:
 
-```kotlin
-val mapper = HttpOutcomeMapper.standard()
-    .withOverride(StandardOutcomes.NOT_FOUND, HttpStatusCode.of(410))
+```java
+HttpOutcomeMapper mapper = HttpOutcomeMapper.standard()
+    .withOverride(StandardOutcomes.NOT_FOUND, HttpStatusCode.of(410));
 ```
-
-The same operations are available on `GrpcOutcomeMapper`.
 
 `withMapping` rejects duplicate mappings. `withOverride` rejects outcomes that are not already mapped.
 
-HTTP status constants such as `HttpStatusCode.CREATED`, `ACCEPTED`, `NO_CONTENT`, and `PAYLOAD_TOO_LARGE` remain available
-for explicit application mappings even though those names are not standard application outcomes.
+HTTP status constants such as `CREATED`, `ACCEPTED`, `NO_CONTENT`, and `PAYLOAD_TOO_LARGE` remain available for explicit application mappings even though those names are not standard application outcomes.

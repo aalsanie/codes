@@ -1,0 +1,32 @@
+name: Change request
+description: Propose a core semantic, mapping, or integration change.
+title: "request: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Describe the application problem, not the proposed API first.
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Current integration
+      description: Show how the problem is handled without the proposed change.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+    validations:
+      required: true
+  - type: checkboxes
+    id: contract
+    attributes:
+      label: Contract impact
+      options:
+        - label: This changes the standard outcome catalog, state semantics, or a built-in mapping.
+        - label: This changes the public Java API.
