@@ -7,36 +7,25 @@
 ### Changed
 
 * Reimplemented the published core in Java 17.
-* Removed the Kotlin standard library from the core artifact's runtime dependency graph.
-* Replaced the Kotlin-specific ABI baseline with a deterministic public Java API snapshot.
-* Kept the 17-outcome standard catalog and its semantic state assignments unchanged from `0.2.0`.
-* Kept the built-in HTTP and gRPC mapping tables unchanged from `0.2.0`.
-* Kept protocol mapping failures explicit through `MappingResult.Unmapped`.
-* Added an explicit boundary-exposure policy for `message`, occurrence `detail`, and `Issue` data.
+* Removed the Kotlin standard library from the core dependency graph.
+* Added `org.jspecify:jspecify:1.0.0` as the core's only dependency for nullability annotations.
+* Replaced Kotlin-specific ABI compatibility with a deterministic public Java API snapshot.
+* Preserved the 17 standard outcomes, `OutcomeState` assignments, and built-in HTTP and gRPC mappings from `0.2.0`.
 
 ### Added
 
-* Added Gradle Java and Kotlin published-artifact consumer builds.
-* Added Maven Java and Kotlin consumer builds.
-* Added a Kotlin compiler compatibility matrix to CI.
-* Added a dependency-free core runtime verification task.
-* Added Spring and grpc-java reference applications that integrate Codes without adapters.
-* Added `codes-spring` and `codes-grpc-java` as `0.4.0-SNAPSHOT` incubating modules built in CI but excluded from the `0.3.0` Maven release.
-* Added compatibility, integration, security, contribution, and boundary-exposure documentation.
+* Added Gradle and Maven consumer verification for Java and Kotlin.
+* Added Kotlin compiler compatibility and JSpecify nullability contract verification.
+* Added publication checks for the expected runtime and Maven dependency contract.
 
 ### Removed
 
-* Removed Kotlin source from the published core.
-* Removed the core dependency on `org.jetbrains.kotlin:kotlin-stdlib`.
-* Removed Kotlin compiler and Kotlin coverage plugins from the core build.
-* Removed Kotlin compiler-generated companion classes and default-argument methods from the public JVM API.
-* Removed the Kotlin extension form of `Outcome.toException`; use `OutcomeExceptions.toException(...)` or `new OutcomeException(...)`.
+* Removed Kotlin compiler-generated API such as `Companion`, default-argument bridges, and `OutcomeState.entries`.
+* Removed the Kotlin `Outcome.toException` extension; use `OutcomeExceptions.toException(...)` or `new OutcomeException(...)`.
 
 ### Breaking
-
-`0.3.0` is source and binary incompatible with `0.2.x` where callers depended on Kotlin compiler-generated JVM members such as `Companion`, Kotlin default-argument bridge methods, `OutcomeState.entries`, or the `Outcome.toException` extension.
-
-The semantic outcome identities, outcome states, standard catalog, and built-in protocol mapping tables remain unchanged from `0.2.0`.
+`0.3.0` is source and binary incompatible with `0.2.x` for callers that depend on the removed Kotlin-generated API or `Outcome.toException`.
+The standard outcome identities, states, and built-in protocol mappings are unchanged from `0.2.0`.
 
 ## 0.2.0
 
