@@ -1,12 +1,8 @@
 package io.github.aalsanie.codes;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class MappingResultTest {
     @Test
@@ -22,6 +18,9 @@ class MappingResultTest {
         assertThrows(NullPointerException.class, () -> MappingResult.mapped(null));
         assertThrows(NullPointerException.class, () -> result.fold(null, () -> -1));
         assertThrows(NullPointerException.class, () -> result.fold(String::length, null));
+        assertEquals(result, result);
+        assertNotEquals("ok", result);
+        assertNotEquals(result, MappingResult.mapped("different"));
     }
 
     @Test
@@ -34,5 +33,6 @@ class MappingResultTest {
         assertEquals(MappingResult.unmapped(), result);
         assertEquals(0, result.hashCode());
         assertEquals("Unmapped", result.toString());
+        assertNotEquals("Unmapped", result);
     }
 }
