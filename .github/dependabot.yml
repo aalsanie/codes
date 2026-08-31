@@ -1,29 +1,40 @@
 version: 2
 updates:
   - package-ecosystem: gradle
-    directory: "/"
+    directory: /
     schedule:
       interval: weekly
-      day: monday
-    open-pull-requests-limit: 5
     groups:
-      gradle-dependencies:
-        patterns: ["*"]
+      build-tooling:
+        patterns:
+          - "com.vanniktech.maven.publish"
+          - "org.junit:*"
+          - "org.springframework:*"
+          - "org.springframework.boot:*"
+          - "io.grpc:*"
+          - "com.google.api.grpc:*"
+          - "com.google.protobuf:*"
+
   - package-ecosystem: gradle
-    directory: "/smoke-test"
+    directory: /smoke-test-kotlin
     schedule:
       interval: weekly
-      day: monday
-    open-pull-requests-limit: 3
-    groups:
-      smoke-gradle-dependencies:
-        patterns: ["*"]
+
+  - package-ecosystem: maven
+    directory: /smoke-test-maven-java
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: maven
+    directory: /smoke-test-maven-kotlin
+    schedule:
+      interval: weekly
+
   - package-ecosystem: github-actions
-    directory: "/"
+    directory: /
     schedule:
       interval: weekly
-      day: monday
-    open-pull-requests-limit: 5
     groups:
       github-actions:
-        patterns: ["*"]
+        patterns:
+          - "*"

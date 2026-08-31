@@ -4,17 +4,10 @@ plugins {
     java
 }
 
-val codesVersion =
-    Properties().run {
-        rootProject.projectDir
-            .parentFile
-            .resolve("gradle.properties")
-            .inputStream()
-            .use { load(it) }
-
-        getProperty("VERSION_NAME")
-            ?: error("VERSION_NAME is missing from gradle.properties")
-    }
+val codesVersion = Properties().run {
+    rootProject.projectDir.parentFile.resolve("gradle.properties").inputStream().use { load(it) }
+    getProperty("VERSION_NAME") ?: error("VERSION_NAME is missing from gradle.properties")
+}
 
 dependencies {
     implementation("io.github.aalsanie:codes:$codesVersion")
@@ -22,28 +15,18 @@ dependencies {
 
 java {
     toolchain {
-        languageVersion.set(
-            JavaLanguageVersion.of(17),
-        )
+        languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
 
 tasks.withType<JavaCompile>().configureEach {
     options.release.set(17)
-    options.compilerArgs.addAll(
-        listOf(
-            "-Xlint:all",
-            "-Werror",
-        ),
-    )
+    options.compilerArgs.addAll(listOf("-Xlint:all,-serial", "-Werror"))
 }
 
 val javaSmoke by tasks.registering(JavaExec::class) {
     dependsOn(tasks.named("classes"))
-
-    classpath =
-        sourceSets.main.get().runtimeClasspath
-
+    classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("SmokeJava")
 }
 

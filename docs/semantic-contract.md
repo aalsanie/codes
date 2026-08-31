@@ -16,13 +16,11 @@ Codes provides a common vocabulary for application outcomes:
 * the standard outcome catalog
 * standard HTTP and gRPC mappings
 
-Applications can keep their existing domain error or result model and use Codes where a shared outcome identity is useful.
+Applications keep their own domain error or result model and use Codes where a shared outcome identity is useful.
 
 ## Identity
 
 `OutcomeCode` is the machine identity of an outcome.
-
-Example:
 
 ```text
 com.example.payments:PAYMENT_DECLINED
@@ -30,17 +28,15 @@ com.example.payments:PAYMENT_DECLINED
 
 The namespace and name form the identity used for registry lookup, mappings, structured logging, observability, and other machine-readable uses.
 
-Human-readable messages are not identifiers and should not be used for branching or matching.
+Human-readable messages are not identifiers and must not be used for branching or matching.
 
 ## Lifecycle state
-
-`OutcomeState` describes the state of the application operation represented by an outcome.
 
 ### `SUCCEEDED`
 
 The modeled operation reached a successful terminal outcome.
 
-Transport status, response shape, resource creation, and any follow-up work are separate concerns.
+Transport status, response shape, resource creation, and follow-up work are separate concerns.
 
 ### `PENDING`
 
@@ -52,11 +48,11 @@ Applications define pending outcomes when that distinction is meaningful to the 
 
 The modeled operation ended without producing a successful result for the caller.
 
-`FAILED` describes the observed outcome of the operation. It is not a transactional guarantee: external state may already have changed before a timeout, cancellation, or other failure was observed.
+`FAILED` is not a transactional guarantee. External state may already have changed before a timeout, cancellation, or other failure was observed.
 
 ## Definition and occurrence
 
-`OutcomeDefinition` contains the reusable part of an outcome:
+`OutcomeDefinition` contains:
 
 ```text
 code
@@ -64,7 +60,7 @@ state
 defaultMessage
 ```
 
-`Outcome` represents one occurrence:
+`Outcome` contains:
 
 ```text
 definition
@@ -72,148 +68,99 @@ detail
 issues
 ```
 
-`detail` and `issues` carry context for that occurrence.
-
-`Outcome.toString()` and `OutcomeException.message` omit `detail` by default.
+`detail` and `issues` belong to one occurrence. `Outcome.toString()` and `OutcomeException.getMessage()` do not include occurrence `detail`.
 
 ## Standard outcome catalog
 
 An outcome belongs in the standard catalog when its meaning:
 
-* is independent of a specific protocol, framework, or serialization format
-* applies across unrelated application domains
-* provides a useful distinction to callers, mapping policy, or observability
-* represents a distinct application outcome rather than only a lifecycle state or transport representation
+* is independent of a specific protocol, framework, or serialization format;
+* applies across unrelated application domains;
+* provides a useful distinction to callers, mapping policy, or observability;
+* represents a distinct application outcome rather than only a transport representation.
 
-The standard catalog contains 17 outcomes. `OK` is the standard successful outcome. Pending and domain-specific successful outcomes are defined by applications when needed.
+| Outcome | State | Meaning |
+|---|---|---|
+| `OK` | `SUCCEEDED` | The operation completed successfully. |
+| `INVALID_ARGUMENT` | `FAILED` | One or more arguments are invalid independent of current application state. |
+| `UNAUTHENTICATED` | `FAILED` | The operation requires an authenticated identity and no valid identity is available. |
+| `PERMISSION_DENIED` | `FAILED` | The caller is not permitted to perform the operation. |
+| `NOT_FOUND` | `FAILED` | A required or requested application resource or entity cannot be found. |
+| `ALREADY_EXISTS` | `FAILED` | The operation conflicts with a resource or entity that already exists. |
+| `FAILED_PRECONDITION` | `FAILED` | Required application state or a precondition is not satisfied. |
+| `OUT_OF_RANGE` | `FAILED` | A supplied value is outside the valid range for the operation. |
+| `RATE_LIMITED` | `FAILED` | A caller or workload exceeded an allowed operation rate. |
+| `CANCELLED` | `FAILED` | The operation was cancelled before a successful result was produced. |
+| `DEADLINE_EXCEEDED` | `FAILED` | The operation did not produce a successful result before its deadline. |
+| `ABORTED` | `FAILED` | The operation was aborted because of a conflict or coordination condition. |
+| `UNIMPLEMENTED` | `FAILED` | The requested operation or capability is not implemented or supported. |
+| `UNAVAILABLE` | `FAILED` | A required capability is temporarily unavailable. |
+| `INTERNAL` | `FAILED` | An internal implementation or invariant failure prevented a successful result. |
+| `DATA_LOSS` | `FAILED` | Unrecoverable data loss or corruption was detected. |
+| `RESOURCE_EXHAUSTED` | `FAILED` | A required capacity, quota, or other resource limit was exhausted. |
 
-| Outcome               | State       | Meaning                                                                                                               |
-|-----------------------|-------------|-----------------------------------------------------------------------------------------------------------------------|
-| `OK`                  | `SUCCEEDED` | The operation completed successfully.                                                                                 |
-| `INVALID_ARGUMENT`    | `FAILED`    | One or more arguments supplied to the operation are invalid independent of current application state.                 |
-| `UNAUTHENTICATED`     | `FAILED`    | The operation requires an authenticated identity and no valid identity is available.                                  |
-| `PERMISSION_DENIED`   | `FAILED`    | The caller is not permitted to perform the operation.                                                                 |
-| `NOT_FOUND`           | `FAILED`    | A required or requested application resource or entity cannot be found.                                               |
-| `ALREADY_EXISTS`      | `FAILED`    | The operation conflicts with a resource or entity that already exists.                                                |
-| `FAILED_PRECONDITION` | `FAILED`    | Required application state or a precondition for the operation is not satisfied.                                      |
-| `OUT_OF_RANGE`        | `FAILED`    | A supplied value is outside the valid range for the operation.                                                        |
-| `RATE_LIMITED`        | `FAILED`    | A caller or workload exceeded an allowed operation rate.                                                              |
-| `CANCELLED`           | `FAILED`    | The operation was cancelled before a successful result was produced for the caller.                                   |
-| `DEADLINE_EXCEEDED`   | `FAILED`    | The operation did not produce a successful result before its deadline. External side effects may still have occurred. |
-| `ABORTED`             | `FAILED`    | The operation was aborted because of a conflict or coordination condition.                                            |
-| `UNIMPLEMENTED`       | `FAILED`    | The requested operation or capability is not implemented or supported.                                                |
-| `UNAVAILABLE`         | `FAILED`    | A required capability is temporarily unavailable.                                                                     |
-| `INTERNAL`            | `FAILED`    | An internal implementation or invariant failure prevented a successful result.                                        |
-| `DATA_LOSS`           | `FAILED`    | Unrecoverable data loss or corruption was detected.                                                                   |
-| `RESOURCE_EXHAUSTED`  | `FAILED`    | A required capacity, quota, or other resource limit was exhausted.                                                    |
-
-Applications can define more specific outcomes where the distinction matters:
-
-```text
-com.example.orders:ORDER_CREATED
-com.example.payments:PAYMENT_CAPTURED
-com.example.jobs:JOB_PROCESSING
-```
+Applications define more specific outcomes where the distinction matters.
 
 ## Structured issues
 
-`Issue` contains:
-
-```text
-optional code
-optional path
-message
-```
-
-`Issue.path` identifies an application-defined logical location. Its syntax and meaning are defined by the application.
+`Issue` contains an optional code, optional application-defined path, and required message. Issue path syntax is owned by the application.
 
 ## Validation
 
-`ValidationResult` aggregates validation issues.
+`ValidationResult` aggregates independent issues and can convert them to an outcome. Conversion requires the failure definition explicitly.
 
-Conversion to an outcome requires the failure definition explicitly:
-
-```kotlin
-validation.toOutcome(StandardOutcomes.INVALID_ARGUMENT)
+```java
+validation.toOutcome(StandardOutcomes.INVALID_ARGUMENT);
 ```
 
-A valid result produces `StandardOutcomes.OK`.
+A valid result produces `StandardOutcomes.OK`. An invalid result produces the supplied failed definition. The supplied definition is validated even for a valid result so invalid conversion policy fails immediately.
 
-An invalid result produces the supplied failed definition and carries its issues.
-
-The supplied definition must have `FAILED` state. This is validated for every conversion so an invalid conversion policy is rejected immediately.
+`ValidationResult` is a convenience type. It is not the application result model and does not define control flow.
 
 ## Protocol mappings
 
-`OutcomeMapper<T>` maps an outcome definition to a boundary representation.
-
-For example:
+`OutcomeMapper<T>` maps an application outcome definition to a boundary representation.
 
 ```text
 NOT_FOUND -> HTTP 404
 NOT_FOUND -> gRPC NOT_FOUND
 ```
 
-Different outcomes can map to the same boundary value while keeping their own application identity:
+Different outcomes can map to the same boundary value while keeping distinct application identities.
 
-```text
-RATE_LIMITED       -> gRPC RESOURCE_EXHAUSTED
-RESOURCE_EXHAUSTED -> gRPC RESOURCE_EXHAUSTED
-```
-
-`MappingResult.Unmapped` represents an outcome for which the mapper has no mapping.
-
-Applications can add or override mappings explicitly.
-
-See [Protocol mappings](protocol-mappings.md) for the built-in HTTP and gRPC mappings.
+`MappingResult.Unmapped` means the mapper has no policy for the outcome. Applications can add or override mappings explicitly.
 
 ## Namespace contract
 
-Custom outcome codes use:
-
-```text
-namespace:NAME
-```
-
-For example:
-
-```text
-com.example.payments:PAYMENT_DECLINED
-```
+Custom codes use `namespace:NAME`.
 
 Namespaces:
 
-* contain lowercase ASCII letters, digits, and hyphens
-* use dot-separated segments
-* start each segment with a lowercase ASCII letter
+* contain lowercase ASCII letters, digits, and hyphens;
+* use dot-separated segments;
+* start each segment with a lowercase ASCII letter;
+* end each segment with a lowercase ASCII letter or digit.
 
 Names use uppercase ASCII letters, digits, and underscores.
 
-`io.github.aalsanie.codes` and its child namespaces are reserved for Codes.
-
-Applications should use namespaces they control. Namespace validation checks syntax only.
+`io.github.aalsanie.codes` and its child namespaces are reserved. Applications should use namespaces they control. Syntax validation does not verify namespace ownership.
 
 ## Compatibility
 
 The machine-readable semantic contract includes:
 
-* `OutcomeCode`
-* standard outcome membership
-* standard `OutcomeState` assignments
-* built-in HTTP mappings
-* built-in gRPC mappings
+* `OutcomeCode` identity;
+* standard outcome membership;
+* standard `OutcomeState` assignments;
+* built-in HTTP mappings;
+* built-in gRPC mappings.
 
-Human-readable text can evolve without changing outcome identity:
+Human-readable text may evolve without changing outcome identity:
 
-* `OutcomeDefinition.defaultMessage`
-* `Outcome.detail`
-* `Issue.message`
+* `OutcomeDefinition.defaultMessage`;
+* `Outcome.detail`;
+* `Issue.message`.
 
-Consumers should use `OutcomeCode`, not message text, when behavior depends on outcome identity.
+Consumers must use `OutcomeCode`, not human-readable text, when behavior depends on identity.
 
-JVM API compatibility and semantic compatibility are checked separately:
-
-* `api/codes.api` protects the public JVM API
-* `compatibility/` protects the standard catalog and built-in mappings
-
-A change to the standard catalog, its state assignments, or a built-in mapping is a semantic API change and should be reviewed as such.
+`api/codes.api` protects the public Java API shape. `compatibility/` protects semantic catalog and mapping behavior.

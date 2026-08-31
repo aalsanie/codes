@@ -1,8 +1,7 @@
 .gradle/
-build/
-out/
+**/build/
 .idea/
 *.iml
+out/
 .DS_Store
-smoke-test/.gradle/
-smoke-test/build/
+**/target/
