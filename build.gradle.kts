@@ -20,7 +20,7 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 dependencies {
-    compileOnlyApi("org.jspecify:jspecify:1.0.0")
+    compileOnly("org.jspecify:jspecify:1.0.0")
     testImplementation(platform("org.junit:junit-bom:${providers.gradleProperty("junitVersion").get()}"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -77,9 +77,28 @@ tasks.register("verifyCoreRuntimeDependencies") {
     }
 }
 
+tasks.register("verifyPublishedPomHasNoDependencies") {
+    group = "verification"
+    description = "Fails when the published Codes Maven POM declares dependencies."
+
+    dependsOn("generatePomFileForMavenPublication")
+
+    val pomFile = layout.buildDirectory.file("publications/maven/pom-default.xml")
+    inputs.file(pomFile)
+
+    doLast {
+        val pom = pomFile.get().asFile.readText()
+
+        check("<dependencies>" !in pom) {
+            "Codes core Maven POM must not declare dependencies."
+        }
+    }
+}
+
 tasks.check {
     dependsOn(tasks.jacocoTestCoverageVerification)
     dependsOn(tasks.named("verifyCoreRuntimeDependencies"))
+    dependsOn(tasks.named("verifyPublishedPomHasNoDependencies"))
 }
 
 tasks.withType<AbstractArchiveTask>().configureEach {
