@@ -43,7 +43,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          version="$(./scripts/version.sh)"
+          version="$(sh ./scripts/version.sh)"
           mvn --batch-mode --no-transfer-progress \
             -f smoke-test-maven-java/pom.xml \
             -Dcodes.version="$version" \
@@ -53,7 +53,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          version="$(./scripts/version.sh)"
+          version="$(sh ./scripts/version.sh)"
           mvn --batch-mode --no-transfer-progress \
             -f smoke-test-maven-kotlin/pom.xml \
             -Dcodes.version="$version" \
@@ -96,7 +96,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          version="$(./scripts/version.sh)"
+          version="$(sh ./scripts/version.sh)"
           mvn --batch-mode --no-transfer-progress \
             -f smoke-test-maven-kotlin/pom.xml \
             -Dcodes.version="$version" \
