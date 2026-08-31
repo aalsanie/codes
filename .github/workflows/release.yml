@@ -65,15 +65,13 @@ jobs:
         run: |
           set -euo pipefail
           version="$(sh ./scripts/version.sh)"
+
           mvn --batch-mode --no-transfer-progress \
             -f smoke-test-maven-java/pom.xml \
             -Dcodes.version="$version" \
             clean verify
-          mvn --batch-mode --no-transfer-progress \
-            -f smoke-test-maven-kotlin/pom.xml \
-            -Dcodes.version="$version" \
-            -Dkotlin.version=2.4.10 \
-            clean verify
+
+          sh ./scripts/verify-kotlin-nullability.sh 2.4.10
 
       - name: Publish Codes core to Maven Central
         run: ./gradlew publishToMavenCentral --no-configuration-cache --stacktrace

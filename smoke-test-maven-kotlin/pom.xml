@@ -35,9 +35,12 @@
             <id>compile</id>
             <phase>compile</phase>
             <goals><goal>compile</goal></goals>
-            <configuration>
-              <jvmTarget>17</jvmTarget>
-            </configuration>
+              <configuration>
+                  <jvmTarget>17</jvmTarget>
+                  <args>
+                      <arg>-Xjspecify-annotations=strict</arg>
+                  </args>
+              </configuration>
           </execution>
         </executions>
       </plugin>

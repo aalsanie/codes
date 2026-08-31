@@ -50,15 +50,7 @@ jobs:
             clean verify
 
       - name: Verify Maven Kotlin consumer
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="$(sh ./scripts/version.sh)"
-          mvn --batch-mode --no-transfer-progress \
-            -f smoke-test-maven-kotlin/pom.xml \
-            -Dcodes.version="$version" \
-            -Dkotlin.version=2.4.10 \
-            clean verify
+        run: sh ./scripts/verify-kotlin-nullability.sh 2.4.10
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
@@ -92,16 +84,8 @@ jobs:
       - name: Publish core locally
         run: ./gradlew publishToMavenLocal --stacktrace
 
-      - name: Compile and run Kotlin consumer
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="$(sh ./scripts/version.sh)"
-          mvn --batch-mode --no-transfer-progress \
-            -f smoke-test-maven-kotlin/pom.xml \
-            -Dcodes.version="$version" \
-            -Dkotlin.version="${{ matrix.kotlin }}" \
-            clean verify
+      - name: Verify Kotlin consumer
+        run: sh ./scripts/verify-kotlin-nullability.sh "${{ matrix.kotlin }}"
 
   kotlin-consumers-gate:
     name: Kotlin consumers gate
