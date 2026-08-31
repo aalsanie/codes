@@ -46,7 +46,7 @@ tasks.withType<KotlinJvmCompile>().configureEach {
 }
 
 dependencies {
-    api("org.jetbrains.kotlin:kotlin-stdlib:2.2.0")
+    api("org.jetbrains.kotlin:kotlin-stdlib:2.4.10")
 
     testImplementation(platform("org.junit:junit-bom:6.1.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
