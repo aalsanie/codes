@@ -97,7 +97,7 @@ System.out.println(outcome.getMessage());
 System.out.println(outcome.getDetail());
 ```
 
-`message` comes from the reusable definition. `detail` belongs to one occurrence and is not exposed by framework adapters unless the application explicitly enables that exposure.
+`message` comes from the reusable definition. `detail` belongs to one occurrence.
 
 ## Structured issues
 
@@ -147,29 +147,10 @@ check(outcome.code == StandardOutcomes.NOT_FOUND.code)
 check(status?.value == 404)
 ```
 
-The repository contains Gradle and Maven consumer builds. CI also compiles a Kotlin Maven consumer against multiple Kotlin compiler generations; see [compatibility policy](docs/compatibility-policy.md).
-
-## Framework integrations
-
-The `0.3.0` Maven release contains the dependency-free core only.
-
-This repository also contains production-oriented `0.4.0-SNAPSHOT` adapters under:
-
-```text
-codes-spring/
-codes-grpc-java/
-```
-
-They are built and tested in CI but are intentionally not published with `0.3.0`. Reference applications under `reference/` first implement the integration manually and document the policy that the adapters remove.
-
 ## Reference
-
 * [Semantic contract](docs/semantic-contract.md)
 * [HTTP and gRPC mappings](docs/protocol-mappings.md)
 * [Compatibility policy](docs/compatibility-policy.md)
-* [Boundary exposure](docs/boundary-exposure.md)
-* [Integration guide](docs/integration-guide.md)
-* [Roadmap](docs/roadmap.md)
 
 ## License
 
