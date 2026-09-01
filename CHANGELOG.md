@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+## 0.3.1
+
+### Changed
+
+* Restored the published core to zero runtime dependencies.
+* Kept JSpecify as a compile-time-only dependency for nullability metadata.
+* Preserved Kotlin nullability semantics across the supported Kotlin compiler matrix.
+
+### Added
+
+* Added publication verification that prevents runtime dependencies from being introduced.
+* Added verification that the published Maven POM remains dependency-free.
+
 ## 0.3.0
 
 ### Changed

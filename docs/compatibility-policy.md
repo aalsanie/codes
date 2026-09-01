@@ -5,7 +5,7 @@ Codes is pre-1.0. Minor releases may contain source or binary breaking changes. 
 The published `codes` artifact:
 
 * targets Java 17;
-* depends only on `org.jspecify:jspecify` for nullability annotations;
+* has zero runtime dependencies;
 * supports Java and Kotlin consumers.
 
 The following are part of the semantic contract:

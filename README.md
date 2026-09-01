@@ -1,5 +1,7 @@
 # Codes
 
+**Java 17+. Zero runtime dependencies.**
+
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.aalsanie/codes)](https://central.sonatype.com/artifact/io.github.aalsanie/codes)
 [![CI](https://github.com/aalsanie/codes/actions/workflows/ci.yml/badge.svg)](https://github.com/aalsanie/codes/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
@@ -36,7 +38,7 @@ Maven:
 </dependency>
 ```
 
-Java 17+. The core is implemented in Java. Kotlin applications consume the same Java API without bringing a Codes-owned Kotlin runtime dependency.
+Java 17+. Zero runtime dependencies. Kotlin applications consume the same Java API with JSpecify nullability metadata.
 
 ## Custom outcomes
 
