@@ -20,9 +20,11 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 dependencies {
-    api("org.jspecify:jspecify:1.0.0")
+    compileOnly("org.jspecify:jspecify:1.0.0")
+
     testImplementation(platform("org.junit:junit-bom:${providers.gradleProperty("junitVersion").get()}"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.jspecify:jspecify:1.0.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -61,28 +63,25 @@ tasks.jacocoTestCoverageVerification {
 
 tasks.register("verifyCoreRuntimeDependencies") {
     group = "verification"
-    description = "Fails when Codes core gains runtime dependencies other than JSpecify."
+    description = "Fails when the Codes core artifact gains a runtime dependency."
 
     val runtimeClasspath: Provider<out FileCollection> = configurations.runtimeClasspath
     inputs.files(runtimeClasspath)
 
     doLast {
-        val runtimeFiles = runtimeClasspath.get()
-            .files
-            .map { it.name }
-            .sorted()
+        val runtimeFiles = runtimeClasspath.get().files
 
-        check(runtimeFiles == listOf("jspecify-1.0.0.jar")) {
-            "Codes core runtime dependencies must be limited to JSpecify: ${
-                runtimeFiles.joinToString()
+        check(runtimeFiles.isEmpty()) {
+            "Codes core must remain dependency-free at runtime: ${
+                runtimeFiles.joinToString { it.name }
             }"
         }
     }
 }
 
-tasks.register("verifyPublishedPomDependencies") {
+tasks.register("verifyPublishedPomHasNoDependencies") {
     group = "verification"
-    description = "Verifies the published Codes Maven dependency contract."
+    description = "Fails when the published Codes Maven POM declares dependencies."
 
     dependsOn("generatePomFileForMavenPublication")
 
@@ -97,27 +96,8 @@ tasks.register("verifyPublishedPomDependencies") {
 
         val dependencies = document.getElementsByTagName("dependency")
 
-        check(dependencies.length == 1) {
-            "Codes core Maven POM must declare only JSpecify; found ${dependencies.length} dependencies."
-        }
-
-        val dependency = dependencies.item(0) as org.w3c.dom.Element
-
-        fun value(name: String): String =
-            dependency.getElementsByTagName(name)
-                .item(0)
-                ?.textContent
-                ?.trim()
-                .orEmpty()
-
-        check(
-            value("groupId") == "org.jspecify"
-                && value("artifactId") == "jspecify"
-                && value("version") == "1.0.0"
-                && value("scope") == "compile"
-                && value("optional").isEmpty()
-        ) {
-            "Codes core Maven POM must expose org.jspecify:jspecify:1.0.0 as a non-optional compile dependency."
+        check(dependencies.length == 0) {
+            "Codes core Maven POM must not declare dependencies; found ${dependencies.length}."
         }
     }
 }
@@ -125,7 +105,7 @@ tasks.register("verifyPublishedPomDependencies") {
 tasks.check {
     dependsOn(tasks.jacocoTestCoverageVerification)
     dependsOn(tasks.named("verifyCoreRuntimeDependencies"))
-    dependsOn(tasks.named("verifyPublishedPomDependencies"))
+    dependsOn(tasks.named("verifyPublishedPomHasNoDependencies"))
 }
 
 tasks.withType<AbstractArchiveTask>().configureEach {

@@ -38,7 +38,7 @@ Maven:
 </dependency>
 ```
 
-Java 17+. The core is implemented in Java. Kotlin applications consume the same Java API without bringing a Codes-owned Kotlin runtime dependency.
+Java 17+. Zero runtime dependencies. Kotlin applications consume the same Java API with JSpecify nullability metadata.
 
 ## Custom outcomes
 
