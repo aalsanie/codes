@@ -24,7 +24,7 @@ Gradle:
 
 ```kotlin
 dependencies {
-    implementation("io.github.aalsanie:codes:0.3.0")
+    implementation("io.github.aalsanie:codes:0.3.1")
 }
 ```
 
@@ -34,7 +34,7 @@ Maven:
 <dependency>
     <groupId>io.github.aalsanie</groupId>
     <artifactId>codes</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
 </dependency>
 ```
 
