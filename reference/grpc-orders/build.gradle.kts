@@ -19,14 +19,12 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 val grpcVersion = providers.gradleProperty("grpcVersion").get()
-val commonProtosVersion = providers.gradleProperty("protoGoogleCommonProtosVersion").get()
 
 dependencies {
-    implementation(project(":"))
+    implementation(project(":codes-grpc-java"))
     implementation("io.grpc:grpc-netty-shaded:$grpcVersion")
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
     implementation("io.grpc:grpc-stub:$grpcVersion")
-    implementation("com.google.api.grpc:proto-google-common-protos:$commonProtosVersion")
     compileOnly("javax.annotation:javax.annotation-api:1.3.2")
 
     testImplementation(platform("org.junit:junit-bom:${providers.gradleProperty("junitVersion").get()}"))
