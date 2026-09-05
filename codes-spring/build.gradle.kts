@@ -53,6 +53,11 @@ tasks.register("verifyPublishedPomContract") {
 
     dependsOn("generatePomFileForMavenPublication")
 
+
+    val artifactId = artifactId
+    val pomName = pomName
+    val pomDescription = pomDescription
+    val expectedPomDependencies = expectedPomDependencies
     val pomFile = layout.buildDirectory.file("publications/maven/pom-default.xml")
     inputs.file(pomFile)
 
@@ -82,9 +87,10 @@ tasks.register("verifyPublishedPomContract") {
             listOf("groupId", "artifactId", "version", "scope")
                 .joinToString(":") { value(it) }
         }.sorted()
+
         check(actual == expectedPomDependencies) {
-            "$artifactId direct dependency budget changed. "
-                + "Expected $expectedPomDependencies, found $actual."
+            "$artifactId direct dependency budget changed. " +
+                "Expected $expectedPomDependencies, found $actual."
         }
     }
 }
