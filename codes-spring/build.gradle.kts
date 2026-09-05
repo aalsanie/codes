@@ -27,7 +27,7 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 dependencies {
-    compileOnly("org.jspecify:jspecify:1.0.0")
+    compileOnly("org.jspecify:jspecify:1.0.1")
 
     api(project(":"))
     api("org.springframework:spring-web:${providers.gradleProperty("springFrameworkVersion").get()}")
