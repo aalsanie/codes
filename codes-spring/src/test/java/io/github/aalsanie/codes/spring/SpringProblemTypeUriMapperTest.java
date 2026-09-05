@@ -40,6 +40,17 @@ class SpringProblemTypeUriMapperTest {
     }
 
     @Test
+    void aboutBlankCannotBeRegisteredAsApplicationOwnedProblemType() {
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> SpringProblemTypeUriMapper.empty()
+                .withMapping(PAYMENT_DECLINED, URI.create("about:blank"))
+        );
+
+        assertTrue(exception.getMessage().contains("about:blank"));
+    }
+
+    @Test
     void duplicateApplicationMappingIsRejected() {
         URI type = URI.create("https://api.example.test/problems/payment-declined");
         SpringProblemTypeUriMapper mapper = SpringProblemTypeUriMapper.empty()

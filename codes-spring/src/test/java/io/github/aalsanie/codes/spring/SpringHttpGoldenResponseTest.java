@@ -1,6 +1,9 @@
 package io.github.aalsanie.codes.spring;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.aalsanie.codes.Issue;
 import io.github.aalsanie.codes.MappingResult;
@@ -12,15 +15,43 @@ import io.github.aalsanie.codes.protocol.http.HttpOutcomeMapper;
 import io.github.aalsanie.codes.protocol.http.HttpStatusCode;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.web.reactive.server.EntityExchangeResult;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
+import org.springframework.web.ErrorResponseException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RestController;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 class SpringHttpGoldenResponseTest {
+    private static final String ABSENT = "<absent>";
+    private static final String ABOUT_BLANK = "about:blank";
+    private static final JsonMapper JSON = JsonMapper.builder().build();
+
+    private static final List<String> GOLDEN_CASES = List.of(
+        "safe",
+        "public",
+        "custom",
+        "validation",
+        "unmapped",
+        "sensitive-detail",
+        "custom-safe"
+    );
+
     private static final OutcomeDefinition PAYMENT_DECLINED = OutcomeDefinition.custom(
         "com.example.checkout",
         "PAYMENT_DECLINED",
@@ -44,43 +75,277 @@ class SpringHttpGoldenResponseTest {
                 URI.create("https://api.example.test/problems/payment-declined")
             );
 
-    @Test
-    void goldenHttpProblemContractsMatch() throws IOException {
-        OutcomeProblemDetailMapper publicMapper = new OutcomeProblemDetailMapper(
+    private static final OutcomeProblemDetailMapper PUBLIC_MAPPER =
+        new OutcomeProblemDetailMapper(
             STATUS_MAPPER,
             SpringOutcomeExposure.publicErrors(),
             TYPE_MAPPER
         );
-        OutcomeProblemDetailMapper detailMapper = new OutcomeProblemDetailMapper(
+
+    private static final OutcomeProblemDetailMapper DETAIL_MAPPER =
+        new OutcomeProblemDetailMapper(
             STATUS_MAPPER,
             new SpringOutcomeExposure(true, true, false),
             TYPE_MAPPER
         );
 
-        String actual = String.join(
-            "\n\n",
-            snapshot(
-                "safe",
-                OutcomeProblemDetailMapper.safeDefaults().map(
-                    Outcome.of(StandardOutcomes.NOT_FOUND, "database shard=7 customerId=42")
-                )
-            ),
-            snapshot(
-                "public",
-                publicMapper.map(Outcome.of(StandardOutcomes.INVALID_ARGUMENT))
-            ),
-            snapshot(
-                "custom",
-                detailMapper.map(
+    private static final OutcomeProblemDetailMapper CUSTOM_SAFE_MAPPER =
+        new OutcomeProblemDetailMapper(
+            STATUS_MAPPER,
+            SpringOutcomeExposure.safeDefaults(),
+            TYPE_MAPPER
+        );
+
+    @Test
+    void mvcRenderedHttpResponsesMatchGoldenContract() throws Exception {
+        WebTestClient client = MockMvcWebTestClient
+            .bindToController(new WireController())
+            .controllerAdvice(new MvcProblemAdvice())
+            .build();
+
+        assertGoldenResponses("mvc", client);
+    }
+
+    @Test
+    void webFluxRenderedHttpResponsesMatchGoldenContract() throws Exception {
+        WebTestClient client = WebTestClient
+            .bindToController(new WireController())
+            .controllerAdvice(new WebFluxProblemAdvice())
+            .build();
+
+        assertGoldenResponses("webflux", client);
+    }
+
+    private static void assertGoldenResponses(String stack, WebTestClient client) throws Exception {
+        Map<String, Map<String, String>> expected = readGoldenContract();
+        assertEquals(GOLDEN_CASES, List.copyOf(expected.keySet()), stack + " golden case order");
+
+        for (String caseName : GOLDEN_CASES) {
+            assertResponse(stack, caseName, expected.get(caseName), client);
+        }
+    }
+
+    private static void assertResponse(
+        String stack,
+        String caseName,
+        Map<String, String> expected,
+        WebTestClient client
+    ) throws Exception {
+        String context = stack + "/" + caseName;
+        String path = "/" + caseName;
+
+        EntityExchangeResult<byte[]> response = client.get()
+            .uri(path)
+            .accept(MediaType.APPLICATION_PROBLEM_JSON)
+            .exchange()
+            .expectBody()
+            .returnResult();
+
+        int expectedStatus = Integer.parseInt(required(expected, "status"));
+        assertEquals(expectedStatus, response.getStatus().value(), context + " HTTP status");
+
+        MediaType contentType = response.getResponseHeaders().getContentType();
+        assertNotNull(contentType, context + " content type");
+        MediaType expectedContentType = MediaType.parseMediaType(required(expected, "contentType"));
+        assertTrue(
+            expectedContentType.isCompatibleWith(contentType),
+            () -> context + " content type expected " + expectedContentType + " but was " + contentType
+        );
+
+        byte[] responseBody = Objects.requireNonNull(
+            response.getResponseBody(),
+            context + " response body"
+        );
+        String rawBody = new String(responseBody, StandardCharsets.UTF_8);
+        JsonNode body = Objects.requireNonNull(JSON.readTree(responseBody), context + " JSON body");
+
+        assertEquals(expectedStatus, body.path("status").asInt(), context + " problem status");
+        assertProblemType(body, required(expected, "type"), context);
+        assertTextField(body, "title", required(expected, "title"), context);
+        assertTextField(body, "detail", required(expected, "detail"), context);
+        assertTextField(body, "instance", required(expected, "instance"), context);
+        assertTextField(body, "code", required(expected, "code"), context);
+
+        assertFalse(body.has("properties"), context + " must flatten ProblemDetail extensions");
+        assertFalse(body.has("outcomeDetail"), context + " must use RFC detail");
+
+        assertIssues(body, expected, context);
+        assertSensitiveValuesAreNotRendered(caseName, rawBody, context);
+    }
+
+    private static void assertProblemType(JsonNode body, String expected, String context) {
+        JsonNode type = body.get("type");
+
+        if (ABOUT_BLANK.equals(expected)) {
+            if (type != null) {
+                assertFalse(type.isNull(), context + " type must be absent or about:blank");
+                assertEquals(ABOUT_BLANK, type.stringValue(), context + " problem type");
+            }
+            return;
+        }
+
+        assertNotNull(type, context + " problem type");
+        assertFalse(type.isNull(), context + " problem type");
+        assertEquals(expected, type.stringValue(), context + " problem type");
+    }
+
+    private static void assertTextField(
+        JsonNode body,
+        String field,
+        String expected,
+        String context
+    ) {
+        JsonNode value = body.get(field);
+
+        if (ABSENT.equals(expected)) {
+            assertTrue(
+                value == null,
+                () -> context + " expected absent '" + field + "' but body contained " + value
+            );
+            return;
+        }
+
+        assertNotNull(value, context + " missing '" + field + "'");
+        assertFalse(value.isNull(), context + " null '" + field + "'");
+        assertEquals(expected, value.stringValue(), context + " '" + field + "'");
+    }
+
+    private static void assertIssues(
+        JsonNode body,
+        Map<String, String> expected,
+        String context
+    ) {
+        int expectedCount = Integer.parseInt(required(expected, "issues"));
+        JsonNode issues = body.get("issues");
+
+        if (expectedCount == 0) {
+            assertTrue(issues == null, context + " issues must be absent");
+            return;
+        }
+
+        assertNotNull(issues, context + " missing issues");
+        assertTrue(issues.isArray(), context + " issues must be a JSON array");
+        assertEquals(expectedCount, issues.size(), context + " issue count");
+
+        for (int index = 0; index < expectedCount; index++) {
+            JsonNode issue = issues.get(index);
+            assertNotNull(issue, context + " missing issue " + index);
+            assertTextField(
+                issue,
+                "code",
+                required(expected, "issue." + index + ".code"),
+                context + " issue " + index
+            );
+            assertTextField(
+                issue,
+                "path",
+                required(expected, "issue." + index + ".path"),
+                context + " issue " + index
+            );
+            assertTextField(
+                issue,
+                "message",
+                required(expected, "issue." + index + ".message"),
+                context + " issue " + index
+            );
+        }
+    }
+
+    private static void assertSensitiveValuesAreNotRendered(
+        String caseName,
+        String rawBody,
+        String context
+    ) {
+        String sensitiveValue = switch (caseName) {
+            case "safe" -> "database shard=7 customerId=42";
+            case "validation" -> "raw request body contained account metadata";
+            case "sensitive-detail" -> "gateway_token=secret-123";
+            case "custom-safe" -> "gateway_token=custom-safe-secret";
+            default -> null;
+        };
+
+        if (sensitiveValue != null) {
+            assertFalse(
+                rawBody.contains(sensitiveValue),
+                context + " leaked sensitive occurrence detail"
+            );
+        }
+    }
+
+    private static Map<String, Map<String, String>> readGoldenContract() throws IOException {
+        List<String> lines = Files.readAllLines(
+            Path.of(System.getProperty("codes.springHttpSnapshot"))
+        );
+        LinkedHashMap<String, Map<String, String>> result = new LinkedHashMap<>();
+        Map<String, String> current = null;
+
+        for (String rawLine : lines) {
+            String line = rawLine.strip();
+            if (line.isEmpty() || line.startsWith("#")) {
+                continue;
+            }
+
+            if (line.startsWith("[") && line.endsWith("]")) {
+                String name = line.substring(1, line.length() - 1);
+                if (name.isBlank() || result.containsKey(name)) {
+                    throw new IllegalStateException("Invalid duplicate or blank golden case: " + line);
+                }
+                current = new LinkedHashMap<>();
+                result.put(name, current);
+                continue;
+            }
+
+            if (current == null) {
+                throw new IllegalStateException("Golden property appears before a case: " + line);
+            }
+
+            int separator = line.indexOf('=');
+            if (separator <= 0) {
+                throw new IllegalStateException("Invalid golden property: " + line);
+            }
+
+            String key = line.substring(0, separator);
+            String value = line.substring(separator + 1);
+            if (current.put(key, value) != null) {
+                throw new IllegalStateException("Duplicate golden property: " + key);
+            }
+        }
+
+        return result;
+    }
+
+    private static String required(Map<String, String> values, String key) {
+        String value = values.get(key);
+        if (value == null) {
+            throw new IllegalStateException("Missing golden property: " + key);
+        }
+        return value;
+    }
+
+    @RestController
+    static final class WireController {
+        @GetMapping("/{caseName}")
+        Object render(@PathVariable("caseName") String caseName) {
+            return switch (caseName) {
+                case "safe" -> throw mappedException(
+                    Outcome.of(
+                        StandardOutcomes.NOT_FOUND,
+                        "database shard=7 customerId=42"
+                    ),
+                    OutcomeProblemDetailMapper.safeDefaults()
+                );
+                case "public" -> throw mappedException(
+                    Outcome.of(StandardOutcomes.INVALID_ARGUMENT),
+                    PUBLIC_MAPPER
+                );
+                case "custom" -> throw mappedException(
                     Outcome.of(
                         PAYMENT_DECLINED,
                         "Ask the customer to use another payment method."
-                    )
-                )
-            ),
-            snapshot(
-                "validation",
-                publicMapper.map(
+                    ),
+                    DETAIL_MAPPER
+                );
+                case "validation" -> throw mappedException(
                     Outcome.of(
                         StandardOutcomes.INVALID_ARGUMENT,
                         "raw request body contained account metadata",
@@ -88,95 +353,60 @@ class SpringHttpGoldenResponseTest {
                             Issue.at("email", "Invalid email address."),
                             Issue.at("quantity", "Must be greater than zero.")
                         )
-                    )
-                )
-            ),
-            snapshot(
-                "unmapped",
-                publicMapper.map(Outcome.of(StandardOutcomes.FAILED_PRECONDITION))
-            ),
-            snapshot(
-                "sensitive-detail",
-                publicMapper.map(
-                    Outcome.of(PAYMENT_DECLINED, "gateway_token=secret-123")
-                )
-            )
-        );
-
-        String expected = Files.readString(
-            Path.of(System.getProperty("codes.springHttpSnapshot"))
-        ).replace("\r\n", "\n").stripTrailing();
-
-        assertEquals(expected, actual);
-    }
-
-    private static String snapshot(
-        String name,
-        MappingResult<ProblemDetail> result
-    ) {
-        if (result.isUnmapped()) {
-            return "[" + name + "]\n"
-                + "mapped=false";
+                    ),
+                    PUBLIC_MAPPER
+                );
+                case "unmapped" -> unmappedResponse(
+                    Outcome.of(StandardOutcomes.FAILED_PRECONDITION)
+                );
+                case "sensitive-detail" -> throw mappedException(
+                    Outcome.of(PAYMENT_DECLINED, "gateway_token=secret-123"),
+                    PUBLIC_MAPPER
+                );
+                case "custom-safe" -> throw mappedException(
+                    Outcome.of(PAYMENT_DECLINED, "gateway_token=custom-safe-secret"),
+                    CUSTOM_SAFE_MAPPER
+                );
+                default -> throw new IllegalArgumentException("Unknown golden case: " + caseName);
+            };
         }
 
-        ProblemDetail problem = Objects.requireNonNull(result.orNull());
-        Map<String, Object> properties = Objects.requireNonNull(problem.getProperties());
-
-        return "[" + name + "]\n"
-            + "mapped=true\n"
-            + "status=" + problem.getStatus() + "\n"
-            + "type=" + (problem.getType() == null ? "about:blank" : problem.getType()) + "\n"
-            + "title=" + nullable(problem.getTitle()) + "\n"
-            + "detail=" + nullable(problem.getDetail()) + "\n"
-            + "code=" + properties.get(OutcomeProblemDetailMapper.CODE_PROPERTY) + "\n"
-            + "issues=" + issueSnapshot(properties.get(OutcomeProblemDetailMapper.ISSUES_PROPERTY));
-    }
-
-    private static String nullable(String value) {
-        return value == null ? "<none>" : value;
-    }
-
-    private static String issueSnapshot(Object value) {
-        if (value == null) {
-            return "<none>";
-        }
-        if (!(value instanceof List<?> issues)) {
-            throw new IllegalStateException("issues property must be a list");
-        }
-
-        StringBuilder result = new StringBuilder("[");
-        for (int index = 0; index < issues.size(); index++) {
-            if (index > 0) {
-                result.append(',');
+        private static ErrorResponseException mappedException(
+            Outcome outcome,
+            OutcomeProblemDetailMapper mapper
+        ) {
+            MappingResult<ErrorResponseException> result =
+                SpringOutcomeExceptions.toErrorResponseException(outcome, mapper);
+            ErrorResponseException exception = result.orNull();
+            if (exception == null) {
+                throw new IllegalStateException("Expected mapped Spring error response for " + outcome.getCode());
             }
-            if (!(issues.get(index) instanceof Map<?, ?> issue)) {
-                throw new IllegalStateException("issue payload must be a map");
+            return exception;
+        }
+
+        private static ResponseEntity<ProblemDetail> unmappedResponse(Outcome outcome) {
+            MappingResult<ErrorResponseException> result =
+                SpringOutcomeExceptions.toErrorResponseException(outcome, PUBLIC_MAPPER);
+            if (result.isMapped()) {
+                throw new IllegalStateException("Expected unmapped Spring error response for " + outcome.getCode());
             }
 
-            result.append('{');
-            boolean hasPrevious = false;
-            hasPrevious = appendField(result, issue, "code", hasPrevious);
-            hasPrevious = appendField(result, issue, "path", hasPrevious);
-            appendField(result, issue, "message", hasPrevious);
-            result.append('}');
+            ProblemDetail fallback = ProblemDetail.forStatus(500);
+            fallback.setProperty(
+                OutcomeProblemDetailMapper.CODE_PROPERTY,
+                outcome.getCode().getValue()
+            );
+            return ResponseEntity.internalServerError().body(fallback);
         }
-        return result.append(']').toString();
     }
 
-    private static boolean appendField(
-        StringBuilder result,
-        Map<?, ?> issue,
-        String name,
-        boolean hasPrevious
-    ) {
-        Object value = issue.get(name);
-        if (value == null) {
-            return hasPrevious;
-        }
-        if (hasPrevious) {
-            result.append(',');
-        }
-        result.append(name).append('=').append(value);
-        return true;
+    @ControllerAdvice
+    static final class MvcProblemAdvice
+        extends org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler {
+    }
+
+    @ControllerAdvice
+    static final class WebFluxProblemAdvice
+        extends org.springframework.web.reactive.result.method.annotation.ResponseEntityExceptionHandler {
     }
 }

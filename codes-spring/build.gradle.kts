@@ -36,6 +36,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.springframework:spring-webmvc:${providers.gradleProperty("springFrameworkVersion").get()}")
     testImplementation("org.springframework:spring-webflux:${providers.gradleProperty("springFrameworkVersion").get()}")
+    testImplementation("org.springframework:spring-test:${providers.gradleProperty("springFrameworkVersion").get()}")
+    testImplementation("tools.jackson.core:jackson-databind:${providers.gradleProperty("jackson3Version").get()}")
     testImplementation("jakarta.servlet:jakarta.servlet-api:6.1.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

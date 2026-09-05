@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 import org.springframework.http.ProblemDetail;
 
 /**
@@ -66,10 +67,11 @@ public final class OutcomeProblemDetailMapper {
     }
 
     private ProblemDetail createProblemDetail(Outcome outcome, int status) {
-        ProblemDetail problem = ProblemDetail.forStatus(status);
+        URI problemType = problemTypeMapper.map(outcome).orNull();
+        ProblemDetail problem = createProblemDetail(status, problemType);
+
         problem.setProperty(CODE_PROPERTY, outcome.getCode().getValue());
 
-        URI problemType = problemTypeMapper.map(outcome).orNull();
         if (problemType != null) {
             problem.setType(problemType);
             if (exposure.exposeMessage()) {
@@ -86,6 +88,13 @@ public final class OutcomeProblemDetailMapper {
         return problem;
     }
 
+    private ProblemDetail createProblemDetail(int status, @Nullable URI problemType) {
+        if (problemType != null && !exposure.exposeMessage()) {
+            return new ProblemDetailWithoutDefaultTitle(status);
+        }
+        return ProblemDetail.forStatus(status);
+    }
+
     private static List<Map<String, String>> toIssuePayload(List<Issue> issues) {
         List<Map<String, String>> values = new ArrayList<>(issues.size());
         for (Issue issue : issues) {
@@ -100,5 +109,28 @@ public final class OutcomeProblemDetailMapper {
             values.add(Map.copyOf(value));
         }
         return List.copyOf(values);
+    }
+
+    /**
+     * Spring's default {@link ProblemDetail#getTitle()} synthesizes the HTTP reason phrase when
+     * no title was explicitly configured. That behavior is correct for implicit {@code about:blank}
+     * but not for an application-owned problem type whose stable title is intentionally hidden.
+     */
+    private static final class ProblemDetailWithoutDefaultTitle extends ProblemDetail {
+        private @Nullable String explicitTitle;
+
+        private ProblemDetailWithoutDefaultTitle(int status) {
+            super(status);
+        }
+
+        @Override
+        public void setTitle(@Nullable String title) {
+            explicitTitle = title;
+        }
+
+        @Override
+        public @Nullable String getTitle() {
+            return explicitTitle;
+        }
     }
 }

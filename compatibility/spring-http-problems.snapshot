@@ -1,47 +1,79 @@
+# Rendered Spring HTTP problem contract.
+# The same cases are exercised through MVC and WebFlux.
+# JSON member ordering is intentionally not part of the contract.
+
 [safe]
-mapped=true
 status=404
+contentType=application/problem+json
 type=about:blank
 title=Not Found
-detail=<none>
+detail=<absent>
+instance=/safe
 code=io.github.aalsanie.codes.standard:NOT_FOUND
-issues=<none>
+issues=0
 
 [public]
-mapped=true
 status=400
+contentType=application/problem+json
 type=https://api.example.test/problems/invalid-argument
 title=An argument supplied to the operation is invalid.
-detail=<none>
+detail=<absent>
+instance=/public
 code=io.github.aalsanie.codes.standard:INVALID_ARGUMENT
-issues=<none>
+issues=0
 
 [custom]
-mapped=true
 status=422
+contentType=application/problem+json
 type=https://api.example.test/problems/payment-declined
 title=The payment was declined.
 detail=Ask the customer to use another payment method.
+instance=/custom
 code=com.example.checkout:PAYMENT_DECLINED
-issues=<none>
+issues=0
 
 [validation]
-mapped=true
 status=400
+contentType=application/problem+json
 type=https://api.example.test/problems/invalid-argument
 title=An argument supplied to the operation is invalid.
-detail=<none>
+detail=<absent>
+instance=/validation
 code=io.github.aalsanie.codes.standard:INVALID_ARGUMENT
-issues=[{path=email,message=Invalid email address.},{path=quantity,message=Must be greater than zero.}]
+issues=2
+issue.0.code=<absent>
+issue.0.path=email
+issue.0.message=Invalid email address.
+issue.1.code=<absent>
+issue.1.path=quantity
+issue.1.message=Must be greater than zero.
 
 [unmapped]
-mapped=false
+status=500
+contentType=application/problem+json
+type=about:blank
+title=Internal Server Error
+detail=<absent>
+instance=/unmapped
+code=io.github.aalsanie.codes.standard:FAILED_PRECONDITION
+issues=0
 
 [sensitive-detail]
-mapped=true
 status=422
+contentType=application/problem+json
 type=https://api.example.test/problems/payment-declined
 title=The payment was declined.
-detail=<none>
+detail=<absent>
+instance=/sensitive-detail
 code=com.example.checkout:PAYMENT_DECLINED
-issues=<none>
+issues=0
+
+[custom-safe]
+status=422
+contentType=application/problem+json
+type=https://api.example.test/problems/payment-declined
+title=<absent>
+detail=<absent>
+instance=/custom-safe
+code=com.example.checkout:PAYMENT_DECLINED
+issues=0

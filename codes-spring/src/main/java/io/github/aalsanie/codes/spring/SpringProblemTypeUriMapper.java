@@ -14,9 +14,12 @@ import java.util.Objects;
  * Immutable application-owned mapping from Codes outcome identity to RFC 9457 problem type URI.
  *
  * <p>Codes does not assign or invent problem type URIs. Applications opt in by registering the
- * URIs whose ownership and lifecycle they control.
+ * URIs whose ownership and lifecycle they control. The RFC-defined {@code about:blank} type is
+ * implicit and therefore cannot be registered as an application-owned problem type.
  */
 public final class SpringProblemTypeUriMapper {
+    private static final URI ABOUT_BLANK = URI.create("about:blank");
+
     private final Map<OutcomeCode, URI> mappings;
 
     private SpringProblemTypeUriMapper(Map<OutcomeCode, URI> mappings) {
@@ -40,6 +43,12 @@ public final class SpringProblemTypeUriMapper {
     public SpringProblemTypeUriMapper withMapping(OutcomeDefinition definition, URI type) {
         Objects.requireNonNull(definition, "definition");
         Objects.requireNonNull(type, "type");
+        if (ABOUT_BLANK.equals(type)) {
+            throw new IllegalArgumentException(
+                "about:blank is the implicit RFC 9457 default and cannot be application-owned"
+            );
+        }
+
         OutcomeCode code = definition.getCode();
         if (mappings.containsKey(code)) {
             throw new IllegalArgumentException("problem type mapping already exists for outcome code: " + code);

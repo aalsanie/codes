@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.ProblemDetail;
 
 class OutcomeProblemDetailMapperTest {
+    private static final URI ABOUT_BLANK = URI.create("about:blank");
+
     @Test
     void safeDefaultsExposeOnlyRfcDefaultsAndMachineCode() {
         Outcome outcome = Outcome.of(
@@ -26,7 +28,7 @@ class OutcomeProblemDetailMapperTest {
         ProblemDetail problem = OutcomeProblemDetailMapper.safeDefaults().map(outcome).orNull();
 
         assertEquals(404, problem.getStatus());
-        assertNull(problem.getType());
+        assertAboutBlank(problem.getType());
         assertEquals("Not Found", problem.getTitle());
         assertNull(problem.getDetail());
         assertEquals(outcome.getCode().getValue(), problem.getProperties().get("code"));
@@ -64,6 +66,28 @@ class OutcomeProblemDetailMapperTest {
     }
 
     @Test
+    void applicationOwnedTypeDoesNotReuseHttpStatusTitleWhenMessageIsHidden() {
+        Outcome outcome = Outcome.of(
+            StandardOutcomes.INVALID_ARGUMENT,
+            "sensitive occurrence detail"
+        );
+        URI type = URI.create("https://api.example.test/problems/invalid-argument");
+        OutcomeProblemDetailMapper mapper = new OutcomeProblemDetailMapper(
+            SpringHttpStatusMapper.standard(),
+            SpringOutcomeExposure.safeDefaults(),
+            SpringProblemTypeUriMapper.empty()
+                .withMapping(StandardOutcomes.INVALID_ARGUMENT, type)
+        );
+
+        ProblemDetail problem = mapper.map(outcome).orNull();
+
+        assertEquals(type, problem.getType());
+        assertNull(problem.getTitle());
+        assertNull(problem.getDetail());
+        assertEquals(outcome.getCode().getValue(), problem.getProperties().get("code"));
+    }
+
+    @Test
     void aboutBlankKeepsHttpTitleEvenWhenPublicMessageExposureIsEnabled() {
         Outcome outcome = Outcome.of(StandardOutcomes.INVALID_ARGUMENT);
         OutcomeProblemDetailMapper mapper = new OutcomeProblemDetailMapper(
@@ -73,7 +97,7 @@ class OutcomeProblemDetailMapperTest {
 
         ProblemDetail problem = mapper.map(outcome).orNull();
 
-        assertNull(problem.getType());
+        assertAboutBlank(problem.getType());
         assertEquals("Bad Request", problem.getTitle());
         assertEquals(outcome.getCode().getValue(), problem.getProperties().get("code"));
     }
@@ -101,5 +125,9 @@ class OutcomeProblemDetailMapperTest {
             new SpringOutcomeExposure(true, false, true),
             SpringOutcomeExposure.publicErrors()
         );
+    }
+
+    private static void assertAboutBlank(URI type) {
+        assertTrue(type == null || ABOUT_BLANK.equals(type));
     }
 }
