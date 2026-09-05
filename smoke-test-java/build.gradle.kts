@@ -11,6 +11,8 @@ val codesVersion = Properties().run {
 
 dependencies {
     implementation("io.github.aalsanie:codes:$codesVersion")
+    implementation("io.github.aalsanie:codes-spring:$codesVersion")
+    implementation("io.github.aalsanie:codes-grpc-java:$codesVersion")
 }
 
 java {

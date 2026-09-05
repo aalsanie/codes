@@ -9,12 +9,22 @@
   <properties>
     <maven.compiler.release>17</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <codes.version>0.3.0</codes.version>
+    <codes.version>0.4.0-SNAPSHOT</codes.version>
   </properties>
   <dependencies>
     <dependency>
       <groupId>io.github.aalsanie</groupId>
       <artifactId>codes</artifactId>
+      <version>${codes.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.aalsanie</groupId>
+      <artifactId>codes-spring</artifactId>
+      <version>${codes.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.aalsanie</groupId>
+      <artifactId>codes-grpc-java</artifactId>
       <version>${codes.version}</version>
     </dependency>
   </dependencies>

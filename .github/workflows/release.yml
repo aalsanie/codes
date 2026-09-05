@@ -52,7 +52,18 @@ jobs:
           cache-provider: basic
 
       - name: Verify release tree
-        run: ./gradlew clean verifyAll publishToMavenLocal --stacktrace
+        run: ./gradlew clean verifyAll --stacktrace
+
+      - name: Publish all artifacts to Maven Local
+        run: >-
+          ./gradlew
+          :publishToMavenLocal
+          :codes-spring:publishToMavenLocal
+          :codes-grpc-java:publishToMavenLocal
+          --stacktrace
+
+      - name: Verify local publication files
+        run: sh ./scripts/verify-local-publications.sh
 
       - name: Verify Gradle Java consumer
         run: ./gradlew -p smoke-test-java clean check --stacktrace
@@ -73,8 +84,14 @@ jobs:
 
           sh ./scripts/verify-kotlin-nullability.sh 2.4.10
 
-      - name: Publish Codes core to Maven Central
-        run: ./gradlew publishToMavenCentral --no-configuration-cache --stacktrace
+      - name: Publish all Codes artifacts to Maven Central
+        run: >-
+          ./gradlew
+          :publishToMavenCentral
+          :codes-spring:publishToMavenCentral
+          :codes-grpc-java:publishToMavenCentral
+          --no-configuration-cache
+          --stacktrace
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
