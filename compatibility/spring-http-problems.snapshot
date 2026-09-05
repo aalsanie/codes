@@ -1,0 +1,47 @@
+[safe]
+mapped=true
+status=404
+type=about:blank
+title=Not Found
+detail=<none>
+code=io.github.aalsanie.codes.standard:NOT_FOUND
+issues=<none>
+
+[public]
+mapped=true
+status=400
+type=https://api.example.test/problems/invalid-argument
+title=An argument supplied to the operation is invalid.
+detail=<none>
+code=io.github.aalsanie.codes.standard:INVALID_ARGUMENT
+issues=<none>
+
+[custom]
+mapped=true
+status=422
+type=https://api.example.test/problems/payment-declined
+title=The payment was declined.
+detail=Ask the customer to use another payment method.
+code=com.example.checkout:PAYMENT_DECLINED
+issues=<none>
+
+[validation]
+mapped=true
+status=400
+type=https://api.example.test/problems/invalid-argument
+title=An argument supplied to the operation is invalid.
+detail=<none>
+code=io.github.aalsanie.codes.standard:INVALID_ARGUMENT
+issues=[{path=email,message=Invalid email address.},{path=quantity,message=Must be greater than zero.}]
+
+[unmapped]
+mapped=false
+
+[sensitive-detail]
+mapped=true
+status=422
+type=https://api.example.test/problems/payment-declined
+title=The payment was declined.
+detail=<none>
+code=com.example.checkout:PAYMENT_DECLINED
+issues=<none>

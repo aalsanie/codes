@@ -27,11 +27,16 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 dependencies {
+    compileOnly("org.jspecify:jspecify:1.0.0")
+
     api(project(":"))
     api("org.springframework:spring-web:${providers.gradleProperty("springFrameworkVersion").get()}")
 
     testImplementation(platform("org.junit:junit-bom:${providers.gradleProperty("junitVersion").get()}"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.springframework:spring-webmvc:${providers.gradleProperty("springFrameworkVersion").get()}")
+    testImplementation("org.springframework:spring-webflux:${providers.gradleProperty("springFrameworkVersion").get()}")
+    testImplementation("jakarta.servlet:jakarta.servlet-api:6.1.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -40,6 +45,10 @@ tasks.test {
     systemProperty(
         "codes.apiSnapshot",
         rootProject.file("api/codes-spring.api").absolutePath,
+    )
+    systemProperty(
+        "codes.springHttpSnapshot",
+        rootProject.file("compatibility/spring-http-problems.snapshot").absolutePath,
     )
 }
 
@@ -52,7 +61,6 @@ tasks.register("verifyPublishedPomContract") {
     description = "Verifies the Codes Spring POM metadata and direct dependency budget."
 
     dependsOn("generatePomFileForMavenPublication")
-
 
     val artifactId = artifactId
     val pomName = pomName

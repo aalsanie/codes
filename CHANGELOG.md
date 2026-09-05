@@ -7,10 +7,16 @@
 * Added Maven publications for `codes-spring` and `codes-grpc-java`.
 * Added adapter API snapshots and exact published dependency budgets.
 * Added clean Gradle and Maven consumer checks that resolve all three artifacts from Maven Local.
+* Added application-owned Spring problem-type URI mappings.
+* Added a thin failed-`Outcome` to Spring `ErrorResponseException` bridge.
+* Added Spring RFC 9457 golden response contracts plus MVC and WebFlux compatibility checks.
 
 ### Changed
 
 * Aligned all publishable modules on the shared `0.4.0-SNAPSHOT` version.
+* Corrected Spring problem details so reusable outcome messages are titles for explicitly mapped problem types and occurrence details use RFC `detail`.
+* Kept stable Codes identity in the Spring `code` extension for every mapped failure.
+* Reworked the Spring orders reference to consume `codes-spring` instead of duplicating adapter behavior.
 
 ## 0.3.1
 

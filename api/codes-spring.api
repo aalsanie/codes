@@ -1,8 +1,8 @@
 public final class io.github.aalsanie.codes.spring.OutcomeProblemDetailMapper
   ctor public (io.github.aalsanie.codes.spring.SpringHttpStatusMapper, io.github.aalsanie.codes.spring.SpringOutcomeExposure)
+  ctor public (io.github.aalsanie.codes.spring.SpringHttpStatusMapper, io.github.aalsanie.codes.spring.SpringOutcomeExposure, io.github.aalsanie.codes.spring.SpringProblemTypeUriMapper)
   field public static final java.lang.String CODE_PROPERTY
   field public static final java.lang.String ISSUES_PROPERTY
-  field public static final java.lang.String OUTCOME_DETAIL_PROPERTY
   method public io.github.aalsanie.codes.MappingResult<org.springframework.http.ProblemDetail> map(io.github.aalsanie.codes.Outcome)
   method public static io.github.aalsanie.codes.spring.OutcomeProblemDetailMapper safeDefaults()
 
@@ -11,6 +11,9 @@ public final class io.github.aalsanie.codes.spring.SpringHttpStatusMapper
   method public io.github.aalsanie.codes.MappingResult<org.springframework.http.HttpStatusCode> map(io.github.aalsanie.codes.Outcome)
   method public io.github.aalsanie.codes.MappingResult<org.springframework.http.HttpStatusCode> map(io.github.aalsanie.codes.OutcomeDefinition)
   method public static io.github.aalsanie.codes.spring.SpringHttpStatusMapper standard()
+
+public final class io.github.aalsanie.codes.spring.SpringOutcomeExceptions
+  method public static io.github.aalsanie.codes.MappingResult<org.springframework.web.ErrorResponseException> toErrorResponseException(io.github.aalsanie.codes.Outcome, io.github.aalsanie.codes.spring.OutcomeProblemDetailMapper)
 
 public final class io.github.aalsanie.codes.spring.SpringOutcomeExposure extends java.lang.Record
   ctor public (boolean, boolean, boolean)
@@ -22,3 +25,9 @@ public final class io.github.aalsanie.codes.spring.SpringOutcomeExposure extends
   method public final java.lang.String toString()
   method public static io.github.aalsanie.codes.spring.SpringOutcomeExposure publicErrors()
   method public static io.github.aalsanie.codes.spring.SpringOutcomeExposure safeDefaults()
+
+public final class io.github.aalsanie.codes.spring.SpringProblemTypeUriMapper
+  method public io.github.aalsanie.codes.MappingResult<java.net.URI> map(io.github.aalsanie.codes.Outcome)
+  method public io.github.aalsanie.codes.MappingResult<java.net.URI> map(io.github.aalsanie.codes.OutcomeDefinition)
+  method public io.github.aalsanie.codes.spring.SpringProblemTypeUriMapper withMapping(io.github.aalsanie.codes.OutcomeDefinition, java.net.URI)
+  method public static io.github.aalsanie.codes.spring.SpringProblemTypeUriMapper empty()
