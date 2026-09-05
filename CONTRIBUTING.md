@@ -8,7 +8,8 @@ Changes to standard outcome membership, standard outcome state, or a built-in HT
 
 ```bash
 ./gradlew clean verifyAll
-./gradlew publishToMavenLocal
+./gradlew :publishToMavenLocal :codes-spring:publishToMavenLocal :codes-grpc-java:publishToMavenLocal
+./scripts/verify-local-publications.sh
 ./gradlew -p smoke-test-java clean check
 ./gradlew -p smoke-test-kotlin clean check
 ```
@@ -17,12 +18,12 @@ Maven consumer checks:
 
 ```bash
 version=$(./scripts/version.sh)
-mvn -f smoke-test-maven-java/pom.xml -Dcodes.version="$version" package
-mvn -f smoke-test-maven-kotlin/pom.xml -Dcodes.version="$version" package
+mvn -f smoke-test-maven-java/pom.xml -Dcodes.version="$version" clean verify
+./scripts/verify-kotlin-nullability.sh 2.4.10
 ```
 
 ## Pull requests
 
-Keep changes focused. Include tests for behavior changes. Public API changes require updating `api/codes.api`; semantic changes require updating the matching compatibility snapshot.
+Keep changes focused. Include tests for behavior changes. Public API changes require updating the matching snapshot under `api/`; semantic changes require updating the matching compatibility snapshot.
 
 Do not add framework dependencies to the core artifact.

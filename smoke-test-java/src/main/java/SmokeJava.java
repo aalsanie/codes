@@ -11,7 +11,10 @@ import io.github.aalsanie.codes.protocol.grpc.GrpcOutcomeMapper;
 import io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode;
 import io.github.aalsanie.codes.protocol.http.HttpOutcomeMapper;
 import io.github.aalsanie.codes.protocol.http.HttpStatusCode;
+import io.github.aalsanie.codes.grpc.GoogleRpcOutcomeMapper;
+import io.github.aalsanie.codes.spring.OutcomeProblemDetailMapper;
 import java.util.List;
+import org.springframework.http.ProblemDetail;
 
 public final class SmokeJava {
     private SmokeJava() {
@@ -27,6 +30,12 @@ public final class SmokeJava {
         require(http.map(outcome).orNull().getValue() == 422);
         require(grpc.map(outcome).orNull() == GrpcStatusCode.FAILED_PRECONDITION);
 
+        Outcome standardFailure = Outcome.of(StandardOutcomes.NOT_FOUND);
+        ProblemDetail problem = OutcomeProblemDetailMapper.safeDefaults().map(standardFailure).orNull();
+        require(problem.getStatus() == 404);
+        com.google.rpc.Status rpcStatus = GoogleRpcOutcomeMapper.safeDefaults().map(standardFailure).orNull();
+        require(rpcStatus.getCode() == io.grpc.Status.Code.NOT_FOUND.value());
+
         ValidationResult validation = ValidationResult.combine(
             ValidationResult.valid(),
             ValidationResult.invalid(Issue.at("email", "Invalid."))
@@ -38,7 +47,7 @@ public final class SmokeJava {
         MappingResult<Integer> mapped = MappingResult.mapped(42);
         require(mapped.fold(value -> value, () -> -1) == 42);
 
-        System.out.println("Pure Java consumer smoke test passed.");
+        System.out.println("Pure Java consumer smoke test passed for all Codes artifacts.");
     }
 
     private static void require(boolean condition) {

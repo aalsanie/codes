@@ -31,7 +31,18 @@ jobs:
           cache-provider: basic
 
       - name: Verify core, adapters, and references
-        run: ./gradlew clean verifyAll publishToMavenLocal --stacktrace
+        run: ./gradlew clean verifyAll --stacktrace
+
+      - name: Publish all artifacts to Maven Local
+        run: >-
+          ./gradlew
+          :publishToMavenLocal
+          :codes-spring:publishToMavenLocal
+          :codes-grpc-java:publishToMavenLocal
+          --stacktrace
+
+      - name: Verify local publication files
+        run: sh ./scripts/verify-local-publications.sh
 
       - name: Verify Gradle Java consumer
         run: ./gradlew -p smoke-test-java clean check --stacktrace
@@ -82,7 +93,7 @@ jobs:
           cache-provider: basic
 
       - name: Publish core locally
-        run: ./gradlew publishToMavenLocal --stacktrace
+        run: ./gradlew :publishToMavenLocal --stacktrace
 
       - name: Verify Kotlin consumer
         run: sh ./scripts/verify-kotlin-nullability.sh "${{ matrix.kotlin }}"

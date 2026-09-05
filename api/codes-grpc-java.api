@@ -1,0 +1,24 @@
+public final class io.github.aalsanie.codes.grpc.GoogleRpcOutcomeMapper
+  ctor public (io.github.aalsanie.codes.protocol.grpc.GrpcOutcomeMapper, io.github.aalsanie.codes.grpc.GrpcOutcomeExposure)
+  method public io.github.aalsanie.codes.MappingResult<com.google.rpc.Status> map(io.github.aalsanie.codes.Outcome)
+  method public static io.github.aalsanie.codes.grpc.GoogleRpcOutcomeMapper safeDefaults()
+
+public final class io.github.aalsanie.codes.grpc.GrpcOutcomeExceptions
+  method public static io.github.aalsanie.codes.MappingResult<io.grpc.StatusRuntimeException> toStatusRuntimeException(io.github.aalsanie.codes.Outcome, io.github.aalsanie.codes.grpc.GoogleRpcOutcomeMapper)
+
+public final class io.github.aalsanie.codes.grpc.GrpcOutcomeExposure extends java.lang.Record
+  ctor public (boolean, boolean, boolean)
+  method public boolean exposeDetail()
+  method public boolean exposeIssues()
+  method public boolean exposeMessage()
+  method public final boolean equals(java.lang.Object)
+  method public final int hashCode()
+  method public final java.lang.String toString()
+  method public static io.github.aalsanie.codes.grpc.GrpcOutcomeExposure publicErrors()
+  method public static io.github.aalsanie.codes.grpc.GrpcOutcomeExposure safeDefaults()
+
+public final class io.github.aalsanie.codes.grpc.GrpcStatusMapper
+  ctor public (io.github.aalsanie.codes.protocol.grpc.GrpcOutcomeMapper)
+  method public io.github.aalsanie.codes.MappingResult<io.grpc.Status> map(io.github.aalsanie.codes.Outcome)
+  method public io.github.aalsanie.codes.MappingResult<io.grpc.Status> map(io.github.aalsanie.codes.OutcomeDefinition)
+  method public static io.github.aalsanie.codes.grpc.GrpcStatusMapper standard()

@@ -153,6 +153,7 @@ check(status?.value == 404)
 * [Semantic contract](docs/semantic-contract.md)
 * [HTTP and gRPC mappings](docs/protocol-mappings.md)
 * [Compatibility policy](docs/compatibility-policy.md)
+* [Artifact contracts](docs/artifact-contracts.md)
 
 ## License
 

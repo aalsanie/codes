@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Added
+
+* Added Maven publications for `codes-spring` and `codes-grpc-java`.
+* Added adapter API snapshots and exact published dependency budgets.
+* Added clean Gradle and Maven consumer checks that resolve all three artifacts from Maven Local.
+
+### Changed
+
+* Aligned all publishable modules on the shared `0.4.0-SNAPSHOT` version.
+
 ## 0.3.1
 
 ### Changed

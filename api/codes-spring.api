@@ -1,0 +1,24 @@
+public final class io.github.aalsanie.codes.spring.OutcomeProblemDetailMapper
+  ctor public (io.github.aalsanie.codes.spring.SpringHttpStatusMapper, io.github.aalsanie.codes.spring.SpringOutcomeExposure)
+  field public static final java.lang.String CODE_PROPERTY
+  field public static final java.lang.String ISSUES_PROPERTY
+  field public static final java.lang.String OUTCOME_DETAIL_PROPERTY
+  method public io.github.aalsanie.codes.MappingResult<org.springframework.http.ProblemDetail> map(io.github.aalsanie.codes.Outcome)
+  method public static io.github.aalsanie.codes.spring.OutcomeProblemDetailMapper safeDefaults()
+
+public final class io.github.aalsanie.codes.spring.SpringHttpStatusMapper
+  ctor public (io.github.aalsanie.codes.protocol.http.HttpOutcomeMapper)
+  method public io.github.aalsanie.codes.MappingResult<org.springframework.http.HttpStatusCode> map(io.github.aalsanie.codes.Outcome)
+  method public io.github.aalsanie.codes.MappingResult<org.springframework.http.HttpStatusCode> map(io.github.aalsanie.codes.OutcomeDefinition)
+  method public static io.github.aalsanie.codes.spring.SpringHttpStatusMapper standard()
+
+public final class io.github.aalsanie.codes.spring.SpringOutcomeExposure extends java.lang.Record
+  ctor public (boolean, boolean, boolean)
+  method public boolean exposeDetail()
+  method public boolean exposeIssues()
+  method public boolean exposeMessage()
+  method public final boolean equals(java.lang.Object)
+  method public final int hashCode()
+  method public final java.lang.String toString()
+  method public static io.github.aalsanie.codes.spring.SpringOutcomeExposure publicErrors()
+  method public static io.github.aalsanie.codes.spring.SpringOutcomeExposure safeDefaults()
