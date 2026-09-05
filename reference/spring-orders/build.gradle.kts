@@ -18,7 +18,7 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 dependencies {
-    implementation(project(":"))
+    implementation(project(":codes-spring"))
     implementation("org.springframework.boot:spring-boot-starter-webmvc:${providers.gradleProperty("springBootVersion").get()}")
 
     testImplementation(platform("org.junit:junit-bom:${providers.gradleProperty("junitVersion").get()}"))

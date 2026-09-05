@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.aalsanie.codes.StandardOutcomes;
+import java.net.URI;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -23,13 +24,22 @@ class OrderReferenceTest {
     }
 
     @Test
-    void validationIssuesAreExposedOnlyByApplicationPolicy() {
+    void validationUsesApplicationOwnedProblemTypeAndAdapterExposurePolicy() {
         ResponseEntity<?> response = boundary.toResponse(
             service.create(new CreateOrderRequest("", "", "book"))
         );
+
         assertEquals(400, response.getStatusCode().value());
         ProblemDetail problem = (ProblemDetail) response.getBody();
-        assertEquals(StandardOutcomes.INVALID_ARGUMENT.getCode().getValue(), problem.getProperties().get("code"));
+        assertEquals(
+            URI.create("https://api.example.com/problems/invalid-argument"),
+            problem.getType()
+        );
+        assertEquals(StandardOutcomes.INVALID_ARGUMENT.getDefaultMessage(), problem.getTitle());
+        assertEquals(
+            StandardOutcomes.INVALID_ARGUMENT.getCode().getValue(),
+            problem.getProperties().get("code")
+        );
         assertEquals(2, ((java.util.List<?>) problem.getProperties().get("issues")).size());
         assertNull(problem.getDetail());
     }
@@ -43,9 +53,16 @@ class OrderReferenceTest {
         boundary.toResponse(service.create(new CreateOrderRequest("o-3", "c-1", "blocked")));
         ResponseEntity<?> rejected = boundary.toResponse(service.process("o-3"));
         assertEquals(422, rejected.getStatusCode().value());
+
+        ProblemDetail problem = (ProblemDetail) rejected.getBody();
+        assertEquals(
+            URI.create("https://api.example.com/problems/order-rejected"),
+            problem.getType()
+        );
+        assertEquals(OrderOutcomes.ORDER_REJECTED.getDefaultMessage(), problem.getTitle());
         assertEquals(
             OrderOutcomes.ORDER_REJECTED.getCode().getValue(),
-            ((ProblemDetail) rejected.getBody()).getProperties().get("code")
+            problem.getProperties().get("code")
         );
     }
 }
