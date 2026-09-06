@@ -10,6 +10,8 @@
 * Added application-owned Spring problem-type URI mappings.
 * Added a thin failed-`Outcome` to Spring `ErrorResponseException` bridge.
 * Added Spring RFC 9457 golden response contracts plus MVC and WebFlux compatibility checks.
+* Added decoded gRPC wire contracts covering safe, public, and explicitly exposed `google.rpc.Status` payloads.
+* Added gRPC `StatusRuntimeException` trailer round-trip verification.
 
 ### Changed
 
@@ -17,6 +19,9 @@
 * Corrected Spring problem details so reusable outcome messages are titles for explicitly mapped problem types and occurrence details use RFC `detail`.
 * Kept stable Codes identity in the Spring `code` extension for every mapped failure.
 * Reworked the Spring orders reference to consume `codes-spring` instead of duplicating adapter behavior.
+* Enforced lossless Codes identity compatibility with `google.rpc.ErrorInfo.domain` and `ErrorInfo.reason`.
+* Preserved exposed structured issues through `google.rpc.BadRequest` without normalizing coded issue identity.
+* Reworked the gRPC orders reference to consume `codes-grpc-java` instead of constructing rich error details manually.
 
 ## 0.3.1
 

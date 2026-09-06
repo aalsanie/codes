@@ -1,0 +1,38 @@
+[safe]
+code=9
+message=com.example.checkout:PAYMENT_DECLINED
+details=1
+identity.domain=com.example.checkout
+identity.reason=PAYMENT_DECLINED
+debug=<absent>
+issues=0
+
+[public]
+code=9
+message=The payment was declined.
+details=2
+identity.domain=com.example.checkout
+identity.reason=PAYMENT_DECLINED
+debug=<absent>
+issues=2
+issue.0.field=paymentMethod
+issue.0.reason=PAYMENT_METHOD_INVALID
+issue.0.description=Payment method is invalid.
+issue.1.field=amount
+issue.1.reason=<absent>
+issue.1.description=Amount must be positive.
+
+[explicit]
+code=9
+message=The payment was declined.
+details=3
+identity.domain=com.example.checkout
+identity.reason=PAYMENT_DECLINED
+debug=gateway_token=secret-123
+issues=2
+issue.0.field=paymentMethod
+issue.0.reason=PAYMENT_METHOD_INVALID
+issue.0.description=Payment method is invalid.
+issue.1.field=amount
+issue.1.reason=<absent>
+issue.1.description=Amount must be positive.

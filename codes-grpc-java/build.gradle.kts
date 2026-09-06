@@ -29,6 +29,8 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 dependencies {
+    compileOnly("org.jspecify:jspecify:1.0.0")
+
     api(project(":"))
     api("io.grpc:grpc-api:${providers.gradleProperty("grpcVersion").get()}")
     api("com.google.api.grpc:proto-google-common-protos:${providers.gradleProperty("protoGoogleCommonProtosVersion").get()}")
@@ -45,6 +47,10 @@ tasks.test {
         "codes.apiSnapshot",
         rootProject.file("api/codes-grpc-java.api").absolutePath,
     )
+    systemProperty(
+        "codes.grpcStatusSnapshot",
+        rootProject.file("compatibility/grpc-google-rpc-status.snapshot").absolutePath,
+    )
 }
 
 sourceSets.test {
@@ -56,7 +62,6 @@ tasks.register("verifyPublishedPomContract") {
     description = "Verifies the Codes gRPC Java POM metadata and direct dependency budget."
 
     dependsOn("generatePomFileForMavenPublication")
-
 
     val artifactId = artifactId
     val pomName = pomName

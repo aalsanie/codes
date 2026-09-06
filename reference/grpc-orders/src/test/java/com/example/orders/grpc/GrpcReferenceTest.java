@@ -14,24 +14,41 @@ class GrpcReferenceTest {
     private final OutcomeGrpcBoundary boundary = new OutcomeGrpcBoundary();
 
     @Test
-    void validationMapsToCanonicalStatusAndStructuredDetails() throws Exception {
+    void validationUsesAdapterIdentityAndStructuredIssues() throws Exception {
         OrderResult result = service.create("", "", "book");
         StatusRuntimeException exception = boundary.toException(result.outcome());
+
         com.google.rpc.Status status = StatusProto.fromThrowable(exception);
         assertNotNull(status);
         assertEquals(3, status.getCode());
+        assertEquals(result.outcome().getCode().getValue(), status.getMessage());
+        assertEquals(2, status.getDetailsCount());
+
         ErrorInfo info = status.getDetails(0).unpack(ErrorInfo.class);
-        assertEquals("INVALID_ARGUMENT", info.getReason());
+        assertEquals(result.outcome().getCode().getNamespace(), info.getDomain());
+        assertEquals(result.outcome().getCode().getName(), info.getReason());
+
         BadRequest badRequest = status.getDetails(1).unpack(BadRequest.class);
         assertEquals(2, badRequest.getFieldViolationsCount());
+        assertEquals("orderId", badRequest.getFieldViolations(0).getField());
+        assertEquals("customerId", badRequest.getFieldViolations(1).getField());
     }
 
     @Test
-    void customDomainFailureKeepsItsIdentity() throws Exception {
+    void customDomainFailureKeepsItsIdentityThroughAdapter() throws Exception {
         OrderResult result = service.create("o-1", "c-1", "blocked");
-        com.google.rpc.Status status = StatusProto.fromThrowable(boundary.toException(result.outcome()));
+
+        com.google.rpc.Status status = StatusProto.fromThrowable(
+            boundary.toException(result.outcome())
+        );
+
         assertNotNull(status);
         assertEquals(9, status.getCode());
-        assertEquals("ORDER_REJECTED", status.getDetails(0).unpack(ErrorInfo.class).getReason());
+        assertEquals(result.outcome().getCode().getValue(), status.getMessage());
+        assertEquals(1, status.getDetailsCount());
+
+        ErrorInfo info = status.getDetails(0).unpack(ErrorInfo.class);
+        assertEquals("com.example.orders", info.getDomain());
+        assertEquals("ORDER_REJECTED", info.getReason());
     }
 }
