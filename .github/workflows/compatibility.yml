@@ -45,7 +45,17 @@ jobs:
               "spring": matrix["spring"],
               "grpc": matrix["grpc"],
           }))
-          print("kotlin=" + compact({"kotlin": matrix["kotlin"]}))
+          kotlin = matrix["kotlin"]
+          print("kotlin=" + compact({
+              "include": [
+                  {
+                      "kotlin": version,
+                      "spring": kotlin["spring"],
+                      "grpc": kotlin["grpc"],
+                  }
+                  for version in kotlin["versions"]
+              ]
+          }))
           print("os=" + compact({"os": matrix["os"]}))
           PY
 
@@ -135,7 +145,7 @@ jobs:
             clean verify
 
   kotlin-nullability:
-    name: Kotlin ${{ matrix.kotlin }} JSpecify
+    name: Kotlin ${{ matrix.kotlin }} / Spring ${{ matrix.spring }} / gRPC ${{ matrix.grpc }} JSpecify
     needs: [matrix, contracts]
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -162,7 +172,11 @@ jobs:
       - name: Verify Kotlin JSpecify consumer
         env:
           MAVEN_REPO_LOCAL: ${{ github.workspace }}/build/compatibility-maven
-        run: sh scripts/verify-kotlin-nullability.sh "${{ matrix.kotlin }}"
+        run: >-
+          sh scripts/verify-kotlin-nullability.sh
+          "${{ matrix.kotlin }}"
+          "${{ matrix.spring }}"
+          "${{ matrix.grpc }}"
 
   operating-systems:
     name: Published consumers / ${{ matrix.os }}

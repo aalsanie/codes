@@ -11,7 +11,28 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <codes.version>0.4.0-SNAPSHOT</codes.version>
     <kotlin.version>2.4.10</kotlin.version>
+    <spring.framework.version>6.0.0</spring.framework.version>
+    <grpc.version>1.75.0</grpc.version>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-framework-bom</artifactId>
+        <version>${spring.framework.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-bom</artifactId>
+        <version>${grpc.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <dependency>

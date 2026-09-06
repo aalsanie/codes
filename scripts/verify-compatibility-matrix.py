@@ -20,11 +20,19 @@ def properties(path: Path) -> dict[str, str]:
 matrix = json.loads((ROOT / "compatibility" / "matrix.json").read_text(encoding="utf-8"))
 gradle = properties(ROOT / "gradle.properties")
 
+spring_floor = "6.0.0"
+grpc_floor = "1.75.0"
+kotlin_versions = ["1.9.24", "2.0.21", "2.1.21", "2.2.20", "2.4.10"]
+
 expected_axes = {
     "java": ["17", "21", "25"],
-    "spring": ["6.0.0", gradle["springFrameworkVersion"]],
-    "grpc": ["1.75.0", gradle["grpcVersion"]],
-    "kotlin": ["1.9.24", "2.0.21", "2.1.21", "2.2.20", "2.4.10"],
+    "spring": [spring_floor, gradle["springFrameworkVersion"]],
+    "grpc": [grpc_floor, gradle["grpcVersion"]],
+    "kotlin": {
+        "versions": kotlin_versions,
+        "spring": spring_floor,
+        "grpc": grpc_floor,
+    },
     "os": ["ubuntu-latest", "windows-latest", "macos-latest"],
 }
 
@@ -34,5 +42,11 @@ if matrix != expected_axes:
         f"Expected: {expected_axes}\n"
         f"Actual:   {matrix}"
     )
+
+if matrix["kotlin"]["spring"] != matrix["spring"][0]:
+    raise SystemExit("Kotlin/JSpecify Spring version must be the declared Spring compatibility floor.")
+
+if matrix["kotlin"]["grpc"] != matrix["grpc"][0]:
+    raise SystemExit("Kotlin/JSpecify gRPC version must be the declared gRPC compatibility floor.")
 
 print("Compatibility matrix policy verified.")

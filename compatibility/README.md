@@ -33,6 +33,7 @@ Current matrix:
 * Spring Framework: 6.0.0 and 7.0.9.
 * gRPC Java: 1.75.0 and 1.83.1.
 * Kotlin compiler consumers: 1.9.24, 2.0.21, 2.1.21, 2.2.20, 2.4.10.
+* Kotlin/JSpecify compiler matrix framework baseline: Spring 6.0.0 and gRPC 1.75.0.
 * Build tools: Gradle and Maven.
 * Consumer languages: Java and Kotlin.
 * Operating systems: Linux, Windows, macOS.
@@ -40,6 +41,8 @@ Current matrix:
 Spring Framework 6.0.0 is the Codes `0.4.x` binary compatibility floor for the Spring 6 generation. Spring 7.0.9 is the current Spring 7 baseline used to build the adapter. This compatibility floor is not a statement about upstream maintenance or security support for old Spring releases.
 
 Codes explicitly supports gRPC Java 1.75.0 as its `0.4.x` compatibility floor and 1.83.1 as the current build baseline. The minimum is a Codes support policy, not an upstream gRPC LTS declaration.
+
+The Kotlin/JSpecify compiler matrix intentionally runs all supported Kotlin compiler versions against the minimum supported Spring and gRPC framework versions. This isolates Codes' published JSpecify metadata contract from the Kotlin metadata version used internally by the current Spring release. Current-framework Kotlin consumption remains covered separately by the Gradle Kotlin smoke consumer on the current Spring/gRPC baselines. Do not use Kotlin's metadata-version bypass flags to make an older compiler consume a newer framework's incompatible Kotlin metadata.
 
 Framework/JDK compatibility is exercised as a full Cartesian product:
 
