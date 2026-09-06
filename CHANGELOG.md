@@ -2,11 +2,13 @@
 
 ## Unreleased
 
+## 0.4.0-RC1
+
 ### Added
 
 * Added Maven publications for `codes-spring` and `codes-grpc-java`.
 * Added adapter API snapshots and exact published dependency budgets.
-* Added clean Gradle and Maven consumer checks that resolve all three artifacts from Maven Local.
+* Added clean Gradle and Maven consumer checks that resolve all three artifacts from isolated publication repositories.
 * Added application-owned Spring problem-type URI mappings.
 * Added a thin failed-`Outcome` to Spring `ErrorResponseException` bridge.
 * Added Spring RFC 9457 golden response contracts plus MVC and WebFlux compatibility checks.
@@ -15,10 +17,13 @@
 * Added a production compatibility matrix for Spring 6/7, minimum/current gRPC, Java 17/21/25, Java/Kotlin consumers, Gradle/Maven, and Linux/Windows/macOS.
 * Added adapter JSpecify consumer verification and adapter coverage gates.
 * Added published-POM verification against clean isolated Maven repositories.
+* Added ten-minute Spring and gRPC boundary examples.
+* Added a reproducible release-candidate adopter gate against two pinned external codebases.
+* Added a dedicated release-candidate workflow that publishes to Maven Central before running the external adopter gate.
 
 ### Changed
 
-* Aligned all publishable modules on the shared `0.4.0-SNAPSHOT` version.
+* Set all publishable modules to `0.4.0-RC1`.
 * Corrected Spring problem details so reusable outcome messages are titles for explicitly mapped problem types and occurrence details use RFC `detail`.
 * Kept stable Codes identity in the Spring `code` extension for every mapped failure.
 * Reworked the Spring orders reference to consume `codes-spring` instead of duplicating adapter behavior.
@@ -26,6 +31,7 @@
 * Preserved exposed structured issues through `google.rpc.BadRequest` without normalizing coded issue identity.
 * Reworked the gRPC orders reference to consume `codes-grpc-java` instead of constructing rich error details manually.
 * Moved publication consumer verification to freshly emptied Maven repositories so compatibility checks cannot be satisfied by stale local artifacts.
+* Documented cases where Codes should not be introduced.
 
 ## 0.3.1
 

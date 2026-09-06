@@ -1,10 +1,9 @@
-name: Release
+name: Release Candidate
 
 on:
   push:
     tags:
-      - "v*.*.*"
-      - "!v*.*.*-RC*"
+      - "v*.*.*-RC*"
 
 permissions:
   contents: read
@@ -17,6 +16,8 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    outputs:
+      version: ${{ steps.version.outputs.value }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -24,15 +25,16 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Verify release tag
+      - id: version
+        name: Verify release-candidate tag
         shell: bash
         run: |
           set -euo pipefail
 
           version="$(sh ./scripts/version.sh)"
 
-          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
-            echo "Invalid release version: $version"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-RC[1-9][0-9]*$ ]] || {
+            echo "Invalid release-candidate version: $version"
             exit 1
           }
 
@@ -43,40 +45,26 @@ jobs:
           test "$(git rev-parse "${GITHUB_SHA}^{commit}")" = \
                "$(git rev-parse "origin/main^{commit}")"
 
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+
       - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
         with:
           distribution: temurin
           java-version: "17"
 
-      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92
         with:
           cache-provider: basic
 
-      - name: Verify release tree
+      - name: Verify release-candidate tree
         run: |
           python scripts/verify-compatibility-matrix.py
           ./gradlew clean verifyAll --stacktrace
 
       - name: Publish clean release-candidate artifacts
-        run: sh scripts/prepare-compatibility-repository.sh build/compatibility-maven
+        run: bash scripts/prepare-compatibility-repository.sh build/compatibility-maven
 
-      - name: Verify Gradle Java consumer
-        run: >-
-          ./gradlew
-          -p smoke-test-java
-          -Dmaven.repo.local=${{ github.workspace }}/build/compatibility-maven
-          clean check
-          --stacktrace
-
-      - name: Verify Gradle Kotlin consumer
-        run: >-
-          ./gradlew
-          -p smoke-test-kotlin
-          -Dmaven.repo.local=${{ github.workspace }}/build/compatibility-maven
-          clean check
-          --stacktrace
-
-      - name: Verify Maven consumers
+      - name: Verify published-artifact consumers before Central
         shell: bash
         env:
           MAVEN_REPO_LOCAL: ${{ github.workspace }}/build/compatibility-maven
@@ -84,13 +72,25 @@ jobs:
           set -euo pipefail
           version="$(sh ./scripts/version.sh)"
 
+          ./gradlew \
+            -p smoke-test-java \
+            "-Dmaven.repo.local=${MAVEN_REPO_LOCAL}" \
+            clean check \
+            --stacktrace
+
+          ./gradlew \
+            -p smoke-test-kotlin \
+            "-Dmaven.repo.local=${MAVEN_REPO_LOCAL}" \
+            clean check \
+            --stacktrace
+
           mvn --batch-mode --no-transfer-progress \
             "-Dmaven.repo.local=${MAVEN_REPO_LOCAL}" \
             -f smoke-test-maven-java/pom.xml \
             "-Dcodes.version=$version" \
             clean verify
 
-          sh ./scripts/verify-kotlin-nullability.sh 2.4.10
+          bash ./scripts/verify-kotlin-nullability.sh 2.4.10
 
       - name: Publish all Codes artifacts to Maven Central
         run: >-
@@ -106,8 +106,39 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_IN_MEMORY_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_IN_MEMORY_KEY_PASSWORD }}
 
-  github-release:
+  real-adopters:
     needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Verify two external adopters from Maven Central
+        run: >-
+          bash scripts/verify-rc-adopters.sh
+          "${{ needs.publish.outputs.version }}"
+          build/reports/rc1-adopters.md
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: rc1-adopter-gate
+          path: |
+            build/reports/rc1-adopters.md
+            build/rc-adopters/*.log
+          if-no-files-found: warn
+          retention-days: 30
+
+  github-prerelease:
+    needs: [publish, real-adopters]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -118,7 +149,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Create GitHub Release
+      - name: Create GitHub prerelease
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -144,5 +175,6 @@ jobs:
 
           gh release create "$GITHUB_REF_NAME" \
             --verify-tag \
+            --prerelease \
             --title "Codes $version" \
             --notes-file release-notes.md
