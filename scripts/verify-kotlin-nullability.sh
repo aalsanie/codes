@@ -7,17 +7,26 @@ source_dir="$root_dir/smoke-test-maven-kotlin/src/main/kotlin"
 
 kotlin_version="${1:?Usage: verify-kotlin-nullability.sh <kotlin-version>}"
 codes_version="$(sh "$root_dir/scripts/version.sh")"
+repository="${MAVEN_REPO_LOCAL:-$HOME/.m2/repository}"
 
-nullable_probe="$source_dir/NullableReturnProbe.kt"
-null_marked_probe="$source_dir/NullMarkedProbe.kt"
+core_nullable_probe="$source_dir/CoreNullableReturnProbe.kt"
+core_null_marked_probe="$source_dir/CoreNullMarkedProbe.kt"
+spring_null_marked_probe="$source_dir/SpringNullMarkedProbe.kt"
+grpc_null_marked_probe="$source_dir/GrpcNullMarkedProbe.kt"
 output_file="$(mktemp)"
 
 cleanup() {
-    rm -f "$nullable_probe" "$null_marked_probe" "$output_file"
+    rm -f \
+        "$core_nullable_probe" \
+        "$core_null_marked_probe" \
+        "$spring_null_marked_probe" \
+        "$grpc_null_marked_probe" \
+        "$output_file"
 }
 trap cleanup EXIT HUP INT TERM
 
 mvn --batch-mode --no-transfer-progress \
+    "-Dmaven.repo.local=$repository" \
     -f "$pom" \
     "-Dcodes.version=$codes_version" \
     "-Dkotlin.version=$kotlin_version" \
@@ -29,6 +38,7 @@ expect_compile_failure() {
 
     set +e
     mvn --batch-mode --no-transfer-progress --offline \
+        "-Dmaven.repo.local=$repository" \
         -f "$pom" \
         "-Dcodes.version=$codes_version" \
         "-Dkotlin.version=$kotlin_version" \
@@ -51,27 +61,43 @@ expect_compile_failure() {
     rm -f "$probe_file"
 }
 
-cat > "$nullable_probe" <<'EOF'
+cat > "$core_nullable_probe" <<'EOF'
 import io.github.aalsanie.codes.Outcome
 import io.github.aalsanie.codes.StandardOutcomes
 
-fun nullableReturnProbe() {
+fun coreNullableReturnProbe() {
     val outcome = Outcome.of(StandardOutcomes.NOT_FOUND)
     val detail: String = outcome.detail
     println(detail)
 }
 EOF
+expect_compile_failure "$core_nullable_probe"
 
-expect_compile_failure "$nullable_probe"
-
-cat > "$null_marked_probe" <<'EOF'
+cat > "$core_null_marked_probe" <<'EOF'
 import io.github.aalsanie.codes.Outcome
 
-fun nullMarkedProbe() {
+fun coreNullMarkedProbe() {
     Outcome.of(null)
 }
 EOF
+expect_compile_failure "$core_null_marked_probe"
 
-expect_compile_failure "$null_marked_probe"
+cat > "$spring_null_marked_probe" <<'EOF'
+import io.github.aalsanie.codes.spring.OutcomeProblemDetailMapper
 
-echo "Kotlin $kotlin_version JSpecify nullability contract verified."
+fun springNullMarkedProbe() {
+    OutcomeProblemDetailMapper.safeDefaults().map(null)
+}
+EOF
+expect_compile_failure "$spring_null_marked_probe"
+
+cat > "$grpc_null_marked_probe" <<'EOF'
+import io.github.aalsanie.codes.grpc.GoogleRpcOutcomeMapper
+
+fun grpcNullMarkedProbe() {
+    GoogleRpcOutcomeMapper.safeDefaults().map(null)
+}
+EOF
+expect_compile_failure "$grpc_null_marked_probe"
+
+echo "Kotlin $kotlin_version JSpecify nullability contracts verified for core, Spring, and gRPC."

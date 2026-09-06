@@ -1,5 +1,6 @@
 plugins {
     `java-library`
+    jacoco
     id("com.vanniktech.maven.publish")
 }
 
@@ -44,6 +45,7 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
     systemProperty(
         "codes.apiSnapshot",
         rootProject.file("api/codes-spring.api").absolutePath,
@@ -52,6 +54,34 @@ tasks.test {
         "codes.springHttpSnapshot",
         rootProject.file("compatibility/spring-http-problems.snapshot").absolutePath,
     )
+}
+
+jacoco {
+    toolVersion = "0.8.14"
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        html.required.set(true)
+        xml.required.set(true)
+    }
+}
+
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.test)
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                minimum = "0.90".toBigDecimal()
+            }
+            limit {
+                counter = "BRANCH"
+                minimum = "0.80".toBigDecimal()
+            }
+        }
+    }
 }
 
 sourceSets.test {
@@ -106,6 +136,7 @@ tasks.register("verifyPublishedPomContract") {
 }
 
 tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification)
     dependsOn(tasks.named("verifyPublishedPomContract"))
 }
 

@@ -1,4 +1,5 @@
 import java.util.Properties
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     kotlin("jvm") version "2.4.10"
@@ -9,12 +10,22 @@ val codesVersion = Properties().run {
     getProperty("VERSION_NAME") ?: error("VERSION_NAME is missing from gradle.properties")
 }
 
+val consumerJavaVersion = providers.gradleProperty("consumerJavaVersion")
+    .orElse("17")
+    .map(String::toInt)
+
 dependencies {
     implementation("io.github.aalsanie:codes:$codesVersion")
+    implementation("io.github.aalsanie:codes-spring:$codesVersion")
+    implementation("io.github.aalsanie:codes-grpc-java:$codesVersion")
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(consumerJavaVersion.get())
+    compilerOptions {
+        jvmTarget.set(consumerJavaVersion.map { JvmTarget.fromTarget(it.toString()) })
+        freeCompilerArgs.add("-Xjspecify-annotations=strict")
+    }
 }
 
 val kotlinSmoke by tasks.registering(JavaExec::class) {

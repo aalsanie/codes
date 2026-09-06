@@ -6,15 +6,27 @@
   <groupId>io.github.aalsanie.smoke</groupId>
   <artifactId>codes-maven-kotlin-smoke</artifactId>
   <version>1.0.0</version>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <codes.version>0.4.0-SNAPSHOT</codes.version>
     <kotlin.version>2.4.10</kotlin.version>
   </properties>
+
   <dependencies>
     <dependency>
       <groupId>io.github.aalsanie</groupId>
       <artifactId>codes</artifactId>
+      <version>${codes.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.aalsanie</groupId>
+      <artifactId>codes-spring</artifactId>
+      <version>${codes.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.aalsanie</groupId>
+      <artifactId>codes-grpc-java</artifactId>
       <version>${codes.version}</version>
     </dependency>
     <dependency>
@@ -23,6 +35,7 @@
       <version>${kotlin.version}</version>
     </dependency>
   </dependencies>
+
   <build>
     <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
     <plugins>
@@ -35,12 +48,12 @@
             <id>compile</id>
             <phase>compile</phase>
             <goals><goal>compile</goal></goals>
-              <configuration>
-                  <jvmTarget>17</jvmTarget>
-                  <args>
-                      <arg>-Xjspecify-annotations=strict</arg>
-                  </args>
-              </configuration>
+            <configuration>
+              <jvmTarget>17</jvmTarget>
+              <args>
+                <arg>-Xjspecify-annotations=strict</arg>
+              </args>
+            </configuration>
           </execution>
         </executions>
       </plugin>

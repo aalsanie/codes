@@ -6,11 +6,34 @@
   <groupId>io.github.aalsanie.smoke</groupId>
   <artifactId>codes-maven-java-smoke</artifactId>
   <version>1.0.0</version>
+
   <properties>
     <maven.compiler.release>17</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <codes.version>0.4.0-SNAPSHOT</codes.version>
+    <spring.framework.version>7.0.9</spring.framework.version>
+    <grpc.version>1.83.1</grpc.version>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-framework-bom</artifactId>
+        <version>${spring.framework.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-bom</artifactId>
+        <version>${grpc.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
     <dependency>
       <groupId>io.github.aalsanie</groupId>
@@ -28,6 +51,7 @@
       <version>${codes.version}</version>
     </dependency>
   </dependencies>
+
   <build>
     <plugins>
       <plugin>
@@ -35,7 +59,7 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.14.1</version>
         <configuration>
-          <release>17</release>
+          <release>${maven.compiler.release}</release>
           <compilerArgs>
             <arg>-Xlint:all,-serial</arg>
             <arg>-Werror</arg>

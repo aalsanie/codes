@@ -33,22 +33,24 @@ jobs:
       - name: Verify core, adapters, and references
         run: ./gradlew clean verifyAll --stacktrace
 
-      - name: Publish all artifacts to Maven Local
-        run: >-
-          ./gradlew
-          :publishToMavenLocal
-          :codes-spring:publishToMavenLocal
-          :codes-grpc-java:publishToMavenLocal
-          --stacktrace
-
-      - name: Verify local publication files
-        run: sh ./scripts/verify-local-publications.sh
+      - name: Publish clean compatibility artifacts
+        run: sh scripts/prepare-compatibility-repository.sh build/compatibility-maven
 
       - name: Verify Gradle Java consumer
-        run: ./gradlew -p smoke-test-java clean check --stacktrace
+        run: >-
+          ./gradlew
+          -p smoke-test-java
+          -Dmaven.repo.local=${{ github.workspace }}/build/compatibility-maven
+          clean check
+          --stacktrace
 
       - name: Verify Gradle Kotlin consumer
-        run: ./gradlew -p smoke-test-kotlin clean check --stacktrace
+        run: >-
+          ./gradlew
+          -p smoke-test-kotlin
+          -Dmaven.repo.local=${{ github.workspace }}/build/compatibility-maven
+          clean check
+          --stacktrace
 
       - name: Verify Maven Java consumer
         shell: bash
@@ -56,24 +58,30 @@ jobs:
           set -euo pipefail
           version="$(sh ./scripts/version.sh)"
           mvn --batch-mode --no-transfer-progress \
+            "-Dmaven.repo.local=${GITHUB_WORKSPACE}/build/compatibility-maven" \
             -f smoke-test-maven-java/pom.xml \
-            -Dcodes.version="$version" \
+            "-Dcodes.version=$version" \
             clean verify
 
       - name: Verify Maven Kotlin consumer
+        env:
+          MAVEN_REPO_LOCAL: ${{ github.workspace }}/build/compatibility-maven
         run: sh ./scripts/verify-kotlin-nullability.sh 2.4.10
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
           name: coverage-reports
-          path: build/reports/jacoco
+          path: |
+            build/reports/jacoco
+            codes-spring/build/reports/jacoco
+            codes-grpc-java/build/reports/jacoco
           if-no-files-found: warn
           retention-days: 14
 
   kotlin-consumers:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
@@ -92,10 +100,12 @@ jobs:
         with:
           cache-provider: basic
 
-      - name: Publish core locally
-        run: ./gradlew :publishToMavenLocal --stacktrace
+      - name: Publish all artifacts locally
+        run: sh scripts/prepare-compatibility-repository.sh build/compatibility-maven
 
       - name: Verify Kotlin consumer
+        env:
+          MAVEN_REPO_LOCAL: ${{ github.workspace }}/build/compatibility-maven
         run: sh ./scripts/verify-kotlin-nullability.sh "${{ matrix.kotlin }}"
 
   kotlin-consumers-gate:
