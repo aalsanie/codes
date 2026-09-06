@@ -12,6 +12,9 @@
 * Added Spring RFC 9457 golden response contracts plus MVC and WebFlux compatibility checks.
 * Added decoded gRPC wire contracts covering safe, public, and explicitly exposed `google.rpc.Status` payloads.
 * Added gRPC `StatusRuntimeException` trailer round-trip verification.
+* Added a production compatibility matrix for Spring 6/7, minimum/current gRPC, Java 17/21/25, Java/Kotlin consumers, Gradle/Maven, and Linux/Windows/macOS.
+* Added adapter JSpecify consumer verification and adapter coverage gates.
+* Added published-POM verification against clean isolated Maven repositories.
 
 ### Changed
 
@@ -22,6 +25,7 @@
 * Enforced lossless Codes identity compatibility with `google.rpc.ErrorInfo.domain` and `ErrorInfo.reason`.
 * Preserved exposed structured issues through `google.rpc.BadRequest` without normalizing coded issue identity.
 * Reworked the gRPC orders reference to consume `codes-grpc-java` instead of constructing rich error details manually.
+* Moved publication consumer verification to freshly emptied Maven repositories so compatibility checks cannot be satisfied by stale local artifacts.
 
 ## 0.3.1
 

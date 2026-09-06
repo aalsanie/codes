@@ -52,34 +52,41 @@ jobs:
           cache-provider: basic
 
       - name: Verify release tree
-        run: ./gradlew clean verifyAll --stacktrace
+        run: |
+          python scripts/verify-compatibility-matrix.py
+          ./gradlew clean verifyAll --stacktrace
 
-      - name: Publish all artifacts to Maven Local
-        run: >-
-          ./gradlew
-          :publishToMavenLocal
-          :codes-spring:publishToMavenLocal
-          :codes-grpc-java:publishToMavenLocal
-          --stacktrace
-
-      - name: Verify local publication files
-        run: sh ./scripts/verify-local-publications.sh
+      - name: Publish clean release-candidate artifacts
+        run: sh scripts/prepare-compatibility-repository.sh build/compatibility-maven
 
       - name: Verify Gradle Java consumer
-        run: ./gradlew -p smoke-test-java clean check --stacktrace
+        run: >-
+          ./gradlew
+          -p smoke-test-java
+          -Dmaven.repo.local=${{ github.workspace }}/build/compatibility-maven
+          clean check
+          --stacktrace
 
       - name: Verify Gradle Kotlin consumer
-        run: ./gradlew -p smoke-test-kotlin clean check --stacktrace
+        run: >-
+          ./gradlew
+          -p smoke-test-kotlin
+          -Dmaven.repo.local=${{ github.workspace }}/build/compatibility-maven
+          clean check
+          --stacktrace
 
       - name: Verify Maven consumers
         shell: bash
+        env:
+          MAVEN_REPO_LOCAL: ${{ github.workspace }}/build/compatibility-maven
         run: |
           set -euo pipefail
           version="$(sh ./scripts/version.sh)"
 
           mvn --batch-mode --no-transfer-progress \
+            "-Dmaven.repo.local=${MAVEN_REPO_LOCAL}" \
             -f smoke-test-maven-java/pom.xml \
-            -Dcodes.version="$version" \
+            "-Dcodes.version=$version" \
             clean verify
 
           sh ./scripts/verify-kotlin-nullability.sh 2.4.10
