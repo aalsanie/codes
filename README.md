@@ -18,8 +18,6 @@ com.example.payments:PAYMENT_DECLINED
 
 ## Install
 
-`0.4.0-RC1` is a release candidate.
-
 Core:
 
 ```kotlin
