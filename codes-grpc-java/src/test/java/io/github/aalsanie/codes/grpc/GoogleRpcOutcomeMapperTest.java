@@ -29,17 +29,33 @@ class GoogleRpcOutcomeMapperTest {
         "The payment was declined."
     );
 
+    private static final OutcomeDefinition CHECKOUT_INVALID = OutcomeDefinition.custom(
+        APP_NAMESPACE,
+        "CHECKOUT_INVALID",
+        OutcomeState.FAILED,
+        "Checkout request is invalid."
+    );
+
+    private static final OutcomeDefinition RANGE_INVALID = OutcomeDefinition.custom(
+        APP_NAMESPACE,
+        "RANGE_INVALID",
+        OutcomeState.FAILED,
+        "Requested range is invalid."
+    );
+
     private static final OutcomeCode PAYMENT_METHOD_INVALID = OutcomeCode.of(
         APP_NAMESPACE,
         "PAYMENT_METHOD_INVALID"
     );
 
     private static final GrpcOutcomeMapper APP_MAPPER = GrpcOutcomeMapper.standard()
-        .withMapping(PAYMENT_DECLINED, GrpcStatusCode.FAILED_PRECONDITION);
+        .withMapping(PAYMENT_DECLINED, GrpcStatusCode.FAILED_PRECONDITION)
+        .withMapping(CHECKOUT_INVALID, GrpcStatusCode.INVALID_ARGUMENT)
+        .withMapping(RANGE_INVALID, GrpcStatusCode.OUT_OF_RANGE);
 
     @Test
     void safeDefaultsExposeOnlyMachineIdentity() throws Exception {
-        Outcome outcome = testOutcome();
+        Outcome outcome = paymentDeclinedOutcome();
         GoogleRpcOutcomeMapper mapper = mapper(GrpcOutcomeExposure.safeDefaults());
 
         com.google.rpc.Status status = mapper.map(outcome).orNull();
@@ -55,19 +71,20 @@ class GoogleRpcOutcomeMapperTest {
     }
 
     @Test
-    void publicErrorsExposeMessageAndStructuredIssuesButNotOccurrenceDetail() throws Exception {
-        Outcome outcome = testOutcome();
+    void publicErrorsExposeRequestIssuesButNotOccurrenceDetail() throws Exception {
+        Outcome outcome = validationOutcome();
         GoogleRpcOutcomeMapper mapper = mapper(GrpcOutcomeExposure.publicErrors());
 
         com.google.rpc.Status status = mapper.map(outcome).orNull();
 
         assertNotNull(status);
+        assertEquals(3, status.getCode());
         assertEquals(outcome.getMessage(), status.getMessage());
         assertEquals(2, status.getDetailsCount());
 
         ErrorInfo info = status.getDetails(0).unpack(ErrorInfo.class);
         assertEquals(APP_NAMESPACE, info.getDomain());
-        assertEquals("PAYMENT_DECLINED", info.getReason());
+        assertEquals("CHECKOUT_INVALID", info.getReason());
 
         BadRequest request = status.getDetails(1).unpack(BadRequest.class);
         assertEquals(2, request.getFieldViolationsCount());
@@ -85,7 +102,7 @@ class GoogleRpcOutcomeMapperTest {
 
     @Test
     void explicitDetailExposureAddsDebugInfo() throws Exception {
-        Outcome outcome = testOutcome();
+        Outcome outcome = validationOutcome();
         GoogleRpcOutcomeMapper mapper = mapper(new GrpcOutcomeExposure(true, true, true));
 
         com.google.rpc.Status status = mapper.map(outcome).orNull();
@@ -95,6 +112,52 @@ class GoogleRpcOutcomeMapperTest {
         DebugInfo debugInfo = status.getDetails(1).unpack(DebugInfo.class);
         assertEquals("gateway_token=secret-123", debugInfo.getDetail());
         assertTrue(status.getDetails(2).is(BadRequest.class));
+    }
+
+    @Test
+    void outOfRangeCanExposeBadRequest() throws Exception {
+        Outcome outcome = Outcome.of(
+            RANGE_INVALID,
+            null,
+            List.of(Issue.at("offset", "Offset is outside the available range."))
+        );
+
+        com.google.rpc.Status status = mapper(GrpcOutcomeExposure.publicErrors())
+            .map(outcome)
+            .orNull();
+
+        assertNotNull(status);
+        assertEquals(11, status.getCode());
+        BadRequest request = status.getDetails(1).unpack(BadRequest.class);
+        assertEquals("offset", request.getFieldViolations(0).getField());
+    }
+
+    @Test
+    void rejectsBadRequestIssuesForFailedPrecondition() {
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> mapper(GrpcOutcomeExposure.publicErrors()).map(paymentDeclinedOutcome())
+        );
+
+        assertTrue(exception.getMessage().contains("FAILED_PRECONDITION"));
+        assertTrue(exception.getMessage().contains("INVALID_ARGUMENT or OUT_OF_RANGE"));
+    }
+
+    @Test
+    void rejectsPathlessIssueAsBadRequestFieldViolation() {
+        Outcome outcome = Outcome.of(
+            CHECKOUT_INVALID,
+            null,
+            List.of(Issue.of("The request is invalid."))
+        );
+
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> mapper(GrpcOutcomeExposure.publicErrors()).map(outcome)
+        );
+
+        assertTrue(exception.getMessage().contains("request-field path"));
+        assertTrue(exception.getMessage().contains(CHECKOUT_INVALID.getCode().getValue()));
     }
 
     @Test
@@ -147,7 +210,7 @@ class GoogleRpcOutcomeMapperTest {
             "PAYMENT_METHOD_INVALID"
         );
         Outcome outcome = Outcome.of(
-            PAYMENT_DECLINED,
+            CHECKOUT_INVALID,
             null,
             List.of(
                 Issue.at(
@@ -191,9 +254,9 @@ class GoogleRpcOutcomeMapperTest {
         assertTrue(GrpcOutcomeExposure.publicErrors().exposeIssues());
     }
 
-    private static Outcome testOutcome() {
+    private static Outcome validationOutcome() {
         return Outcome.of(
-            PAYMENT_DECLINED,
+            CHECKOUT_INVALID,
             "gateway_token=secret-123",
             List.of(
                 Issue.at(
@@ -203,6 +266,14 @@ class GoogleRpcOutcomeMapperTest {
                 ),
                 Issue.at("amount", "Amount must be positive.")
             )
+        );
+    }
+
+    private static Outcome paymentDeclinedOutcome() {
+        return Outcome.of(
+            PAYMENT_DECLINED,
+            "gateway_token=secret-123",
+            List.of(Issue.of("Payment cannot be completed."))
         );
     }
 

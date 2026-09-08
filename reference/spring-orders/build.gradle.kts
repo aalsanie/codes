@@ -3,7 +3,7 @@ plugins {
     application
 }
 
-version = "0.3.0-reference"
+version = "0.4.0-reference"
 
 java {
     toolchain {

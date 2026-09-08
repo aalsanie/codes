@@ -21,6 +21,9 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Verify release promotion policy
+        run: python scripts/test-release-promotion-policy.py
+
       - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
         with:
           distribution: temurin

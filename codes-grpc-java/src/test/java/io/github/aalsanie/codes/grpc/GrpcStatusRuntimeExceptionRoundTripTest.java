@@ -19,7 +19,6 @@ import io.github.aalsanie.codes.protocol.grpc.GrpcOutcomeMapper;
 import io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode;
 import io.grpc.StatusRuntimeException;
 import io.grpc.protobuf.StatusProto;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,11 +31,11 @@ class GrpcStatusRuntimeExceptionRoundTripTest {
     private static final String PROTECTED_DETAIL = "gateway_token=secret-123";
     private static final String PROTECTED_ISSUE_MESSAGE = "Payment method is invalid.";
 
-    private static final OutcomeDefinition PAYMENT_DECLINED = OutcomeDefinition.custom(
+    private static final OutcomeDefinition CHECKOUT_INVALID = OutcomeDefinition.custom(
         APP_NAMESPACE,
-        "PAYMENT_DECLINED",
+        "CHECKOUT_INVALID",
         OutcomeState.FAILED,
-        "The payment was declined."
+        "Checkout request is invalid."
     );
 
     private static final OutcomeCode PAYMENT_METHOD_INVALID = OutcomeCode.of(
@@ -45,7 +44,7 @@ class GrpcStatusRuntimeExceptionRoundTripTest {
     );
 
     private static final GrpcOutcomeMapper APP_MAPPER = GrpcOutcomeMapper.standard()
-        .withMapping(PAYMENT_DECLINED, GrpcStatusCode.FAILED_PRECONDITION);
+        .withMapping(CHECKOUT_INVALID, GrpcStatusCode.INVALID_ARGUMENT);
 
     @Test
     void decodedStatusRuntimeExceptionsMatchGoldenContract() throws Exception {
@@ -99,7 +98,7 @@ class GrpcStatusRuntimeExceptionRoundTripTest {
 
         assertNotNull(exception);
         assertEquals(
-            io.grpc.Status.Code.FAILED_PRECONDITION,
+            io.grpc.Status.Code.INVALID_ARGUMENT,
             exception.getStatus().getCode()
         );
 
@@ -226,7 +225,7 @@ class GrpcStatusRuntimeExceptionRoundTripTest {
 
     private static Outcome testOutcome() {
         return Outcome.of(
-            PAYMENT_DECLINED,
+            CHECKOUT_INVALID,
             PROTECTED_DETAIL,
             List.of(
                 Issue.at(

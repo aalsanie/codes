@@ -17,7 +17,9 @@ Core semantic snapshots do not freeze human-readable messages, occurrence detail
 
 A change to that fixture is therefore a reviewed Spring wire-contract change.
 
-`grpc-google-rpc-status.snapshot` is the gRPC adapter wire fixture. It is captured after a `google.rpc.Status` is encoded into a `StatusRuntimeException` and decoded from its trailers again. It verifies exact application identity in `ErrorInfo.domain` and `ErrorInfo.reason`, safe message behavior, explicit detail exposure through `DebugInfo`, and structured issues through `BadRequest`.
+`grpc-google-rpc-status.snapshot` is the gRPC adapter wire fixture. It is captured after a `google.rpc.Status` is encoded into a `StatusRuntimeException` and decoded from its trailers again. It verifies exact application identity in `ErrorInfo.domain` and `ErrorInfo.reason`, safe message behavior, explicit detail exposure through `DebugInfo`, and request-field issues through `BadRequest` for a status whose standard detail is `BadRequest`.
+
+When gRPC issue exposure is enabled, the adapter emits `BadRequest` only for `INVALID_ARGUMENT` and `OUT_OF_RANGE`. Every exposed issue must have a request-field path. Incompatible statuses and pathless issues are rejected instead of being encoded with misleading wire semantics.
 
 A change to that fixture is therefore a reviewed gRPC wire-contract change.
 
