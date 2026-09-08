@@ -49,3 +49,13 @@ HttpOutcomeMapper mapper = HttpOutcomeMapper.standard()
 `withMapping` rejects duplicate mappings. `withOverride` rejects outcomes that are not already mapped.
 
 HTTP status constants such as `CREATED`, `ACCEPTED`, `NO_CONTENT`, and `PAYLOAD_TOO_LARGE` remain available for explicit application mappings even though those names are not standard application outcomes.
+
+## gRPC structured issues
+
+`GoogleRpcOutcomeMapper` always preserves the stable Codes identity in `ErrorInfo.domain` and `ErrorInfo.reason` for mapped failures.
+
+When issue exposure is enabled, Codes uses `google.rpc.BadRequest` only for outcomes mapped to gRPC `INVALID_ARGUMENT` or `OUT_OF_RANGE`, matching the standard Google RPC error-detail semantics. Every exposed issue must have a path that the application intends as a request-field path.
+
+If an outcome with issues is mapped to another gRPC status while issue exposure is enabled, the adapter rejects the mapping instead of emitting a misleading `BadRequest`. Pathless issues are rejected for the same reason.
+
+A coded issue can populate `BadRequest.FieldViolation.reason` only when its namespace matches the enclosing outcome namespace, because the reason is scoped by the enclosing `ErrorInfo.domain`.

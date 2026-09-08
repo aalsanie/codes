@@ -1,18 +1,18 @@
 [safe]
-code=9
-message=com.example.checkout:PAYMENT_DECLINED
+code=3
+message=com.example.checkout:CHECKOUT_INVALID
 details=1
 identity.domain=com.example.checkout
-identity.reason=PAYMENT_DECLINED
+identity.reason=CHECKOUT_INVALID
 debug=<absent>
 issues=0
 
 [public]
-code=9
-message=The payment was declined.
+code=3
+message=Checkout request is invalid.
 details=2
 identity.domain=com.example.checkout
-identity.reason=PAYMENT_DECLINED
+identity.reason=CHECKOUT_INVALID
 debug=<absent>
 issues=2
 issue.0.field=paymentMethod
@@ -23,11 +23,11 @@ issue.1.reason=<absent>
 issue.1.description=Amount must be positive.
 
 [explicit]
-code=9
-message=The payment was declined.
+code=3
+message=Checkout request is invalid.
 details=3
 identity.domain=com.example.checkout
-identity.reason=PAYMENT_DECLINED
+identity.reason=CHECKOUT_INVALID
 debug=gateway_token=secret-123
 issues=2
 issue.0.field=paymentMethod

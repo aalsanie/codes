@@ -7,6 +7,7 @@ on:
       - "!v*.*.*-RC*"
 
 permissions:
+  actions: read
   contents: read
 
 concurrency:
@@ -43,6 +44,11 @@ jobs:
           test "$(git rev-parse "${GITHUB_SHA}^{commit}")" = \
                "$(git rev-parse "origin/main^{commit}")"
 
+      - name: Verify release-candidate promotion
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/verify-release-promotion.py
+
       - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
         with:
           distribution: temurin
@@ -57,7 +63,7 @@ jobs:
           python scripts/verify-compatibility-matrix.py
           ./gradlew clean verifyAll --stacktrace
 
-      - name: Publish clean release-candidate artifacts
+      - name: Publish clean release artifacts
         run: sh scripts/prepare-compatibility-repository.sh build/compatibility-maven
 
       - name: Verify Gradle Java consumer

@@ -20,6 +20,7 @@
 * Added ten-minute Spring and gRPC boundary examples.
 * Added a reproducible release-candidate adopter gate against two pinned external codebases.
 * Added a dedicated release-candidate workflow that publishes to Maven Central before running the external adopter gate.
+* Added a final-release promotion gate that requires a successful same-line RC and allows only version substitution between the accepted RC and final release.
 
 ### Changed
 
@@ -28,7 +29,7 @@
 * Kept stable Codes identity in the Spring `code` extension for every mapped failure.
 * Reworked the Spring orders reference to consume `codes-spring` instead of duplicating adapter behavior.
 * Enforced lossless Codes identity compatibility with `google.rpc.ErrorInfo.domain` and `ErrorInfo.reason`.
-* Preserved exposed structured issues through `google.rpc.BadRequest` without normalizing coded issue identity.
+* Restricted exposed `google.rpc.BadRequest` issues to `INVALID_ARGUMENT` and `OUT_OF_RANGE`, requiring request-field paths and rejecting incompatible representations.
 * Reworked the gRPC orders reference to consume `codes-grpc-java` instead of constructing rich error details manually.
 * Moved publication consumer verification to freshly emptied Maven repositories so compatibility checks cannot be satisfied by stale local artifacts.
 * Documented cases where Codes should not be introduced.

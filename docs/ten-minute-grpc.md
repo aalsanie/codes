@@ -15,15 +15,15 @@ Codes `0.4.x` declares gRPC Java 1.75.0 as its compatibility floor.
 ## 2. Define the stable application outcome
 
 ```java
-final class PaymentOutcomes {
-    static final OutcomeDefinition PAYMENT_DECLINED = OutcomeDefinition.custom(
-        "com.example.payments",
-        "PAYMENT_DECLINED",
+final class CheckoutOutcomes {
+    static final OutcomeDefinition CHECKOUT_INVALID = OutcomeDefinition.custom(
+        "com.example.checkout",
+        "CHECKOUT_INVALID",
         OutcomeState.FAILED,
-        "The payment was declined."
+        "Checkout request is invalid."
     );
 
-    private PaymentOutcomes() {
+    private CheckoutOutcomes() {
     }
 }
 ```
@@ -35,8 +35,8 @@ For `ErrorInfo.reason`, the outcome name must satisfy the Google RPC reason cont
 ```java
 GrpcOutcomeMapper grpc = GrpcOutcomeMapper.standard()
     .withMapping(
-        PaymentOutcomes.PAYMENT_DECLINED,
-        GrpcStatusCode.FAILED_PRECONDITION
+        CheckoutOutcomes.CHECKOUT_INVALID,
+        GrpcStatusCode.INVALID_ARGUMENT
     );
 
 GoogleRpcOutcomeMapper errors = new GoogleRpcOutcomeMapper(
@@ -45,15 +45,15 @@ GoogleRpcOutcomeMapper errors = new GoogleRpcOutcomeMapper(
 );
 ```
 
-`publicErrors()` exposes the reusable message and structured issues. It does not expose occurrence `detail`.
+`publicErrors()` exposes the reusable message and request-field issues. It does not expose occurrence `detail`.
 
 ## 4. Send the error through the existing service
 
 ```java
 Outcome outcome = Outcome.of(
-    PaymentOutcomes.PAYMENT_DECLINED,
+    CheckoutOutcomes.CHECKOUT_INVALID,
     null,
-    List.of(Issue.at("paymentMethod", "Payment method is unavailable."))
+    List.of(Issue.at("paymentMethod", "Payment method is invalid."))
 );
 
 StatusRuntimeException error = GrpcOutcomeExceptions
@@ -61,7 +61,7 @@ StatusRuntimeException error = GrpcOutcomeExceptions
     .orNull();
 
 if (error == null) {
-    throw new IllegalStateException("PAYMENT_DECLINED has no gRPC mapping");
+    throw new IllegalStateException("CHECKOUT_INVALID has no gRPC mapping");
 }
 
 responseObserver.onError(error);
@@ -80,17 +80,29 @@ ErrorInfo identity = status.getDetailsList().stream()
     .orElseThrow()
     .unpack(ErrorInfo.class);
 
-assert identity.getDomain().equals("com.example.payments");
-assert identity.getReason().equals("PAYMENT_DECLINED");
+assert identity.getDomain().equals("com.example.checkout");
+assert identity.getReason().equals("CHECKOUT_INVALID");
+
+BadRequest request = status.getDetailsList().stream()
+    .filter(any -> any.is(BadRequest.class))
+    .findFirst()
+    .orElseThrow()
+    .unpack(BadRequest.class);
+
+assert request.getFieldViolations(0).getField().equals("paymentMethod");
 ```
 
-Structured issues are carried in `google.rpc.BadRequest`. Occurrence detail is carried only when `exposeDetail` is explicitly enabled.
+Structured issues are carried in `google.rpc.BadRequest` only when the mapped gRPC status is `INVALID_ARGUMENT` or `OUT_OF_RANGE`. Every exposed issue must have a path that the application intends as a request-field path. Codes rejects incompatible or pathless issue exposure instead of changing its meaning.
+
+Occurrence detail is carried only when `exposeDetail` is explicitly enabled.
 
 The application identity therefore survives:
 
 ```text
-com.example.payments:PAYMENT_DECLINED
-    -> gRPC FAILED_PRECONDITION
-    -> ErrorInfo.domain  = com.example.payments
-    -> ErrorInfo.reason  = PAYMENT_DECLINED
+com.example.checkout:CHECKOUT_INVALID
+    -> gRPC INVALID_ARGUMENT
+    -> ErrorInfo.domain  = com.example.checkout
+    -> ErrorInfo.reason  = CHECKOUT_INVALID
 ```
+
+For outcomes such as `FAILED_PRECONDITION`, Codes does not coerce generic `Issue` values into `PreconditionFailure`; that type has different semantics and requires information the core `Issue` model does not claim to contain.

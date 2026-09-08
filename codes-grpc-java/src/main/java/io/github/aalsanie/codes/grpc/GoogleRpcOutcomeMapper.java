@@ -9,6 +9,7 @@ import io.github.aalsanie.codes.MappingResult;
 import io.github.aalsanie.codes.Outcome;
 import io.github.aalsanie.codes.OutcomeCode;
 import io.github.aalsanie.codes.protocol.grpc.GrpcOutcomeMapper;
+import io.github.aalsanie.codes.protocol.grpc.GrpcStatusCode;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -21,9 +22,14 @@ import java.util.regex.Pattern;
  * the Google RPC contract. A mapped outcome whose name cannot be represented as an
  * {@code ErrorInfo.reason} is rejected.
  *
- * <p>When a coded {@link Issue} is exposed through {@link BadRequest.FieldViolation#getReason() reason},
- * its namespace must match the enclosing outcome namespace. This keeps the field-level reason
- * scoped by the same {@code ErrorInfo.domain} and avoids silently changing issue identity.
+ * <p>Structured issues are exposed through {@link BadRequest} only for gRPC
+ * {@code INVALID_ARGUMENT} and {@code OUT_OF_RANGE}. Every exposed issue must have a path that the
+ * application intends as a request-field path. Pathless issues cannot be represented honestly as
+ * {@link BadRequest.FieldViolation} and are rejected instead of being emitted with an empty field.
+ *
+ * <p>When a coded {@link Issue} is exposed through {@link BadRequest.FieldViolation#getReason()
+ * reason}, its namespace must match the enclosing outcome namespace. This keeps the field-level
+ * reason scoped by the same {@code ErrorInfo.domain} and avoids silently changing issue identity.
  */
 public final class GoogleRpcOutcomeMapper {
     private static final int MAX_GOOGLE_REASON_LENGTH = 63;
@@ -55,17 +61,17 @@ public final class GoogleRpcOutcomeMapper {
         }
 
         return mapper.map(outcome).fold(
-            status -> MappingResult.mapped(createStatus(outcome, status.getValue())),
+            status -> MappingResult.mapped(createStatus(outcome, status)),
             MappingResult::unmapped
         );
     }
 
-    private com.google.rpc.Status createStatus(Outcome outcome, int statusCode) {
+    private com.google.rpc.Status createStatus(Outcome outcome, GrpcStatusCode statusCode) {
         OutcomeCode outcomeCode = outcome.getCode();
         requireGoogleReason(outcomeCode, "outcome code", "google.rpc.ErrorInfo.reason");
 
         com.google.rpc.Status.Builder status = com.google.rpc.Status.newBuilder()
-            .setCode(statusCode)
+            .setCode(statusCode.getValue())
             .setMessage(exposure.exposeMessage() ? outcome.getMessage() : outcomeCode.getValue())
             .addDetails(Any.pack(
                 ErrorInfo.newBuilder()
@@ -83,23 +89,31 @@ public final class GoogleRpcOutcomeMapper {
         }
 
         if (exposure.exposeIssues() && !outcome.getIssues().isEmpty()) {
-            status.addDetails(Any.pack(toBadRequest(outcome)));
+            status.addDetails(Any.pack(toBadRequest(outcome, statusCode)));
         }
 
         return status.build();
     }
 
-    private static BadRequest toBadRequest(Outcome outcome) {
+    private static BadRequest toBadRequest(Outcome outcome, GrpcStatusCode statusCode) {
+        requireBadRequestStatus(outcome, statusCode);
+
         OutcomeCode outcomeCode = outcome.getCode();
         BadRequest.Builder request = BadRequest.newBuilder();
 
         for (Issue issue : outcome.getIssues()) {
-            BadRequest.FieldViolation.Builder violation = BadRequest.FieldViolation.newBuilder()
-                .setDescription(issue.getMessage());
-
-            if (issue.getPath() != null) {
-                violation.setField(issue.getPath());
+            String path = issue.getPath();
+            if (path == null) {
+                throw new IllegalArgumentException(
+                    "issue on outcome '" + outcomeCode.getValue()
+                        + "' cannot be represented as google.rpc.BadRequest.FieldViolation"
+                        + "; exposed gRPC issues must have a request-field path"
+                );
             }
+
+            BadRequest.FieldViolation.Builder violation = BadRequest.FieldViolation.newBuilder()
+                .setField(path)
+                .setDescription(issue.getMessage());
 
             OutcomeCode issueCode = issue.getCode();
             if (issueCode != null) {
@@ -111,6 +125,20 @@ public final class GoogleRpcOutcomeMapper {
         }
 
         return request.build();
+    }
+
+    private static void requireBadRequestStatus(Outcome outcome, GrpcStatusCode statusCode) {
+        if (statusCode == GrpcStatusCode.INVALID_ARGUMENT
+            || statusCode == GrpcStatusCode.OUT_OF_RANGE) {
+            return;
+        }
+
+        throw new IllegalArgumentException(
+            "issues on outcome '" + outcome.getCode().getValue()
+                + "' cannot be represented as google.rpc.BadRequest when mapped to gRPC "
+                + statusCode
+                + "; BadRequest issue exposure requires INVALID_ARGUMENT or OUT_OF_RANGE"
+        );
     }
 
     private static void requireFieldViolationIdentity(
