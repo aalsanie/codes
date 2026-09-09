@@ -115,8 +115,6 @@ validation.toOutcome(StandardOutcomes.INVALID_ARGUMENT);
 
 A valid result produces `StandardOutcomes.OK`. An invalid result produces the supplied failed definition. The supplied definition is validated even for a valid result so invalid conversion policy fails immediately.
 
-`ValidationResult` is a convenience type. It is not the application result model and does not define control flow.
-
 ## Protocol mappings
 
 `OutcomeMapper<T>` maps an application outcome definition to a boundary representation.
@@ -163,4 +161,4 @@ Human-readable text may evolve without changing outcome identity:
 
 Consumers must use `OutcomeCode`, not human-readable text, when behavior depends on identity.
 
-`api/codes.api` protects the public Java API shape. `compatibility/` protects semantic catalog and mapping behavior.
+Runtime, framework, language, and build-tool support is documented in the [compatibility policy](compatibility-policy.md).

@@ -1,6 +1,6 @@
 # gRPC Java in ten minutes
 
-This example adds Codes at a gRPC server boundary. It does not replace the service's domain model.
+This example adds Codes at a gRPC server boundary while the service keeps its existing domain model.
 
 ## 1. Add the adapter
 

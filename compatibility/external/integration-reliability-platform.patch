@@ -1,0 +1,159 @@
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -6,6 +6,8 @@
+
+ group = "io.github.aalsanie"
+ version = "0.0.1-SNAPSHOT"
++
++val codesVersion = providers.gradleProperty("codesVersion").orElse("0.4.0-RC1")
+
+ java {
+ 	toolchain {
+@@ -18,6 +20,7 @@
+ }
+
+ dependencies {
++	implementation("io.github.aalsanie:codes-spring:${codesVersion.get()}")
+ 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+ 	implementation("org.springframework.boot:spring-boot-starter-flyway")
+ 	implementation("org.springframework.boot:spring-boot-starter-validation")
+--- a/src/main/java/io/github/aalsanie/irp/common/api/GlobalExceptionHandler.java
++++ b/src/main/java/io/github/aalsanie/irp/common/api/GlobalExceptionHandler.java
+@@ -1,5 +1,8 @@
+ package io.github.aalsanie.irp.common.api;
+
++import io.github.aalsanie.codes.Outcome;
++import io.github.aalsanie.codes.StandardOutcomes;
++import io.github.aalsanie.codes.spring.OutcomeProblemDetailMapper;
+ import io.github.aalsanie.irp.connections.DuplicateConnectionException;
+ import io.github.aalsanie.irp.events.DuplicateInboundEventException;
+ import io.github.aalsanie.irp.events.EventNotFoundException;
+@@ -7,6 +10,7 @@
+ import io.github.aalsanie.irp.events.InvalidEventProcessingStatus;
+ import jakarta.servlet.http.HttpServletRequest;
+ import org.springframework.http.HttpStatus;
++import org.springframework.http.ProblemDetail;
+ import org.springframework.http.ResponseEntity;
+ import org.springframework.web.bind.annotation.ExceptionHandler;
+ import org.springframework.web.bind.annotation.RestControllerAdvice;
+@@ -15,6 +19,8 @@
+
+ @RestControllerAdvice
+ public class GlobalExceptionHandler {
++    private static final OutcomeProblemDetailMapper CODES_PROBLEMS =
++            OutcomeProblemDetailMapper.safeDefaults();
+
+     @ExceptionHandler(value = {DuplicateConnectionException.class})
+     public ResponseEntity<ApiErrorResponse> handleException(DuplicateConnectionException exception,
+@@ -53,14 +59,16 @@
+     }
+
+     @ExceptionHandler(value = {DuplicateInboundEventException.class})
+-    public ResponseEntity<ApiErrorResponse> handleException(DuplicateInboundEventException exception, HttpServletRequest request) {
+-        HttpStatus status = HttpStatus.CONFLICT;
+-        ApiErrorResponse response = new ApiErrorResponse(Instant.now(),
+-                status.value(),
+-                exception.getMessage(),
+-                status.getReasonPhrase(),
+-                request.getRequestURI());
+-        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
++    public ResponseEntity<ProblemDetail> handleException(DuplicateInboundEventException exception) {
++        ProblemDetail problem = CODES_PROBLEMS
++                .map(Outcome.of(StandardOutcomes.ALREADY_EXISTS))
++                .orNull();
++
++        if (problem == null) {
++            throw new IllegalStateException("ALREADY_EXISTS has no HTTP mapping", exception);
++        }
++
++        return ResponseEntity.status(problem.getStatus()).body(problem);
+     }
+
+     @ExceptionHandler(value = {InvalidEventProcessingStatus.class})
+--- /dev/null
++++ b/src/test/java/io/github/aalsanie/irp/CodesSpringIntegrationTest.java
+@@ -0,0 +1,84 @@
++package io.github.aalsanie.irp;
++
++import io.github.aalsanie.irp.connections.ConnectionStatus;
++import io.github.aalsanie.irp.connections.IntegrationConnection;
++import io.github.aalsanie.irp.connections.IntegrationConnectionRepository;
++import io.github.aalsanie.irp.events.EventRepository;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.Test;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.boot.test.context.SpringBootTest;
++import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
++import org.springframework.context.annotation.Import;
++import org.springframework.http.MediaType;
++import org.springframework.test.web.servlet.MockMvc;
++
++import java.time.Instant;
++import java.util.UUID;
++
++import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
++import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
++import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
++import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
++
++@SpringBootTest
++@AutoConfigureMockMvc
++@Import(TestcontainersConfiguration.class)
++class CodesSpringIntegrationTest {
++
++    @Autowired
++    private MockMvc mockMvc;
++
++    @Autowired
++    private EventRepository eventRepository;
++
++    @Autowired
++    private IntegrationConnectionRepository connectionRepository;
++
++    @BeforeEach
++    void setUp() {
++        eventRepository.deleteAll();
++        connectionRepository.deleteAll();
++    }
++
++    @Test
++    void duplicateInboundEventKeepsStableCodesIdentityWithoutOccurrenceDetail()
++            throws Exception {
++        IntegrationConnection connection = connectionRepository.saveAndFlush(
++                new IntegrationConnection(
++                        UUID.randomUUID(),
++                        "integration-test",
++                        "stripe",
++                        ConnectionStatus.ACTIVE,
++                        Instant.now()
++                )
++        );
++
++        String request = """
++                {
++                  "externalEventId": "evt_codes",
++                  "eventType": "payment.succeeded",
++                  "payload": {
++                    "paymentId": "pay_codes"
++                  }
++                }
++                """;
++
++        String endpoint = "/api/v1/connections/" + connection.getId() + "/events";
++
++        mockMvc.perform(post(endpoint)
++                        .contentType(MediaType.APPLICATION_JSON)
++                        .content(request))
++                .andExpect(status().isCreated());
++
++        mockMvc.perform(post(endpoint)
++                        .contentType(MediaType.APPLICATION_JSON)
++                        .content(request))
++                .andExpect(status().isConflict())
++                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
++                .andExpect(jsonPath("$.status").value(409))
++                .andExpect(jsonPath("$.code")
++                        .value("io.github.aalsanie.codes.standard:ALREADY_EXISTS"))
++                .andExpect(jsonPath("$.detail").doesNotExist());
++    }
++}

@@ -1,0 +1,365 @@
+--- a/patient-service/pom.xml
++++ b/patient-service/pom.xml
+@@ -28,8 +28,14 @@
+ 	</scm>
+ 	<properties>
+ 		<java.version>21</java.version>
++		<codes.version>0.4.0-RC1</codes.version>
+ 	</properties>
+ 	<dependencies>
++		<dependency>
++			<groupId>io.github.aalsanie</groupId>
++			<artifactId>codes-spring</artifactId>
++			<version>${codes.version}</version>
++		</dependency>
+ 		<dependency>
+ 			<groupId>org.springframework.boot</groupId>
+ 			<artifactId>spring-boot-starter-data-jpa</artifactId>
+--- a/patient-service/src/main/java/com/pm/patientservice/exception/GlobalExceptionHandler.java
++++ b/patient-service/src/main/java/com/pm/patientservice/exception/GlobalExceptionHandler.java
+@@ -1,31 +1,57 @@
+ package com.pm.patientservice.exception;
+ 
+-import jakarta.validation.constraints.Email;
++import io.github.aalsanie.codes.Issue;
++import io.github.aalsanie.codes.Outcome;
++import io.github.aalsanie.codes.StandardOutcomes;
++import io.github.aalsanie.codes.spring.OutcomeProblemDetailMapper;
++import io.github.aalsanie.codes.spring.SpringHttpStatusMapper;
++import io.github.aalsanie.codes.spring.SpringOutcomeExposure;
++import io.github.aalsanie.codes.spring.SpringProblemTypeUriMapper;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
++import org.springframework.http.ProblemDetail;
+ import org.springframework.http.ResponseEntity;
+ import org.springframework.web.bind.MethodArgumentNotValidException;
+ import org.springframework.web.bind.annotation.ControllerAdvice;
+ import org.springframework.web.bind.annotation.ExceptionHandler;
+ 
++import java.util.ArrayList;
+ import java.util.HashMap;
++import java.util.List;
+ import java.util.Map;
+ 
+ @ControllerAdvice
+ public class GlobalExceptionHandler {
+ 
+     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
++    private static final OutcomeProblemDetailMapper VALIDATION_PROBLEMS =
++            new OutcomeProblemDetailMapper(
++                    SpringHttpStatusMapper.standard(),
++                    SpringOutcomeExposure.publicErrors(),
++                    SpringProblemTypeUriMapper.empty()
++            );
+ 
+     @ExceptionHandler(MethodArgumentNotValidException.class)
+-    public ResponseEntity<Map<String, String>> handleValidationException(
++    public ResponseEntity<ProblemDetail> handleValidationException(
+             MethodArgumentNotValidException ex) {
+ 
+-        Map<String, String> errors = new HashMap<>();
++        List<Issue> issues = new ArrayList<>();
++        ex.getBindingResult().getFieldErrors().forEach(error -> {
++            String message = error.getDefaultMessage() == null
++                    ? "Invalid value."
++                    : error.getDefaultMessage();
++            issues.add(Issue.at(error.getField(), message));
++        });
+ 
+-        ex.getBindingResult().getFieldErrors().forEach(
+-                error -> errors.put(error.getField(), error.getDefaultMessage()));
++        ProblemDetail problem = VALIDATION_PROBLEMS
++                .map(Outcome.of(StandardOutcomes.INVALID_ARGUMENT, null, issues))
++                .orNull();
+ 
+-        return ResponseEntity.badRequest().body(errors);
++        if (problem == null) {
++            throw new IllegalStateException("INVALID_ARGUMENT has no HTTP mapping");
++        }
++
++        return ResponseEntity.status(problem.getStatus()).body(problem);
+     }
+ 
+     @ExceptionHandler(EmailAlreadyExistsException.class)
+--- /dev/null
++++ b/patient-service/src/test/java/com/pm/patientservice/exception/CodesValidationBoundaryTest.java
+@@ -0,0 +1,55 @@
++package com.pm.patientservice.exception;
++
++import jakarta.validation.Valid;
++import jakarta.validation.constraints.NotBlank;
++import org.junit.jupiter.api.Test;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
++import org.springframework.context.annotation.Import;
++import org.springframework.http.MediaType;
++import org.springframework.web.bind.annotation.PostMapping;
++import org.springframework.web.bind.annotation.RequestBody;
++import org.springframework.web.bind.annotation.RestController;
++import org.springframework.test.web.servlet.MockMvc;
++
++import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
++import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
++import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
++import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
++
++@WebMvcTest(controllers = CodesValidationBoundaryTest.TestController.class)
++@Import(GlobalExceptionHandler.class)
++class CodesValidationBoundaryTest {
++
++    @Autowired
++    private MockMvc mockMvc;
++
++    @Test
++    void validationKeepsCodesIdentityAndStructuredIssuesAtHttpBoundary()
++            throws Exception {
++        mockMvc.perform(post("/codes-test/validate")
++                        .contentType(MediaType.APPLICATION_JSON)
++                        .content("""
++                                {
++                                  "email": ""
++                                }
++                                """))
++                .andExpect(status().isBadRequest())
++                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
++                .andExpect(jsonPath("$.status").value(400))
++                .andExpect(jsonPath("$.code")
++                        .value("io.github.aalsanie.codes.standard:INVALID_ARGUMENT"))
++                .andExpect(jsonPath("$.issues[0].path").value("email"))
++                .andExpect(jsonPath("$.detail").doesNotExist());
++    }
++
++    @RestController
++    static class TestController {
++        @PostMapping("/codes-test/validate")
++        void validate(@Valid @RequestBody TestRequest request) {
++        }
++    }
++
++    record TestRequest(@NotBlank String email) {
++    }
++}
+--- a/billing-service/pom.xml
++++ b/billing-service/pom.xml
+@@ -28,8 +28,26 @@
+ 	</scm>
+ 	<properties>
+ 		<java.version>21</java.version>
++		<codes.version>0.4.0-RC1</codes.version>
++		<grpc.version>1.75.0</grpc.version>
+ 	</properties>
++	<dependencyManagement>
++		<dependencies>
++			<dependency>
++				<groupId>io.grpc</groupId>
++				<artifactId>grpc-bom</artifactId>
++				<version>${grpc.version}</version>
++				<type>pom</type>
++				<scope>import</scope>
++			</dependency>
++		</dependencies>
++	</dependencyManagement>
+ 	<dependencies>
++		<dependency>
++			<groupId>io.github.aalsanie</groupId>
++			<artifactId>codes-grpc-java</artifactId>
++			<version>${codes.version}</version>
++		</dependency>
+ 		<dependency>
+ 			<groupId>org.springframework.boot</groupId>
+ 			<artifactId>spring-boot-starter-web</artifactId>
+@@ -45,17 +63,17 @@
+ 		<dependency>
+ 			<groupId>io.grpc</groupId>
+ 			<artifactId>grpc-netty-shaded</artifactId>
+-			<version>1.69.0</version>
++			<version>${grpc.version}</version>
+ 		</dependency>
+ 		<dependency>
+ 			<groupId>io.grpc</groupId>
+ 			<artifactId>grpc-protobuf</artifactId>
+-			<version>1.69.0</version>
++			<version>${grpc.version}</version>
+ 		</dependency>
+ 		<dependency>
+ 			<groupId>io.grpc</groupId>
+ 			<artifactId>grpc-stub</artifactId>
+-			<version>1.69.0</version>
++			<version>${grpc.version}</version>
+ 		</dependency>
+ 		<dependency> <!-- necessary for Java 9+ -->
+ 			<groupId>org.apache.tomcat</groupId>
+@@ -103,7 +121,7 @@
+ 					<protocArtifact>com.google.protobuf:protoc:3.25.5:exe:${os.detected.classifier}</protocArtifact>
+ 					<pluginId>grpc-java</pluginId>
+ 					<!--suppress UnresolvedMavenProperty -->
+-					<pluginArtifact>io.grpc:protoc-gen-grpc-java:1.68.1:exe:${os.detected.classifier}</pluginArtifact>
++					<pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
+ 				</configuration>
+ 				<executions>
+ 					<execution>
+--- a/billing-service/src/main/java/com/pm/billingservice/grpc/BillingGrpcService.java
++++ b/billing-service/src/main/java/com/pm/billingservice/grpc/BillingGrpcService.java
+@@ -1,21 +1,58 @@
+ package com.pm.billingservice.grpc;
+ 
++import billing.BillingRequest;
+ import billing.BillingResponse;
+ import billing.BillingServiceGrpc.BillingServiceImplBase;
++import io.github.aalsanie.codes.Issue;
++import io.github.aalsanie.codes.Outcome;
++import io.github.aalsanie.codes.StandardOutcomes;
++import io.github.aalsanie.codes.grpc.GoogleRpcOutcomeMapper;
++import io.github.aalsanie.codes.grpc.GrpcOutcomeExceptions;
++import io.github.aalsanie.codes.grpc.GrpcOutcomeExposure;
++import io.github.aalsanie.codes.protocol.grpc.GrpcOutcomeMapper;
++import io.grpc.StatusRuntimeException;
+ import io.grpc.stub.StreamObserver;
+ import net.devh.boot.grpc.server.service.GrpcService;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ 
++import java.util.ArrayList;
++import java.util.List;
++
+ @GrpcService
+ public class BillingGrpcService extends BillingServiceImplBase {
+     private static final Logger log = LoggerFactory.getLogger(BillingGrpcService.class);
++    private static final GoogleRpcOutcomeMapper ERRORS =
++            new GoogleRpcOutcomeMapper(
++                    GrpcOutcomeMapper.standard(),
++                    GrpcOutcomeExposure.publicErrors()
++            );
+ 
+     @Override
+-    public void createBillingAccount(billing.BillingRequest billingRequest,
++    public void createBillingAccount(BillingRequest billingRequest,
+                                      StreamObserver<BillingResponse> responseObserver) {
+ 
+         log.info("createBillingAccount request received {}", billingRequest.toString());
++
++        List<Issue> issues = validationIssues(billingRequest);
++        if (!issues.isEmpty()) {
++            Outcome outcome = Outcome.of(
++                    StandardOutcomes.INVALID_ARGUMENT,
++                    null,
++                    issues
++            );
++
++            StatusRuntimeException error = GrpcOutcomeExceptions
++                    .toStatusRuntimeException(outcome, ERRORS)
++                    .orNull();
++
++            if (error == null) {
++                throw new IllegalStateException("INVALID_ARGUMENT has no gRPC mapping");
++            }
++
++            responseObserver.onError(error);
++            return;
++        }
+ 
+         // Business logic - e.g. save to database, perform calculations, etc
+ 
+@@ -27,4 +64,20 @@
+         responseObserver.onNext(response);
+         responseObserver.onCompleted();
+     }
++
++    private static List<Issue> validationIssues(BillingRequest request) {
++        List<Issue> issues = new ArrayList<>();
++
++        if (request.getPatientId().isBlank()) {
++            issues.add(Issue.at("patientId", "Patient id is required."));
++        }
++        if (request.getName().isBlank()) {
++            issues.add(Issue.at("name", "Name is required."));
++        }
++        if (request.getEmail().isBlank()) {
++            issues.add(Issue.at("email", "Email is required."));
++        }
++
++        return issues;
++    }
+ }
+--- /dev/null
++++ b/billing-service/src/test/java/com/pm/billingservice/grpc/BillingGrpcServiceCodesTest.java
+@@ -0,0 +1,79 @@
++package com.pm.billingservice.grpc;
++
++import billing.BillingRequest;
++import billing.BillingResponse;
++import com.google.protobuf.Any;
++import com.google.rpc.BadRequest;
++import com.google.rpc.ErrorInfo;
++import io.grpc.StatusRuntimeException;
++import io.grpc.protobuf.StatusProto;
++import io.grpc.stub.StreamObserver;
++import org.junit.jupiter.api.Test;
++
++import java.util.concurrent.atomic.AtomicReference;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertInstanceOf;
++import static org.junit.jupiter.api.Assertions.assertNotNull;
++import static org.junit.jupiter.api.Assertions.assertNull;
++
++class BillingGrpcServiceCodesTest {
++
++    @Test
++    void invalidRequestKeepsCodesIdentityAndStructuredIssuesInTrailers()
++            throws Exception {
++        AtomicReference<Throwable> failure = new AtomicReference<>();
++        AtomicReference<BillingResponse> response = new AtomicReference<>();
++
++        StreamObserver<BillingResponse> observer = new StreamObserver<>() {
++            @Override
++            public void onNext(BillingResponse value) {
++                response.set(value);
++            }
++
++            @Override
++            public void onError(Throwable throwable) {
++                failure.set(throwable);
++            }
++
++            @Override
++            public void onCompleted() {
++            }
++        };
++
++        new BillingGrpcService().createBillingAccount(
++                BillingRequest.getDefaultInstance(),
++                observer
++        );
++
++        assertNull(response.get());
++
++        StatusRuntimeException exception =
++                assertInstanceOf(StatusRuntimeException.class, failure.get());
++
++        com.google.rpc.Status status = StatusProto.fromThrowable(exception);
++        assertNotNull(status);
++        assertEquals(3, status.getCode());
++
++        ErrorInfo identity = null;
++        BadRequest badRequest = null;
++
++        for (Any detail : status.getDetailsList()) {
++            if (detail.is(ErrorInfo.class)) {
++                identity = detail.unpack(ErrorInfo.class);
++            } else if (detail.is(BadRequest.class)) {
++                badRequest = detail.unpack(BadRequest.class);
++            }
++        }
++
++        assertNotNull(identity);
++        assertEquals("io.github.aalsanie.codes.standard", identity.getDomain());
++        assertEquals("INVALID_ARGUMENT", identity.getReason());
++
++        assertNotNull(badRequest);
++        assertEquals(3, badRequest.getFieldViolationsCount());
++        assertEquals("patientId", badRequest.getFieldViolations(0).getField());
++        assertEquals("name", badRequest.getFieldViolations(1).getField());
++        assertEquals("email", badRequest.getFieldViolations(2).getField());
++    }
++}
