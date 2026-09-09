@@ -180,7 +180,7 @@ Codes is useful when the identity itself matters independently of HTTP or gRPC. 
 * [HTTP and gRPC mappings](docs/protocol-mappings.md)
 * [Compatibility policy](docs/compatibility-policy.md)
 * [Artifact contracts](docs/artifact-contracts.md)
-* [RC1 real-adopter gate](docs/rc1-adopter-gate.md)
+* [RC1 external integration gate](docs/rc1-integration-gate.md)
 
 ## License
 

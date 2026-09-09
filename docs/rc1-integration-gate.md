@@ -1,4 +1,4 @@
-# 0.4.0-RC1 real-adopter gate
+# RC1 external integration gate
 
 The RC is not accepted because it has downloads, stars, or because the Codes repository's own reference applications compile.
 
