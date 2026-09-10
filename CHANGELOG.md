@@ -6,62 +6,35 @@
 
 ### Added
 
-* Added Maven publications for `codes-spring` and `codes-grpc-java`.
-* Added adapter API snapshots and exact published dependency budgets.
-* Added clean Gradle and Maven consumer checks that resolve all three artifacts from isolated publication repositories.
-* Added application-owned Spring problem-type URI mappings.
-* Added a thin failed-`Outcome` to Spring `ErrorResponseException` bridge.
-* Added Spring RFC 9457 golden response contracts plus MVC and WebFlux compatibility checks.
-* Added decoded gRPC wire contracts covering safe, public, and explicitly exposed `google.rpc.Status` payloads.
-* Added gRPC `StatusRuntimeException` trailer round-trip verification.
-* Added a production compatibility matrix for Spring 6/7, minimum/current gRPC, Java 17/21/25, Java/Kotlin consumers, Gradle/Maven, and Linux/Windows/macOS.
-* Added adapter JSpecify consumer verification and adapter coverage gates.
-* Added published-POM verification against clean isolated Maven repositories.
-* Added ten-minute Spring and gRPC boundary examples.
-* Added a reproducible release-candidate adopter gate against two pinned external codebases.
-* Added a dedicated release-candidate workflow that publishes to Maven Central before running the external adopter gate.
-* Added a final-release promotion gate that requires a successful same-line RC and allows only version substitution between the accepted RC and final release.
+* Added `codes-spring` for mapping failed outcomes to Spring RFC 9457 `ProblemDetail`.
+* Added application-owned problem-type URI mappings and explicit Spring exposure policies.
+* Added conversion from failed outcomes to Spring `ErrorResponseException`.
+* Added `codes-grpc-java` for mapping failed outcomes to `google.rpc.Status` with stable identity in `ErrorInfo`.
+* Added conversion to gRPC `StatusRuntimeException` and structured request-field issues through `BadRequest` for `INVALID_ARGUMENT` and `OUT_OF_RANGE`.
+* Added Spring and gRPC integration guides.
 
 ### Changed
 
-* Set all publishable modules to `0.4.0-RC1`.
-* Corrected Spring problem details so reusable outcome messages are titles for explicitly mapped problem types and occurrence details use RFC `detail`.
-* Kept stable Codes identity in the Spring `code` extension for every mapped failure.
-* Reworked the Spring orders reference to consume `codes-spring` instead of duplicating adapter behavior.
-* Enforced lossless Codes identity compatibility with `google.rpc.ErrorInfo.domain` and `ErrorInfo.reason`.
-* Restricted exposed `google.rpc.BadRequest` issues to `INVALID_ARGUMENT` and `OUT_OF_RANGE`, requiring request-field paths and rejecting incompatible representations.
-* Reworked the gRPC orders reference to consume `codes-grpc-java` instead of constructing rich error details manually.
-* Moved publication consumer verification to freshly emptied Maven repositories so compatibility checks cannot be satisfied by stale local artifacts.
-* Documented cases where Codes should not be introduced.
+* Set all published artifacts to `0.4.0-RC1`.
+* Spring problem details preserve Codes identity in the `code` extension, use the reusable outcome message as the title for explicitly mapped problem types, and keep occurrence detail in RFC `detail`.
+* gRPC mappings reject lossy `ErrorInfo` identities and incompatible `BadRequest` issue representations instead of normalizing or coercing them.
 
 ## 0.3.1
 
 ### Changed
 
 * Restored the published core to zero runtime dependencies.
-* Kept JSpecify as a compile-time-only dependency for nullability metadata.
+* Kept JSpecify as compile-time-only nullability metadata.
 * Preserved Kotlin nullability semantics across the supported Kotlin compiler matrix.
-
-### Added
-
-* Added publication verification that prevents runtime dependencies from being introduced.
-* Added verification that the published Maven POM remains dependency-free.
 
 ## 0.3.0
 
 ### Changed
 
 * Reimplemented the published core in Java 17.
-* Removed the Kotlin standard library from the core dependency graph.
-* Added `org.jspecify:jspecify:1.0.0` as the core's only dependency for nullability annotations.
-* Replaced Kotlin-specific ABI compatibility with a deterministic public Java API snapshot.
+* Removed the Kotlin standard library from the core runtime dependency graph.
+* Added JSpecify nullability metadata for Java and Kotlin consumers.
 * Preserved the 17 standard outcomes, `OutcomeState` assignments, and built-in HTTP and gRPC mappings from `0.2.0`.
-
-### Added
-
-* Added Gradle and Maven consumer verification for Java and Kotlin.
-* Added Kotlin compiler compatibility and JSpecify nullability contract verification.
-* Added publication checks for the expected runtime and Maven dependency contract.
 
 ### Removed
 
@@ -69,6 +42,7 @@
 * Removed the Kotlin `Outcome.toException` extension; use `OutcomeExceptions.toException(...)` or `new OutcomeException(...)`.
 
 ### Breaking
+
 `0.3.0` is source and binary incompatible with `0.2.x` for callers that depend on the removed Kotlin-generated API or `Outcome.toException`.
 The standard outcome identities, states, and built-in protocol mappings are unchanged from `0.2.0`.
 
@@ -84,10 +58,6 @@ The standard outcome identities, states, and built-in protocol mappings are unch
 ### Removed
 
 * Removed `StandardOutcomes.CREATED`, `ACCEPTED`, `NO_CONTENT`, and `PAYLOAD_TOO_LARGE`.
-
-### Added
-
-* Added semantic compatibility checks for standard outcome codes, states, and built-in mappings.
 
 ## 0.1.0
 

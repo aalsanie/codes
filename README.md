@@ -4,19 +4,22 @@
 [![CI](https://github.com/aalsanie/codes/actions/workflows/ci.yml/badge.svg)](https://github.com/aalsanie/codes/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-Codes provides stable application outcome identities and explicit boundary mappings for JVM applications. Applications keep their own domain result or error model and use Codes where multiple parts of a system need to agree on outcome meaning without coupling that meaning to HTTP, gRPC, serialization, or a framework.
-
-A domain outcome can keep the same identity across boundaries:
+Codes provides stable application outcome identities and explicit boundary mappings for JVM applications. Applications keep their existing domain result or error model; Codes gives the system one machine identity for an outcome while HTTP and gRPC remain boundary decisions.
 
 ```text
-com.example.payments:PAYMENT_DECLINED
-                    |
-                    +-- HTTP 422
-                    +-- gRPC FAILED_PRECONDITION
-                    +-- logs/metrics keep PAYMENT_DECLINED
+com.example.orders:ORDER_NOT_FOUND
+                    -> HTTP 404
+                    -> gRPC NOT_FOUND
+                    -> metric label
+                    -> log identity
+                    -> test assertion
 ```
 
+The same `OutcomeCode` can be used wherever application code, observability, and protocol boundaries need to agree on the outcome.
+
 ## Install
+
+`0.4.0-RC1` is the current pre-release on Maven Central.
 
 Core:
 
@@ -120,7 +123,7 @@ ValidationResult validation = ValidationResult.invalid(
 Outcome outcome = validation.toOutcome(StandardOutcomes.INVALID_ARGUMENT);
 ```
 
-`ValidationResult` is a small convenience for aggregating issues. It is not intended to replace an application's result, validation, or functional programming model.
+`ValidationResult` is a small convenience for aggregating issues and converting them into an outcome.
 
 ## HTTP
 
@@ -158,29 +161,11 @@ check(outcome.code == StandardOutcomes.NOT_FOUND.code)
 check(status?.value == 404)
 ```
 
-## When not to use Codes
-
-Do not add Codes only to standardize a single controller's error body. Framework-native errors are usually enough for a small application with one boundary.
-
-Codes is also the wrong tool when:
-
-* the application does not need a stable outcome identity outside one protocol boundary;
-* you want a `Result`, `Either`, validation framework, exception hierarchy, or business workflow engine;
-* you want Spring Boot auto-configuration, exception scanning, annotations, or hidden mapping conventions;
-* an existing public error schema is fixed and migration cost is larger than the value of cross-boundary identity;
-* you need protocol adapters beyond the ones Codes actually provides and do not want to own that adapter;
-* you need a central outcome registry, governance service, code generator, or schema distribution system;
-* the application has not yet decided which domain outcomes are stable enough to become machine identities.
-
-Codes is useful when the identity itself matters independently of HTTP or gRPC. If that is not true, another abstraction is probably unnecessary.
-
 ## Reference
 
 * [Semantic contract](docs/semantic-contract.md)
 * [HTTP and gRPC mappings](docs/protocol-mappings.md)
 * [Compatibility policy](docs/compatibility-policy.md)
-* [Artifact contracts](docs/artifact-contracts.md)
-* [RC1 real-adopter gate](docs/rc1-adopter-gate.md)
 
 ## License
 

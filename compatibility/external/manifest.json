@@ -1,0 +1,24 @@
+{
+  "integrations": [
+    {
+      "id": "integration-reliability-platform",
+      "repository": "https://github.com/aalsanie/integration-reliability-platform.git",
+      "commit": "1f99ad8ec4b0b7da2a20ab20101a6adb677cb735",
+      "patch": "compatibility/external/integration-reliability-platform.patch",
+      "boundary": "Spring MVC",
+      "scope": "replace one handwritten duplicate-event HTTP mapping with codes-spring",
+      "dependency_notes": "The application uses Spring Boot 4.1.0 and owns Spring dependency management.",
+      "expected_identity": "io.github.aalsanie.codes.standard:ALREADY_EXISTS"
+    },
+    {
+      "id": "patient-mgmt-microservices",
+      "repository": "https://github.com/pratham2402/patient-mgmt-microservices.git",
+      "commit": "26645990986a4f17b755ec17ed390c9e90112d36",
+      "patch": "compatibility/external/patient-mgmt-microservices.patch",
+      "boundary": "Spring MVC + gRPC Java",
+      "scope": "exercise INVALID_ARGUMENT through Spring MVC and gRPC Java",
+      "dependency_notes": "The repository pins gRPC 1.69.0; the integration patch updates that line to the Codes 1.75.0 compatibility floor.",
+      "expected_identity": "io.github.aalsanie.codes.standard:INVALID_ARGUMENT"
+    }
+  ]
+}

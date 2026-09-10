@@ -71,7 +71,7 @@
 
      @ExceptionHandler(value = {InvalidEventProcessingStatus.class})
 --- /dev/null
-+++ b/src/test/java/io/github/aalsanie/irp/CodesSpringAdoptionTest.java
++++ b/src/test/java/io/github/aalsanie/irp/CodesSpringIntegrationTest.java
 @@ -0,0 +1,84 @@
 +package io.github.aalsanie.irp;
 +
@@ -99,7 +99,7 @@
 +@SpringBootTest
 +@AutoConfigureMockMvc
 +@Import(TestcontainersConfiguration.class)
-+class CodesSpringAdoptionTest {
++class CodesSpringIntegrationTest {
 +
 +    @Autowired
 +    private MockMvc mockMvc;
@@ -122,7 +122,7 @@
 +        IntegrationConnection connection = connectionRepository.saveAndFlush(
 +                new IntegrationConnection(
 +                        UUID.randomUUID(),
-+                        "pilot",
++                        "integration-test",
 +                        "stripe",
 +                        ConnectionStatus.ACTIVE,
 +                        Instant.now()
@@ -131,10 +131,10 @@
 +
 +        String request = """
 +                {
-+                  "externalEventId": "evt_rc1",
++                  "externalEventId": "evt_codes",
 +                  "eventType": "payment.succeeded",
 +                  "payload": {
-+                    "paymentId": "pay_rc1"
++                    "paymentId": "pay_codes"
 +                  }
 +                }
 +                """;

@@ -1,6 +1,6 @@
 # Spring in ten minutes
 
-This example adds Codes at the HTTP boundary only. It does not replace the application's exception or domain model.
+This example adds Codes at the HTTP boundary while the application keeps its existing exception and domain model.
 
 ## 1. Add the adapter
 
@@ -75,7 +75,7 @@ final class PaymentExceptionHandler {
 }
 ```
 
-Codes is not discovering exceptions. The application still decides which exception means which outcome.
+The application decides which exception maps to which outcome.
 
 ## Result
 

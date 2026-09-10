@@ -106,7 +106,7 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_IN_MEMORY_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_IN_MEMORY_KEY_PASSWORD }}
 
-  real-adopters:
+  external-integrations:
     needs: publish
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -121,24 +121,24 @@ jobs:
           distribution: temurin
           java-version: "21"
 
-      - name: Verify two external adopters from Maven Central
+      - name: Verify external integrations from Maven Central
         run: >-
-          bash scripts/verify-rc-adopters.sh
+          bash scripts/verify-rc-integrations.sh
           "${{ needs.publish.outputs.version }}"
-          build/reports/rc1-adopters.md
+          build/reports/rc-integrations.md
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
-          name: rc1-adopter-gate
+          name: rc-external-integrations
           path: |
-            build/reports/rc1-adopters.md
-            build/rc-adopters/*.log
+            build/reports/rc-integrations.md
+            build/rc-integrations/*.log
           if-no-files-found: warn
           retention-days: 30
 
   github-prerelease:
-    needs: [publish, real-adopters]
+    needs: [publish, external-integrations]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

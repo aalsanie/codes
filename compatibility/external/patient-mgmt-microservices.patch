@@ -103,7 +103,7 @@
 +import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 +import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 +
-+@WebMvcTest(controllers = CodesValidationBoundaryTest.PilotController.class)
++@WebMvcTest(controllers = CodesValidationBoundaryTest.TestController.class)
 +@Import(GlobalExceptionHandler.class)
 +class CodesValidationBoundaryTest {
 +
@@ -113,7 +113,7 @@
 +    @Test
 +    void validationKeepsCodesIdentityAndStructuredIssuesAtHttpBoundary()
 +            throws Exception {
-+        mockMvc.perform(post("/codes-pilot/validate")
++        mockMvc.perform(post("/codes-test/validate")
 +                        .contentType(MediaType.APPLICATION_JSON)
 +                        .content("""
 +                                {
@@ -130,13 +130,13 @@
 +    }
 +
 +    @RestController
-+    static class PilotController {
-+        @PostMapping("/codes-pilot/validate")
-+        void validate(@Valid @RequestBody PilotRequest request) {
++    static class TestController {
++        @PostMapping("/codes-test/validate")
++        void validate(@Valid @RequestBody TestRequest request) {
 +        }
 +    }
 +
-+    record PilotRequest(@NotBlank String email) {
++    record TestRequest(@NotBlank String email) {
 +    }
 +}
 --- a/billing-service/pom.xml
