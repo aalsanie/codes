@@ -12,7 +12,7 @@
     <codes.version>0.4.0-SNAPSHOT</codes.version>
     <kotlin.version>2.4.10</kotlin.version>
     <spring.framework.version>6.0.0</spring.framework.version>
-    <grpc.version>1.75.0</grpc.version>
+    <grpc.version>1.84.0</grpc.version>
   </properties>
 
   <dependencyManagement>
