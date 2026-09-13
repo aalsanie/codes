@@ -49,8 +49,8 @@ All artifacts require Java 17+. The core artifact has zero runtime dependencies.
 
 For a boundary-first walkthrough:
 
-* [Spring in ten minutes](docs/ten-minute-spring.md)
-* [gRPC Java in ten minutes](docs/ten-minute-grpc.md)
+* [Spring integration](docs/ten-minute-spring.md)
+* [gRPC integration](docs/ten-minute-grpc.md)
 
 ## Custom outcomes
 
