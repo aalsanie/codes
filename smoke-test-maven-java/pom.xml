@@ -12,7 +12,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <codes.version>0.4.0-SNAPSHOT</codes.version>
     <spring.framework.version>7.0.9</spring.framework.version>
-    <grpc.version>1.83.1</grpc.version>
+    <grpc.version>1.84.0</grpc.version>
   </properties>
 
   <dependencyManagement>
