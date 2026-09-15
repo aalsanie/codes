@@ -1,4 +1,4 @@
-# Spring in ten minutes
+# Spring Integration
 
 This example adds Codes at the HTTP boundary while the application keeps its existing exception and domain model.
 

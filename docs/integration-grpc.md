@@ -1,4 +1,4 @@
-# gRPC Java in ten minutes
+# gRPC Integration
 
 This example adds Codes at a gRPC server boundary while the service keeps its existing domain model.
 

@@ -17,8 +17,8 @@ WORKFLOW_FILE = "release-candidate.yml"
 PROMOTION_FILES = (
     "CHANGELOG.md",
     "README.md",
-    "docs/ten-minute-grpc.md",
-    "docs/ten-minute-spring.md",
+    "docs/integration-grpc.md",
+    "docs/integration-spring.md",
     "gradle.properties",
 )
 

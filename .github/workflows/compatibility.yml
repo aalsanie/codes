@@ -84,6 +84,14 @@ jobs:
       - name: Build clean publication repository
         run: sh scripts/prepare-compatibility-repository.sh build/compatibility-maven
 
+      - name: Upload clean publication repository
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: compatibility-publications
+          path: build/compatibility-maven
+          if-no-files-found: error
+          retention-days: 1
+
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
@@ -117,8 +125,11 @@ jobs:
         with:
           cache-provider: basic
 
-      - name: Publish clean artifacts
-        run: sh scripts/prepare-compatibility-repository.sh build/compatibility-maven
+      - name: Download clean publication repository
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+        with:
+          name: compatibility-publications
+          path: build/compatibility-maven
 
       - name: Verify Gradle Java consumer
         run: >-
@@ -166,8 +177,11 @@ jobs:
         with:
           cache-provider: basic
 
-      - name: Publish clean artifacts
-        run: sh scripts/prepare-compatibility-repository.sh build/compatibility-maven
+      - name: Download clean publication repository
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+        with:
+          name: compatibility-publications
+          path: build/compatibility-maven
 
       - name: Verify Kotlin JSpecify consumer
         env:
@@ -200,17 +214,11 @@ jobs:
         with:
           cache-provider: basic
 
-      - name: Publish clean artifacts (Unix)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: sh scripts/prepare-compatibility-repository.sh build/compatibility-maven
-
-      - name: Publish clean artifacts (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $repo = Join-Path $env:GITHUB_WORKSPACE "build\compatibility-maven"
-          .\scripts\prepare-compatibility-repository.ps1 -Repository $repo
+      - name: Download clean publication repository
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+        with:
+          name: compatibility-publications
+          path: build/compatibility-maven
 
       - name: Verify Gradle Java and Kotlin consumers (Unix)
         if: runner.os != 'Windows'
