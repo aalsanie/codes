@@ -20,11 +20,11 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 dependencies {
-    compileOnly("org.jspecify:jspecify:1.0.0")
+    compileOnly("org.jspecify:jspecify:1.0.1")
 
     testImplementation(platform("org.junit:junit-bom:${providers.gradleProperty("junitVersion").get()}"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("org.jspecify:jspecify:1.0.0")
+    testImplementation("org.jspecify:jspecify:1.0.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
