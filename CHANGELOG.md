@@ -1,6 +1,28 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
+
+### Added
+
+* Added `ProblemType` as the reusable RFC 9457 problem type definition.
+* Added `ProblemDetails` as the minimal Spring bridge for creating native `ProblemDetail` instances.
+
+### Changed
+
+* Refocused Codes on reusable RFC 9457 problem types.
+* Kept the core artifact dependency-free.
+* Made Spring Framework an application-provided integration dependency instead of a transitive dependency of `codes-spring`.
+* Reduced the verified compatibility matrix to the Java, Spring, Kotlin, Gradle, and Maven combinations relevant to the new API.
+
+### Removed
+
+* Removed the generic outcome model, standard outcome catalog, registries, validation aggregation, exception helpers, and protocol-neutral status mappings.
+* Removed the gRPC artifact and integration.
+* Removed release-candidate promotion requirements tied to the superseded 0.4.0-RC1 API.
+
+### Breaking
+
+`0.4.0` is intentionally source and binary incompatible with the 0.4.0-RC1 outcome-oriented API. Applications using pre-0.4 outcome APIs must migrate to `ProblemType` only where they represent reusable HTTP problem definitions.
 
 ## 0.4.0-RC1
 
