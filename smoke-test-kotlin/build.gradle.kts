@@ -6,7 +6,7 @@ plugins {
 }
 
 val properties = Properties().apply {
-    rootProject.projectDir.parentFile.resolve("gradle.properties").inputStream().use(::load)
+    rootProject.projectDir.parentFile.resolve("gradle.properties").inputStream().use { load(it) }
 }
 val codesVersion = properties.getProperty("VERSION_NAME")
 val springVersion = properties.getProperty("springFrameworkVersion")
