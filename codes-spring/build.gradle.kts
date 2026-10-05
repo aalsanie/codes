@@ -81,8 +81,13 @@ tasks.jacocoTestCoverageVerification {
 tasks.register("verifyPublishedPomContract") {
     group = "verification"
     description = "Verifies the Codes Spring POM metadata and dependency budget."
+
     dependsOn("generatePomFileForMavenPublication")
 
+    val artifactId = artifactId
+    val pomName = pomName
+    val pomDescription = pomDescription
+    val expectedPomDependencies = expectedPomDependencies
     val pomFile = layout.buildDirectory.file("publications/maven/pom-default.xml")
     inputs.file(pomFile)
 
@@ -98,8 +103,12 @@ tasks.register("verifyPublishedPomContract") {
             .first { it.nodeName == name }
             .textContent
 
-        check(directText("name") == pomName)
-        check(directText("description") == pomDescription)
+        check(directText("name") == pomName) {
+            "Unexpected $artifactId POM name: ${directText("name")}"
+        }
+        check(directText("description") == pomDescription) {
+            "Unexpected $artifactId POM description: ${directText("description")}"
+        }
 
         val dependencies = document.getElementsByTagName("dependency")
         val actual = (0 until dependencies.length).map { index ->
@@ -109,7 +118,8 @@ tasks.register("verifyPublishedPomContract") {
         }.sorted()
 
         check(actual == expectedPomDependencies.sorted()) {
-            "$artifactId dependency budget changed. Expected ${expectedPomDependencies.sorted()}, found $actual."
+            "$artifactId dependency budget changed. " +
+                "Expected ${expectedPomDependencies.sorted()}, found $actual."
         }
     }
 }
