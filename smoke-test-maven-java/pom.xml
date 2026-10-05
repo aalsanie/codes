@@ -1,20 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0">
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.github.aalsanie.smoke</groupId>
   <artifactId>codes-maven-java-smoke</artifactId>
   <version>1.0.0</version>
-
   <properties>
     <maven.compiler.release>17</maven.compiler.release>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <codes.version>0.4.0-SNAPSHOT</codes.version>
+    <codes.version>0.4.0</codes.version>
     <spring.framework.version>7.0.9</spring.framework.version>
-    <grpc.version>1.83.1</grpc.version>
   </properties>
-
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -24,16 +18,8 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-bom</artifactId>
-        <version>${grpc.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
     </dependencies>
   </dependencyManagement>
-
   <dependencies>
     <dependency>
       <groupId>io.github.aalsanie</groupId>
@@ -46,26 +32,12 @@
       <version>${codes.version}</version>
     </dependency>
     <dependency>
-      <groupId>io.github.aalsanie</groupId>
-      <artifactId>codes-grpc-java</artifactId>
-      <version>${codes.version}</version>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-web</artifactId>
     </dependency>
   </dependencies>
-
   <build>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.14.1</version>
-        <configuration>
-          <release>${maven.compiler.release}</release>
-          <compilerArgs>
-            <arg>-Xlint:all,-serial</arg>
-            <arg>-Werror</arg>
-          </compilerArgs>
-        </configuration>
-      </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
