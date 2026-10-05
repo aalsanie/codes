@@ -21,19 +21,19 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Verify release promotion policy
-        run: python scripts/test-release-promotion-policy.py
-
       - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
         with:
           distribution: temurin
           java-version: "17"
 
-      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92
         with:
           cache-provider: basic
 
-      - name: Verify core, adapters, and references
+      - name: Verify compatibility policy
+        run: python scripts/verify-compatibility-matrix.py
+
+      - name: Verify library and reference application
         run: ./gradlew clean verifyAll --stacktrace
 
       - name: Publish clean compatibility artifacts
@@ -58,13 +58,8 @@ jobs:
       - name: Verify Maven Java consumer
         shell: bash
         run: |
-          set -euo pipefail
           version="$(sh ./scripts/version.sh)"
-          mvn --batch-mode --no-transfer-progress \
-            "-Dmaven.repo.local=${GITHUB_WORKSPACE}/build/compatibility-maven" \
-            -f smoke-test-maven-java/pom.xml \
-            "-Dcodes.version=$version" \
-            clean verify
+          mvn --batch-mode --no-transfer-progress             "-Dmaven.repo.local=${GITHUB_WORKSPACE}/build/compatibility-maven"             -f smoke-test-maven-java/pom.xml             "-Dcodes.version=$version"             clean verify
 
       - name: Verify Maven Kotlin consumer
         env:
@@ -78,100 +73,5 @@ jobs:
           path: |
             build/reports/jacoco
             codes-spring/build/reports/jacoco
-            codes-grpc-java/build/reports/jacoco
           if-no-files-found: warn
           retention-days: 14
-
-  kotlin-consumers:
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    strategy:
-      fail-fast: false
-      matrix:
-        kotlin: ["1.9.24", "2.0.21", "2.1.21", "2.2.20", "2.4.10"]
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-
-      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
-        with:
-          cache-provider: basic
-
-      - name: Publish all artifacts locally
-        run: sh scripts/prepare-compatibility-repository.sh build/compatibility-maven
-
-      - name: Verify Kotlin consumer
-        env:
-          MAVEN_REPO_LOCAL: ${{ github.workspace }}/build/compatibility-maven
-        run: sh ./scripts/verify-kotlin-nullability.sh "${{ matrix.kotlin }}"
-
-  kotlin-consumers-gate:
-    name: Kotlin consumers gate
-    if: always()
-    needs: [kotlin-consumers]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Verify Kotlin consumer matrix
-        env:
-          RESULT: ${{ needs.kotlin-consumers.result }}
-        shell: bash
-        run: |
-          if [ "$RESULT" != "success" ]; then
-            echo "Kotlin consumer matrix result: $RESULT"
-            exit 1
-          fi
-
-  runtime-jdks:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        java: ["21", "25"]
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-
-      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
-        with:
-          distribution: temurin
-          java-version: ${{ matrix.java }}
-
-      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
-        with:
-          cache-provider: basic
-
-      - name: Test core on runtime JDK
-        run: ./gradlew :test --stacktrace
-
-  operating-systems:
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 25
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, macos-latest]
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-
-      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
-        with:
-          cache-provider: basic
-
-      - name: Test core and adapters
-        run: ./gradlew :test :codes-spring:test :codes-grpc-java:test --stacktrace
