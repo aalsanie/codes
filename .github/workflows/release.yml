@@ -4,10 +4,9 @@ on:
   push:
     tags:
       - "v*.*.*"
-      - "!v*.*.*-RC*"
+      - "!v*.*.*-*"
 
 permissions:
-  actions: read
   contents: read
 
 concurrency:
@@ -31,30 +30,18 @@ jobs:
           set -euo pipefail
 
           version="$(sh ./scripts/version.sh)"
-
-          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
-            echo "Invalid release version: $version"
-            exit 1
-          }
-
+          [[ "$version" =~ ^[0-9]+.[0-9]+.[0-9]+$ ]]
           test "${GITHUB_REF_NAME}" = "v${version}"
 
           git fetch --no-tags origin main
-
-          test "$(git rev-parse "${GITHUB_SHA}^{commit}")" = \
-               "$(git rev-parse "origin/main^{commit}")"
-
-      - name: Verify release-candidate promotion
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: python scripts/verify-release-promotion.py
+          test "$(git rev-parse "${GITHUB_SHA}^{commit}")" =                "$(git rev-parse "origin/main^{commit}")"
 
       - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
         with:
           distribution: temurin
           java-version: "17"
 
-      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92
         with:
           cache-provider: basic
 
@@ -63,47 +50,32 @@ jobs:
           python scripts/verify-compatibility-matrix.py
           ./gradlew clean verifyAll --stacktrace
 
-      - name: Publish clean release artifacts
-        run: sh scripts/prepare-compatibility-repository.sh build/compatibility-maven
+      - name: Build clean release artifacts
+        run: sh scripts/prepare-compatibility-repository.sh build/release-maven
 
-      - name: Verify Gradle Java consumer
-        run: >-
-          ./gradlew
-          -p smoke-test-java
-          -Dmaven.repo.local=${{ github.workspace }}/build/compatibility-maven
-          clean check
-          --stacktrace
+      - name: Verify Gradle consumers
+        shell: bash
+        run: |
+          ./gradlew             -p smoke-test-java             "-Dmaven.repo.local=${GITHUB_WORKSPACE}/build/release-maven"             clean check             --stacktrace
 
-      - name: Verify Gradle Kotlin consumer
-        run: >-
-          ./gradlew
-          -p smoke-test-kotlin
-          -Dmaven.repo.local=${{ github.workspace }}/build/compatibility-maven
-          clean check
-          --stacktrace
+          ./gradlew             -p smoke-test-kotlin             "-Dmaven.repo.local=${GITHUB_WORKSPACE}/build/release-maven"             clean check             --stacktrace
 
       - name: Verify Maven consumers
         shell: bash
         env:
-          MAVEN_REPO_LOCAL: ${{ github.workspace }}/build/compatibility-maven
+          MAVEN_REPO_LOCAL: ${{ github.workspace }}/build/release-maven
         run: |
-          set -euo pipefail
           version="$(sh ./scripts/version.sh)"
 
-          mvn --batch-mode --no-transfer-progress \
-            "-Dmaven.repo.local=${MAVEN_REPO_LOCAL}" \
-            -f smoke-test-maven-java/pom.xml \
-            "-Dcodes.version=$version" \
-            clean verify
+          mvn --batch-mode --no-transfer-progress             "-Dmaven.repo.local=${MAVEN_REPO_LOCAL}"             -f smoke-test-maven-java/pom.xml             "-Dcodes.version=$version"             clean verify
 
           sh ./scripts/verify-kotlin-nullability.sh 2.4.10
 
-      - name: Publish all Codes artifacts to Maven Central
+      - name: Publish to Maven Central
         run: >-
           ./gradlew
           :publishToMavenCentral
           :codes-spring:publishToMavenCentral
-          :codes-grpc-java:publishToMavenCentral
           --no-configuration-cache
           --stacktrace
         env:
@@ -148,7 +120,4 @@ jobs:
 
           test -s release-notes.md
 
-          gh release create "$GITHUB_REF_NAME" \
-            --verify-tag \
-            --title "Codes $version" \
-            --notes-file release-notes.md
+          gh release create "$GITHUB_REF_NAME"             --verify-tag             --title "Codes $version"             --notes-file release-notes.md
