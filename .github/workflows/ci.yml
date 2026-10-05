@@ -58,6 +58,7 @@ jobs:
       - name: Verify Maven Java consumer
         shell: bash
         run: |
+          set -euo pipefail
           version="$(sh ./scripts/version.sh)"
           mvn --batch-mode --no-transfer-progress             "-Dmaven.repo.local=${GITHUB_WORKSPACE}/build/compatibility-maven"             -f smoke-test-maven-java/pom.xml             "-Dcodes.version=$version"             clean verify
 
