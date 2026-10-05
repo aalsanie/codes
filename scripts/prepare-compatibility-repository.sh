@@ -16,7 +16,6 @@ mkdir -p "$repository"
     "-Dmaven.repo.local=$repository" \
     :publishToMavenLocal \
     :codes-spring:publishToMavenLocal \
-    :codes-grpc-java:publishToMavenLocal \
     --stacktrace
 
 MAVEN_REPO_LOCAL="$repository" sh "$root_dir/scripts/verify-local-publications.sh"
