@@ -47,6 +47,7 @@ jobs:
 
       - name: Verify release tree
         run: |
+          set -euo pipefail
           python scripts/verify-compatibility-matrix.py
           ./gradlew clean verifyAll --stacktrace
 
@@ -56,6 +57,8 @@ jobs:
       - name: Verify Gradle consumers
         shell: bash
         run: |
+          set -euo pipefail
+
           ./gradlew             -p smoke-test-java             "-Dmaven.repo.local=${GITHUB_WORKSPACE}/build/release-maven"             clean check             --stacktrace
 
           ./gradlew             -p smoke-test-kotlin             "-Dmaven.repo.local=${GITHUB_WORKSPACE}/build/release-maven"             clean check             --stacktrace
@@ -65,6 +68,7 @@ jobs:
         env:
           MAVEN_REPO_LOCAL: ${{ github.workspace }}/build/release-maven
         run: |
+          set -euo pipefail
           version="$(sh ./scripts/version.sh)"
 
           mvn --batch-mode --no-transfer-progress             "-Dmaven.repo.local=${MAVEN_REPO_LOCAL}"             -f smoke-test-maven-java/pom.xml             "-Dcodes.version=$version"             clean verify
