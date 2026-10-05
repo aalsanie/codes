@@ -17,7 +17,7 @@ class ApiSnapshotTest {
 
         assertEquals(
             expected,
-            PublicApiSnapshot.create(OutcomeProblemDetailMapper.class, "io.github.aalsanie.codes.spring")
+            PublicApiSnapshot.create(ProblemDetails.class, "io.github.aalsanie.codes.spring")
         );
     }
 }
