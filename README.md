@@ -4,28 +4,51 @@
 [![CI](https://github.com/aalsanie/codes/actions/workflows/ci.yml/badge.svg)](https://github.com/aalsanie/codes/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-Codes provides stable application outcome identities and explicit boundary mappings for JVM applications. Applications keep their existing domain result or error model; Codes gives the system one machine identity for an outcome while HTTP and gRPC remain boundary decisions.
+Codes is a tiny Java library for reusable RFC 9457 problem type definitions.
 
-```text
-com.example.orders:ORDER_NOT_FOUND
-                    -> HTTP 404
-                    -> gRPC NOT_FOUND
-                    -> metric label
-                    -> log identity
-                    -> test assertion
+Spring provides `ProblemDetail` for an individual error occurrence. Codes provides the stable definition that can be reused across controllers, exception handlers, tests, and documentation.
+
+```java
+ProblemType ORDER_NOT_FOUND = ProblemType.of(
+    URI.create("https://api.example.com/problems/order-not-found"),
+    404,
+    "Order not found"
+);
 ```
 
-The same `OutcomeCode` can be used wherever application code, observability, and protocol boundaries need to agree on the outcome.
+With Spring:
+
+```java
+ProblemDetail problem = ProblemDetails.forType(ORDER_NOT_FOUND);
+```
+
+or with occurrence-specific detail:
+
+```java
+ProblemDetail problem = ProblemDetails.forTypeAndDetail(
+    ORDER_NOT_FOUND,
+    "Order o-123 was not found."
+);
+```
+
+The resulting problem keeps the reusable definition stable:
+
+```json
+{
+  "type": "https://api.example.com/problems/order-not-found",
+  "title": "Order not found",
+  "status": 404,
+  "detail": "Order o-123 was not found."
+}
+```
 
 ## Install
-
-`0.4.0-RC1` is the current pre-release on Maven Central.
 
 Core:
 
 ```kotlin
 dependencies {
-    implementation("io.github.aalsanie:codes:0.4.0-RC1")
+    implementation("io.github.aalsanie:codes:0.4.0")
 }
 ```
 
@@ -33,138 +56,87 @@ Spring:
 
 ```kotlin
 dependencies {
-    implementation("io.github.aalsanie:codes-spring:0.4.0-RC1")
+    implementation("io.github.aalsanie:codes-spring:0.4.0")
 }
 ```
 
-gRPC Java:
+All artifacts require Java 17+.
 
-```kotlin
-dependencies {
-    implementation("io.github.aalsanie:codes-grpc-java:0.4.0-RC1")
+The core artifact has no runtime dependencies and publishes no Maven dependencies. `codes-spring` depends on the core artifact but does not impose a Spring Framework version; the application supplies Spring Web.
+
+## Define a problem catalog
+
+Applications can use the factory for a small number of problem types or implement `ProblemType` directly for a reusable catalog:
+
+```java
+enum OrderProblems implements ProblemType {
+    ORDER_NOT_FOUND(
+        "https://api.example.com/problems/order-not-found",
+        404,
+        "Order not found"
+    ),
+    ORDER_ALREADY_CANCELLED(
+        "https://api.example.com/problems/order-already-cancelled",
+        409,
+        "Order already cancelled"
+    );
+
+    private final URI type;
+    private final int status;
+    private final String title;
+
+    OrderProblems(String type, int status, String title) {
+        this.type = URI.create(type);
+        this.status = status;
+        this.title = title;
+    }
+
+    public URI getType() {
+        return type;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public String getTitle() {
+        return title;
+    }
 }
 ```
 
-All artifacts require Java 17+. The core artifact has zero runtime dependencies. The Spring and gRPC artifacts depend only on the boundary libraries they adapt.
-
-For a boundary-first walkthrough:
-
-* [Spring integration](docs/integration-spring.md)
-* [gRPC integration](docs/integration-grpc.md)
-
-## Custom outcomes
+Different application exceptions can then reuse the same public problem type:
 
 ```java
-OutcomeDefinition paymentDeclined = OutcomeDefinition.custom(
-    "com.example.payments",
-    "PAYMENT_DECLINED",
-    OutcomeState.FAILED,
-    "The payment was declined."
-);
+@ExceptionHandler(OrderNotFoundException.class)
+ProblemDetail handleOrderNotFound(OrderNotFoundException ex) {
+    return ProblemDetails.forTypeAndDetail(
+        OrderProblems.ORDER_NOT_FOUND,
+        "Order " + ex.orderId() + " was not found."
+    );
+}
 
-Outcome outcome = Outcome.of(paymentDeclined);
-
-HttpOutcomeMapper http = HttpOutcomeMapper.standard()
-    .withMapping(paymentDeclined, HttpStatusCode.of(422));
-
-GrpcOutcomeMapper grpc = GrpcOutcomeMapper.standard()
-    .withMapping(paymentDeclined, GrpcStatusCode.FAILED_PRECONDITION);
+@ExceptionHandler(ArchivedOrderNotFoundException.class)
+ProblemDetail handleArchivedOrderNotFound(ArchivedOrderNotFoundException ex) {
+    return ProblemDetails.forTypeAndDetail(
+        OrderProblems.ORDER_NOT_FOUND,
+        "Archived order " + ex.orderId() + " was not found."
+    );
+}
 ```
 
-`OutcomeCode` is the stable machine identity. Protocol mappings do not change that identity.
+Codes does not own exception handling, controller advice, localization, extension properties, or request-specific data. Those remain application and Spring concerns.
 
-## Standard outcomes
+## Do I need Codes?
 
-```text
-OK
+If an application only creates one or two `ProblemDetail` instances directly, a local helper may be simpler.
 
-INVALID_ARGUMENT
-UNAUTHENTICATED
-PERMISSION_DENIED
-NOT_FOUND
-ALREADY_EXISTS
-FAILED_PRECONDITION
-OUT_OF_RANGE
-RATE_LIMITED
-CANCELLED
-DEADLINE_EXCEEDED
-ABORTED
-UNIMPLEMENTED
-UNAVAILABLE
-INTERNAL
-DATA_LOSS
-RESOURCE_EXHAUSTED
-```
-
-`OK` is the standard successful outcome. Applications define domain-specific success, pending, and failure outcomes when the standard catalog does not match the operation.
-
-## Runtime occurrences
-
-```java
-Outcome outcome = Outcome.of(
-    StandardOutcomes.NOT_FOUND,
-    "customerId=123"
-);
-
-System.out.println(outcome.getCode());
-System.out.println(outcome.getMessage());
-System.out.println(outcome.getDetail());
-```
-
-`message` comes from the reusable definition. `detail` belongs to one occurrence.
-
-## Structured issues
-
-```java
-ValidationResult validation = ValidationResult.invalid(
-    Issue.at("email", "Invalid email address.")
-);
-
-Outcome outcome = validation.toOutcome(StandardOutcomes.INVALID_ARGUMENT);
-```
-
-`ValidationResult` is a small convenience for aggregating issues and converting them into an outcome.
-
-## HTTP
-
-```java
-HttpStatusCode status = HttpOutcomeMapper.standard()
-    .map(StandardOutcomes.NOT_FOUND)
-    .orNull();
-
-assert status == HttpStatusCode.NOT_FOUND;
-```
-
-Some standard outcomes are intentionally left unmapped for HTTP when the correct status depends on the application.
-
-## gRPC
-
-```java
-GrpcStatusCode status = GrpcOutcomeMapper.standard()
-    .map(StandardOutcomes.NOT_FOUND)
-    .orNull();
-
-assert status == GrpcStatusCode.NOT_FOUND;
-```
-
-The standard gRPC mapper covers all standard outcomes.
-
-## Kotlin
-
-Java getters and static factories are directly usable as Kotlin properties and calls:
-
-```kotlin
-val outcome = Outcome.of(StandardOutcomes.NOT_FOUND, "customerId=123")
-val status = HttpOutcomeMapper.standard().map(outcome).orNull()
-
-check(outcome.code == StandardOutcomes.NOT_FOUND.code)
-check(status?.value == 404)
-```
+Codes is useful when problem types are part of the API contract and need to be defined once and reused consistently across multiple handlers, modules, tests, or documentation.
 
 ## Reference
 
+* [Spring integration](docs/integration-spring.md)
 * [Semantic contract](docs/semantic-contract.md)
-* [HTTP and gRPC mappings](docs/protocol-mappings.md)
 * [Compatibility policy](docs/compatibility-policy.md)
 
 ## License
