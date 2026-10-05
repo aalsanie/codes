@@ -5,11 +5,11 @@ plugins {
     kotlin("jvm") version "2.4.10"
 }
 
-val codesVersion = Properties().run {
-    rootProject.projectDir.parentFile.resolve("gradle.properties").inputStream().use { load(it) }
-    getProperty("VERSION_NAME") ?: error("VERSION_NAME is missing from gradle.properties")
+val properties = Properties().apply {
+    rootProject.projectDir.parentFile.resolve("gradle.properties").inputStream().use(::load)
 }
-
+val codesVersion = properties.getProperty("VERSION_NAME")
+val springVersion = properties.getProperty("springFrameworkVersion")
 val consumerJavaVersion = providers.gradleProperty("consumerJavaVersion")
     .orElse("17")
     .map(String::toInt)
@@ -17,7 +17,7 @@ val consumerJavaVersion = providers.gradleProperty("consumerJavaVersion")
 dependencies {
     implementation("io.github.aalsanie:codes:$codesVersion")
     implementation("io.github.aalsanie:codes-spring:$codesVersion")
-    implementation("io.github.aalsanie:codes-grpc-java:$codesVersion")
+    implementation("org.springframework:spring-web:$springVersion")
 }
 
 kotlin {
