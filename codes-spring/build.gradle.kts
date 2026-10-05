@@ -8,12 +8,13 @@ group = providers.gradleProperty("GROUP").get()
 version = providers.gradleProperty("VERSION_NAME").get()
 
 val artifactId = "codes-spring"
-val pomName = "Codes Spring Adapter"
-val pomDescription = "Spring Framework HTTP boundary adapter for Codes application outcomes."
+val pomName = "Codes Spring"
+val pomDescription = "Spring Framework bridge for Codes RFC 9457 problem types."
+val springFrameworkVersion = providers.gradleProperty("springFrameworkOverride")
+    .orElse(providers.gradleProperty("springFrameworkVersion"))
 val expectedPomDependencies = listOf(
     "${project.group}:codes:${project.version}:compile",
-    "org.springframework:spring-web:${providers.gradleProperty("springFrameworkVersion").get()}:compile",
-).sorted()
+)
 
 java {
     toolchain {
@@ -29,31 +30,24 @@ tasks.withType<JavaCompile>().configureEach {
 
 dependencies {
     compileOnly("org.jspecify:jspecify:1.0.0")
-
     api(project(":"))
-    api("org.springframework:spring-web:${providers.gradleProperty("springFrameworkVersion").get()}")
+    compileOnly("org.springframework:spring-web:${springFrameworkVersion.get()}")
 
     testImplementation(platform("org.junit:junit-bom:${providers.gradleProperty("junitVersion").get()}"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("org.springframework:spring-webmvc:${providers.gradleProperty("springFrameworkVersion").get()}")
-    testImplementation("org.springframework:spring-webflux:${providers.gradleProperty("springFrameworkVersion").get()}")
-    testImplementation("org.springframework:spring-test:${providers.gradleProperty("springFrameworkVersion").get()}")
-    testImplementation("tools.jackson.core:jackson-databind:${providers.gradleProperty("jackson3Version").get()}")
-    testImplementation("jakarta.servlet:jakarta.servlet-api:6.1.0")
+    testImplementation("org.jspecify:jspecify:1.0.0")
+    testImplementation("org.springframework:spring-web:${springFrameworkVersion.get()}")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+sourceSets.test {
+    java.srcDir(rootProject.file("testing/api-snapshot/src/main/java"))
 }
 
 tasks.test {
     useJUnitPlatform()
     finalizedBy(tasks.jacocoTestReport)
-    systemProperty(
-        "codes.apiSnapshot",
-        rootProject.file("api/codes-spring.api").absolutePath,
-    )
-    systemProperty(
-        "codes.springHttpSnapshot",
-        rootProject.file("compatibility/spring-http-problems.snapshot").absolutePath,
-    )
+    systemProperty("codes.apiSnapshot", rootProject.file("api/codes-spring.api").absolutePath)
 }
 
 jacoco {
@@ -74,30 +68,21 @@ tasks.jacocoTestCoverageVerification {
         rule {
             limit {
                 counter = "LINE"
-                minimum = "0.90".toBigDecimal()
+                minimum = "0.95".toBigDecimal()
             }
             limit {
                 counter = "BRANCH"
-                minimum = "0.80".toBigDecimal()
+                minimum = "0.90".toBigDecimal()
             }
         }
     }
 }
 
-sourceSets.test {
-    java.srcDir(rootProject.file("testing/api-snapshot/src/main/java"))
-}
-
 tasks.register("verifyPublishedPomContract") {
     group = "verification"
-    description = "Verifies the Codes Spring POM metadata and direct dependency budget."
-
+    description = "Verifies the Codes Spring POM metadata and dependency budget."
     dependsOn("generatePomFileForMavenPublication")
 
-    val artifactId = artifactId
-    val pomName = pomName
-    val pomDescription = pomDescription
-    val expectedPomDependencies = expectedPomDependencies
     val pomFile = layout.buildDirectory.file("publications/maven/pom-default.xml")
     inputs.file(pomFile)
 
@@ -113,24 +98,18 @@ tasks.register("verifyPublishedPomContract") {
             .first { it.nodeName == name }
             .textContent
 
-        check(directText("name") == pomName) {
-            "Unexpected $artifactId POM name: ${directText("name")}"
-        }
-        check(directText("description") == pomDescription) {
-            "Unexpected $artifactId POM description: ${directText("description")}"
-        }
+        check(directText("name") == pomName)
+        check(directText("description") == pomDescription)
 
         val dependencies = document.getElementsByTagName("dependency")
         val actual = (0 until dependencies.length).map { index ->
             val dependency = dependencies.item(index) as org.w3c.dom.Element
             fun value(name: String): String = dependency.getElementsByTagName(name).item(0).textContent
-            listOf("groupId", "artifactId", "version", "scope")
-                .joinToString(":") { value(it) }
+            listOf("groupId", "artifactId", "version", "scope").joinToString(":") { value(it) }
         }.sorted()
 
-        check(actual == expectedPomDependencies) {
-            "$artifactId direct dependency budget changed. " +
-                "Expected $expectedPomDependencies, found $actual."
+        check(actual == expectedPomDependencies.sorted()) {
+            "$artifactId dependency budget changed. Expected ${expectedPomDependencies.sorted()}, found $actual."
         }
     }
 }
@@ -169,17 +148,5 @@ mavenPublishing {
 
     if (signingConfigured) {
         signAllPublications()
-    }
-}
-
-tasks.configureEach {
-    if (name.contains("MavenCentral", ignoreCase = true)) {
-        doFirst {
-            val required = listOf("mavenCentralUsername", "mavenCentralPassword", "signingInMemoryKey")
-            val missing = required.filterNot { providers.gradleProperty(it).isPresent }
-            require(missing.isEmpty()) {
-                "Maven Central publication requires Gradle properties: ${missing.joinToString()}"
-            }
-        }
     }
 }
