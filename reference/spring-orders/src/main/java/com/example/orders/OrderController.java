@@ -19,29 +19,3 @@ class OrderController {
         throw new ArchivedOrderNotFoundException(orderId);
     }
 }
-
-final class OrderNotFoundException extends RuntimeException {
-    private static final long serialVersionUID = 1L;
-    private final String orderId;
-
-    OrderNotFoundException(String orderId) {
-        this.orderId = orderId;
-    }
-
-    String orderId() {
-        return orderId;
-    }
-}
-
-final class ArchivedOrderNotFoundException extends RuntimeException {
-    private static final long serialVersionUID = 1L;
-    private final String orderId;
-
-    ArchivedOrderNotFoundException(String orderId) {
-        this.orderId = orderId;
-    }
-
-    String orderId() {
-        return orderId;
-    }
-}
