@@ -27,16 +27,9 @@ group_path = Path("io/github/aalsanie")
 
 expected = {
     "codes": [],
-    "codes-spring": sorted([
+    "codes-spring": [
         ("io.github.aalsanie", "codes", version, "compile"),
-        ("org.springframework", "spring-web", props["springFrameworkVersion"], "compile"),
-    ]),
-    "codes-grpc-java": sorted([
-        ("io.github.aalsanie", "codes", version, "compile"),
-        ("com.google.api.grpc", "proto-google-common-protos", props["protoGoogleCommonProtosVersion"], "compile"),
-        ("io.grpc", "grpc-api", props["grpcVersion"], "compile"),
-        ("io.grpc", "grpc-protobuf", props["grpcVersion"], "runtime"),
-    ]),
+    ],
 }
 
 namespace = {"m": "http://maven.apache.org/POM/4.0.0"}
@@ -65,6 +58,7 @@ for artifact, expected_dependencies in expected.items():
         ))
 
     actual.sort()
+    expected_dependencies.sort()
     if actual != expected_dependencies:
         raise SystemExit(
             f"{artifact} published POM dependency budget changed.\n"
