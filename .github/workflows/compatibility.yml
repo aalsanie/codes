@@ -13,7 +13,52 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  matrix:
+    name: Matrix policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      java-spring: ${{ steps.matrix.outputs.java-spring }}
+      kotlin: ${{ steps.matrix.outputs.kotlin }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Verify matrix policy
+        run: python scripts/verify-compatibility-matrix.py
+
+      - id: matrix
+        name: Export matrices
+        shell: bash
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+
+          matrix = json.loads(Path("compatibility/matrix.json").read_text(encoding="utf-8"))
+          compact = lambda value: json.dumps(value, separators=(",", ":"))
+
+          print("java-spring=" + compact({
+              "java": matrix["java"],
+              "spring": matrix["spring"],
+          }))
+
+          kotlin = matrix["kotlin"]
+          print("kotlin=" + compact({
+              "include": [
+                  {
+                      "kotlin": version,
+                      "spring": kotlin["spring"],
+                  }
+                  for version in kotlin["versions"]
+              ]
+          }))
+          PY
+
   contracts:
+    name: Artifact contracts and coverage
+    needs: [matrix]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -30,9 +75,6 @@ jobs:
         with:
           cache-provider: basic
 
-      - name: Verify compatibility policy
-        run: python scripts/verify-compatibility-matrix.py
-
       - name: Verify contracts
         run: ./gradlew clean verifyAll --stacktrace
 
@@ -47,14 +89,12 @@ jobs:
           retention-days: 1
 
   java-spring:
-    needs: contracts
+    needs: [matrix, contracts]
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
       fail-fast: false
-      matrix:
-        java: ["17", "21", "25"]
-        spring: ["6.0.0", "7.0.9"]
+      matrix: ${{ fromJSON(needs.matrix.outputs.java-spring) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -99,13 +139,12 @@ jobs:
           mvn --batch-mode --no-transfer-progress             "-Dmaven.repo.local=${GITHUB_WORKSPACE}/build/compatibility-maven"             -f smoke-test-maven-java/pom.xml             "-Dcodes.version=$version"             "-Dmaven.compiler.release=${{ matrix.java }}"             "-Dspring.framework.version=${{ matrix.spring }}"             clean verify
 
   kotlin:
-    needs: contracts
+    needs: [matrix, contracts]
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
       fail-fast: false
-      matrix:
-        kotlin: ["1.9.24", "2.4.10"]
+      matrix: ${{ fromJSON(needs.matrix.outputs.kotlin) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -124,23 +163,28 @@ jobs:
       - name: Verify Kotlin consumer
         env:
           MAVEN_REPO_LOCAL: ${{ github.workspace }}/build/compatibility-maven
-        run: sh scripts/verify-kotlin-nullability.sh "${{ matrix.kotlin }}"
+        run: >-
+          sh scripts/verify-kotlin-nullability.sh
+          "${{ matrix.kotlin }}"
+          "${{ matrix.spring }}"
 
   compatibility-gate:
     name: Compatibility gate
     if: always()
-    needs: [contracts, java-spring, kotlin]
+    needs: [matrix, contracts, java-spring, kotlin]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Require all compatibility checks
         shell: bash
         env:
+          MATRIX: ${{ needs.matrix.result }}
           CONTRACTS: ${{ needs.contracts.result }}
           JAVA_SPRING: ${{ needs.java-spring.result }}
           KOTLIN: ${{ needs.kotlin.result }}
         run: |
           set -euo pipefail
+          test "$MATRIX" = "success"
           test "$CONTRACTS" = "success"
           test "$JAVA_SPRING" = "success"
           test "$KOTLIN" = "success"
