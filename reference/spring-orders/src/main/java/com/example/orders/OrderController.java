@@ -10,12 +10,12 @@ import org.springframework.web.bind.annotation.RestController;
 class OrderController {
 
     @GetMapping("/{orderId}")
-    String find(@PathVariable String orderId) {
+    String find(@PathVariable("orderId") String orderId) {
         throw new OrderNotFoundException(orderId);
     }
 
     @GetMapping("/archive/{orderId}")
-    String findArchived(@PathVariable String orderId) {
+    String findArchived(@PathVariable("orderId") String orderId) {
         throw new ArchivedOrderNotFoundException(orderId);
     }
 }
