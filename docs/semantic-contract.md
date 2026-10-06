@@ -4,9 +4,11 @@ Codes models reusable RFC 9457 problem type definitions.
 
 A `ProblemType` contains:
 
-* a non-empty URI reference returned by `getType()`;
+* an absolute type URI;
 * an HTTP status between 100 and 599;
 * a non-blank human-readable title.
+
+`about:blank` is not a Codes problem type. It represents a status-only problem with no additional semantics beyond the HTTP status and is handled directly by HTTP frameworks such as Spring.
 
 The type URI is the stable machine-readable identity of the problem type.
 

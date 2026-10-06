@@ -15,33 +15,14 @@ The application supplies Spring Web. `codes-spring` does not impose a Spring Fra
 ## Define problem types
 
 ```java
-enum OrderProblems implements ProblemType {
-    ORDER_NOT_FOUND(
+final class OrderProblems {
+    static final ProblemType ORDER_NOT_FOUND = ProblemType.of(
         URI.create("https://api.example.com/problems/order-not-found"),
         404,
         "Order not found"
     );
 
-    private final URI type;
-    private final int status;
-    private final String title;
-
-    OrderProblems(URI type, int status, String title) {
-        this.type = type;
-        this.status = status;
-        this.title = title;
-    }
-
-    public URI getType() {
-        return type;
-    }
-
-    public int getStatus() {
-        return status;
-    }
-
-    public String getTitle() {
-        return title;
+    private OrderProblems() {
     }
 }
 ```
@@ -65,7 +46,9 @@ ProblemDetail problem = ProblemDetails.forTypeAndDetail(
 
 The bridge sets only `type`, `status`, `title`, and the explicitly supplied `detail`.
 
-It does not set the request-specific `instance`, add extension properties, map exceptions, or register controller advice.
+Do not populate `detail` from `exception.getMessage()` unless that message was explicitly designed for public API consumption. Internal exception text can expose implementation details, identifiers, or other sensitive information.
+
+The bridge does not set the request-specific `instance`, add extension properties, map exceptions, or register controller advice.
 
 ## Exception handlers
 

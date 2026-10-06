@@ -66,44 +66,28 @@ The core artifact has no runtime dependencies and publishes no Maven dependencie
 
 ## Define a problem catalog
 
-Applications can use the factory for a small number of problem types or implement `ProblemType` directly for a reusable catalog:
+A problem type is an immutable value. Define reusable application problem types as constants:
 
 ```java
-enum OrderProblems implements ProblemType {
-    ORDER_NOT_FOUND(
-        "https://api.example.com/problems/order-not-found",
+final class OrderProblems {
+    static final ProblemType ORDER_NOT_FOUND = ProblemType.of(
+        URI.create("https://api.example.com/problems/order-not-found"),
         404,
         "Order not found"
-    ),
-    ORDER_ALREADY_CANCELLED(
-        "https://api.example.com/problems/order-already-cancelled",
+    );
+
+    static final ProblemType ORDER_ALREADY_CANCELLED = ProblemType.of(
+        URI.create("https://api.example.com/problems/order-already-cancelled"),
         409,
         "Order already cancelled"
     );
 
-    private final URI type;
-    private final int status;
-    private final String title;
-
-    OrderProblems(String type, int status, String title) {
-        this.type = URI.create(type);
-        this.status = status;
-        this.title = title;
-    }
-
-    public URI getType() {
-        return type;
-    }
-
-    public int getStatus() {
-        return status;
-    }
-
-    public String getTitle() {
-        return title;
+    private OrderProblems() {
     }
 }
 ```
+
+Codes requires an absolute type URI, rejects `about:blank`, requires an HTTP status from 100 through 599, and requires a non-blank title. Use Spring's native `ProblemDetail.forStatus(...)` for status-only `about:blank` responses.
 
 Different application exceptions can then reuse the same public problem type:
 
@@ -138,6 +122,7 @@ Codes is useful when problem types are part of the API contract and need to be d
 * [Spring integration](docs/integration-spring.md)
 * [Semantic contract](docs/semantic-contract.md)
 * [Compatibility policy](docs/compatibility-policy.md)
+* [Migration to 0.4.0](docs/migration-to-0.4.md)
 
 ## License
 

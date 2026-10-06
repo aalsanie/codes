@@ -6,10 +6,14 @@
 
 * Added `ProblemType` as the reusable RFC 9457 problem type definition.
 * Added `ProblemDetails` as the minimal Spring bridge for creating native `ProblemDetail` instances.
+* Added MVC and WebFlux wire-contract verification for rendered problem responses.
+* Added a migration guide for 0.3.x and 0.4.0-RC1 users.
 
 ### Changed
 
 * Refocused Codes on reusable RFC 9457 problem types.
+* Made `ProblemType` an immutable value with one validated creation path.
+* Required absolute problem type URIs and rejected `about:blank`, which remains a native HTTP status-only problem.
 * Kept the core artifact dependency-free.
 * Made Spring Framework an application-provided integration dependency instead of a transitive dependency of `codes-spring`.
 * Reduced the verified compatibility matrix to the Java, Spring, Kotlin, Gradle, and Maven combinations relevant to the new API.
@@ -22,7 +26,7 @@
 
 ### Breaking
 
-`0.4.0` is intentionally source and binary incompatible with the 0.4.0-RC1 outcome-oriented API. Applications using pre-0.4 outcome APIs must migrate to `ProblemType` only where they represent reusable HTTP problem definitions.
+`0.4.0` is intentionally source and binary incompatible with the 0.4.0-RC1 outcome-oriented API. Applications using pre-0.4 outcome APIs should migrate only reusable HTTP problem definitions to `ProblemType`; other domain concerns remain application-owned.
 
 ## 0.4.0-RC1
 
