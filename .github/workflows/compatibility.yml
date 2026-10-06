@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
-      java-spring: ${{ steps.matrix.outputs.java-spring }}
+      java_spring: ${{ steps.matrix.outputs.java_spring }}
       kotlin: ${{ steps.matrix.outputs.kotlin }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -39,7 +39,7 @@ jobs:
           matrix = json.loads(Path("compatibility/matrix.json").read_text(encoding="utf-8"))
           compact = lambda value: json.dumps(value, separators=(",", ":"))
 
-          print("java-spring=" + compact({
+          print("java_spring=" + compact({
               "java": matrix["java"],
               "spring": matrix["spring"],
           }))
@@ -94,7 +94,7 @@ jobs:
     timeout-minutes: 25
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.matrix.outputs.java-spring) }}
+      matrix: ${{ fromJSON(needs.matrix.outputs.java_spring) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
