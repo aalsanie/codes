@@ -7,7 +7,6 @@
 * Added `ProblemType` as the reusable RFC 9457 problem type definition.
 * Added `ProblemDetails` as the minimal Spring bridge for creating native `ProblemDetail` instances.
 * Added MVC and WebFlux wire-contract verification for rendered problem responses.
-* Added a migration guide for 0.3.x and 0.4.0-RC1 users.
 
 ### Changed
 

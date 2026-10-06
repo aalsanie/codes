@@ -4,7 +4,7 @@
 [![CI](https://github.com/aalsanie/codes/actions/workflows/ci.yml/badge.svg)](https://github.com/aalsanie/codes/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-Codes is a tiny Java library for reusable RFC 9457 problem type definitions.
+Codes is a lightweight Java library for reusable RFC 9457 problem type definitions.
 
 Spring provides `ProblemDetail` for an individual error occurrence. Codes provides the stable definition that can be reused across controllers, exception handlers, tests, and documentation.
 
@@ -109,9 +109,9 @@ ProblemDetail handleArchivedOrderNotFound(ArchivedOrderNotFoundException ex) {
 }
 ```
 
-Codes does not own exception handling, controller advice, localization, extension properties, or request-specific data. Those remain application and Spring concerns.
+The library does not own exception handling, controller advice, localization, extension properties, or request-specific data. Those remain application and Spring concerns.
 
-## Do I need Codes?
+## When to use Codes
 
 If an application only creates one or two `ProblemDetail` instances directly, a local helper may be simpler.
 
@@ -122,7 +122,6 @@ Codes is useful when problem types are part of the API contract and need to be d
 * [Spring integration](docs/integration-spring.md)
 * [Semantic contract](docs/semantic-contract.md)
 * [Compatibility policy](docs/compatibility-policy.md)
-* [Migration to 0.4.0](docs/migration-to-0.4.md)
 
 ## License
 
