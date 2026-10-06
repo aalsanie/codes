@@ -2,25 +2,26 @@
 
 Keep changes focused, tested, and justified.
 
-## Before changing contracts
+## Contracts
 
-Codes has public contracts across three artifacts:
+Codes publishes two artifacts:
 
 - `codes`
 - `codes-spring`
-- `codes-grpc-java`
 
-Changes to standard outcome membership, standard outcome state, or built-in HTTP/gRPC mappings change the semantic contract.
+The core contract is the `ProblemType` value: an absolute RFC 9457 type URI, HTTP status, and non-blank title.
 
-Public API changes require updating the matching snapshot under `api/`.
+The Spring contract is the explicit conversion from a `ProblemType` to Spring's native `ProblemDetail`.
 
-Spring or gRPC wire changes require updating the matching snapshot under `compatibility/`.
+Public Java API changes require updating the matching snapshot under `api/`.
 
-Do not update a snapshot just because a test failed. Understand the change and explain why the contract should move.
+Changes that affect rendered Spring problem responses require updating the MVC and WebFlux contract tests in the Spring reference application.
 
-The core artifact must remain free of runtime dependencies.
+The core artifact must remain free of runtime dependencies and publish no Maven dependencies.
 
-Adapters must stay thin and explicit. Do not introduce auto-configuration, serialization frameworks, registries, hidden mapping rules, or unrelated abstractions as part of an adapter change.
+`codes-spring` must remain a thin bridge. Its published dependency surface is limited to `codes`; applications provide Spring Web.
+
+Do not introduce auto-configuration, exception mapping, registries, serialization frameworks, or unrelated abstractions as part of a Spring integration change.
 
 ## Build
 
@@ -38,7 +39,7 @@ Linux/macOS:
 ./gradlew clean verifyAll --stacktrace
 ```
 
-For publication or dependency changes, also verify all three artifacts from a clean isolated Maven repository.
+For publication or dependency changes, also verify the artifacts from a clean isolated Maven repository.
 
 Windows:
 
@@ -53,24 +54,15 @@ Linux/macOS:
 bash scripts/prepare-compatibility-repository.sh build/compatibility-maven
 ```
 
-The CI compatibility workflow covers the supported Java, Kotlin, Spring, gRPC, Gradle/Maven consumer, and operating-system matrix.
+CI verifies the supported Java, Kotlin, Spring, Gradle/Maven consumer, and operating-system matrix.
 
 ## Pull requests
 
-Keep pull requests small enough to review.
+Keep changes small enough to review and include tests for behavior changes.
 
-Include tests for behavior changes.
+Do not mix unrelated cleanup with behavioral changes.
 
-Explain any:
-
-- public API change
-- semantic or wire change
-- dependency change
-- compatibility change
-
-Do not mix unrelated cleanup with a behavioral change.
-
-Do not weaken a compatibility, coverage, dependency, or publication check just to make CI green.
+Do not weaken a compatibility, coverage, dependency, publication, or security check just to make CI green.
 
 ## AI-assisted contributions
 

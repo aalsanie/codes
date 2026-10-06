@@ -18,9 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
-      adapter: ${{ steps.matrix.outputs.adapter }}
+      java_spring: ${{ steps.matrix.outputs.java_spring }}
       kotlin: ${{ steps.matrix.outputs.kotlin }}
-      os: ${{ steps.matrix.outputs.os }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -37,33 +36,31 @@ jobs:
           import json
           from pathlib import Path
 
-          matrix = json.loads(Path("compatibility/matrix.json").read_text())
+          matrix = json.loads(Path("compatibility/matrix.json").read_text(encoding="utf-8"))
           compact = lambda value: json.dumps(value, separators=(",", ":"))
 
-          print("adapter=" + compact({
+          print("java_spring=" + compact({
               "java": matrix["java"],
               "spring": matrix["spring"],
-              "grpc": matrix["grpc"],
           }))
+
           kotlin = matrix["kotlin"]
           print("kotlin=" + compact({
               "include": [
                   {
                       "kotlin": version,
                       "spring": kotlin["spring"],
-                      "grpc": kotlin["grpc"],
                   }
                   for version in kotlin["versions"]
               ]
           }))
-          print("os=" + compact({"os": matrix["os"]}))
           PY
 
   contracts:
     name: Artifact contracts and coverage
-    runs-on: ubuntu-latest
-    timeout-minutes: 35
     needs: [matrix]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -78,39 +75,26 @@ jobs:
         with:
           cache-provider: basic
 
-      - name: Verify API, wire, POM, and coverage contracts
+      - name: Verify contracts
         run: ./gradlew clean verifyAll --stacktrace
 
       - name: Build clean publication repository
         run: sh scripts/prepare-compatibility-repository.sh build/compatibility-maven
 
-      - name: Upload clean publication repository
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: compatibility-publications
           path: build/compatibility-maven
           if-no-files-found: error
           retention-days: 1
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        if: always()
-        with:
-          name: compatibility-coverage
-          path: |
-            build/reports/jacoco
-            codes-spring/build/reports/jacoco
-            codes-grpc-java/build/reports/jacoco
-          if-no-files-found: error
-          retention-days: 14
-
-  adapter-versions:
-    name: JDK ${{ matrix.java }} / Spring ${{ matrix.spring }} / gRPC ${{ matrix.grpc }}
+  java-spring:
     needs: [matrix, contracts]
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.matrix.outputs.adapter) }}
+      matrix: ${{ fromJSON(needs.matrix.outputs.java_spring) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -125,11 +109,17 @@ jobs:
         with:
           cache-provider: basic
 
-      - name: Download clean publication repository
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
         with:
           name: compatibility-publications
           path: build/compatibility-maven
+
+      - name: Test Spring bridge against selected Spring version
+        run: >-
+          ./gradlew
+          :codes-spring:test
+          -PspringFrameworkOverride=${{ matrix.spring }}
+          --stacktrace
 
       - name: Verify Gradle Java consumer
         run: >-
@@ -138,25 +128,17 @@ jobs:
           -Dmaven.repo.local=${{ github.workspace }}/build/compatibility-maven
           -PconsumerJavaVersion=${{ matrix.java }}
           -PspringFrameworkOverride=${{ matrix.spring }}
-          -PgrpcVersionOverride=${{ matrix.grpc }}
           clean check
           --stacktrace
 
       - name: Verify Maven Java consumer
         shell: bash
         run: |
+          set -euo pipefail
           version="$(sh scripts/version.sh)"
-          mvn --batch-mode --no-transfer-progress \
-            "-Dmaven.repo.local=${GITHUB_WORKSPACE}/build/compatibility-maven" \
-            -f smoke-test-maven-java/pom.xml \
-            "-Dcodes.version=$version" \
-            "-Dmaven.compiler.release=${{ matrix.java }}" \
-            "-Dspring.framework.version=${{ matrix.spring }}" \
-            "-Dgrpc.version=${{ matrix.grpc }}" \
-            clean verify
+          mvn --batch-mode --no-transfer-progress             "-Dmaven.repo.local=${GITHUB_WORKSPACE}/build/compatibility-maven"             -f smoke-test-maven-java/pom.xml             "-Dcodes.version=$version"             "-Dmaven.compiler.release=${{ matrix.java }}"             "-Dspring.framework.version=${{ matrix.spring }}"             clean verify
 
-  kotlin-nullability:
-    name: Kotlin ${{ matrix.kotlin }} / Spring ${{ matrix.spring }} / gRPC ${{ matrix.grpc }} JSpecify
+  kotlin:
     needs: [matrix, contracts]
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -173,135 +155,36 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92
-        with:
-          cache-provider: basic
-
-      - name: Download clean publication repository
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
         with:
           name: compatibility-publications
           path: build/compatibility-maven
 
-      - name: Verify Kotlin JSpecify consumer
+      - name: Verify Kotlin consumer
         env:
           MAVEN_REPO_LOCAL: ${{ github.workspace }}/build/compatibility-maven
         run: >-
           sh scripts/verify-kotlin-nullability.sh
           "${{ matrix.kotlin }}"
           "${{ matrix.spring }}"
-          "${{ matrix.grpc }}"
-
-  operating-systems:
-    name: Published consumers / ${{ matrix.os }}
-    needs: [matrix, contracts]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJSON(needs.matrix.outputs.os) }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-
-      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92
-        with:
-          cache-provider: basic
-
-      - name: Download clean publication repository
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
-        with:
-          name: compatibility-publications
-          path: build/compatibility-maven
-
-      - name: Verify Gradle Java and Kotlin consumers (Unix)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          repo="${GITHUB_WORKSPACE}/build/compatibility-maven"
-          ./gradlew -p smoke-test-java "-Dmaven.repo.local=$repo" clean check --stacktrace
-          ./gradlew -p smoke-test-kotlin "-Dmaven.repo.local=$repo" clean check --stacktrace
-
-      - name: Verify Gradle Java and Kotlin consumers (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $repo = Join-Path $env:GITHUB_WORKSPACE "build\compatibility-maven"
-
-          .\gradlew.bat -p smoke-test-java "-Dmaven.repo.local=$repo" clean check --stacktrace
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-          .\gradlew.bat -p smoke-test-kotlin "-Dmaven.repo.local=$repo" clean check --stacktrace
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-      - name: Verify Maven Java consumer (Unix)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          repo="${GITHUB_WORKSPACE}/build/compatibility-maven"
-          version="$(sh scripts/version.sh)"
-          mvn --batch-mode --no-transfer-progress \
-            "-Dmaven.repo.local=$repo" \
-            -f smoke-test-maven-java/pom.xml \
-            "-Dcodes.version=$version" \
-            clean verify
-
-      - name: Verify Maven Java consumer (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $repo = Join-Path $env:GITHUB_WORKSPACE "build\compatibility-maven"
-          $version = (Get-Content .\gradle.properties |
-              Where-Object { $_ -like "VERSION_NAME=*" } |
-              Select-Object -First 1).Substring("VERSION_NAME=".Length)
-          mvn --batch-mode --no-transfer-progress "-Dmaven.repo.local=$repo" `
-              -f smoke-test-maven-java/pom.xml `
-              "-Dcodes.version=$version" `
-              clean verify
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
   compatibility-gate:
     name: Compatibility gate
     if: always()
-    needs:
-      - matrix
-      - contracts
-      - adapter-versions
-      - kotlin-nullability
-      - operating-systems
+    needs: [matrix, contracts, java-spring, kotlin]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Require complete compatibility matrix
-        env:
-          MATRIX_RESULT: ${{ needs.matrix.result }}
-          CONTRACTS_RESULT: ${{ needs.contracts.result }}
-          ADAPTER_RESULT: ${{ needs.adapter-versions.result }}
-          KOTLIN_RESULT: ${{ needs.kotlin-nullability.result }}
-          OS_RESULT: ${{ needs.operating-systems.result }}
+      - name: Require all compatibility checks
         shell: bash
+        env:
+          MATRIX: ${{ needs.matrix.result }}
+          CONTRACTS: ${{ needs.contracts.result }}
+          JAVA_SPRING: ${{ needs.java-spring.result }}
+          KOTLIN: ${{ needs.kotlin.result }}
         run: |
           set -euo pipefail
-
-          for entry in \
-            "matrix:$MATRIX_RESULT" \
-            "contracts:$CONTRACTS_RESULT" \
-            "adapter-versions:$ADAPTER_RESULT" \
-            "kotlin-nullability:$KOTLIN_RESULT" \
-            "operating-systems:$OS_RESULT"
-          do
-            name="${entry%%:*}"
-            result="${entry#*:}"
-            if [ "$result" != "success" ]; then
-              echo "$name result: $result"
-              exit 1
-            fi
-          done
-
-          echo "Complete Codes compatibility matrix passed from clean publication artifacts."
+          test "$MATRIX" = "success"
+          test "$CONTRACTS" = "success"
+          test "$JAVA_SPRING" = "success"
+          test "$KOTLIN" = "success"

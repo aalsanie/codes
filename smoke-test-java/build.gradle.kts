@@ -4,35 +4,20 @@ plugins {
     java
 }
 
-val codesVersion = Properties().run {
+val properties = Properties().apply {
     rootProject.projectDir.parentFile.resolve("gradle.properties").inputStream().use { load(it) }
-    getProperty("VERSION_NAME") ?: error("VERSION_NAME is missing from gradle.properties")
 }
-
+val codesVersion = properties.getProperty("VERSION_NAME")
+val defaultSpringVersion = properties.getProperty("springFrameworkVersion")
+val springVersion = providers.gradleProperty("springFrameworkOverride").orElse(defaultSpringVersion)
 val consumerJavaVersion = providers.gradleProperty("consumerJavaVersion")
     .orElse("17")
     .map(String::toInt)
 
-val springFrameworkOverride = providers.gradleProperty("springFrameworkOverride").orNull
-val grpcVersionOverride = providers.gradleProperty("grpcVersionOverride").orNull
-
 dependencies {
     implementation("io.github.aalsanie:codes:$codesVersion")
     implementation("io.github.aalsanie:codes-spring:$codesVersion")
-    implementation("io.github.aalsanie:codes-grpc-java:$codesVersion")
-}
-
-configurations.configureEach {
-    resolutionStrategy.eachDependency {
-        if (springFrameworkOverride != null && requested.group == "org.springframework") {
-            useVersion(springFrameworkOverride)
-            because("Codes Spring compatibility matrix")
-        }
-        if (grpcVersionOverride != null && requested.group == "io.grpc") {
-            useVersion(grpcVersionOverride)
-            because("Codes gRPC compatibility matrix")
-        }
-    }
+    implementation("org.springframework:spring-web:${springVersion.get()}")
 }
 
 java {

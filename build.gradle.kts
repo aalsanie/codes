@@ -28,6 +28,10 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
+sourceSets.test {
+    java.srcDir(rootProject.file("testing/api-snapshot/src/main/java"))
+}
+
 tasks.test {
     useJUnitPlatform()
     finalizedBy(tasks.jacocoTestReport)
@@ -70,11 +74,8 @@ tasks.register("verifyCoreRuntimeDependencies") {
 
     doLast {
         val runtimeFiles = runtimeClasspath.get().files
-
         check(runtimeFiles.isEmpty()) {
-            "Codes core must remain dependency-free at runtime: ${
-                runtimeFiles.joinToString { it.name }
-            }"
+            "Codes core must remain dependency-free at runtime: ${runtimeFiles.joinToString { it.name }}"
         }
     }
 }
@@ -95,7 +96,6 @@ tasks.register("verifyPublishedPomHasNoDependencies") {
             .parse(pomFile.get().asFile)
 
         val dependencies = document.getElementsByTagName("dependency")
-
         check(dependencies.length == 0) {
             "Codes core Maven POM must not declare dependencies; found ${dependencies.length}."
         }
@@ -121,13 +121,11 @@ tasks.jar {
 
 tasks.register("verifyAll") {
     group = "verification"
-    description = "Verifies the core, incubating adapters, and reference applications."
+    description = "Verifies Codes, the Spring bridge, and the reference application."
     dependsOn(
         tasks.check,
         ":codes-spring:check",
-        ":codes-grpc-java:check",
         ":reference-spring-orders:check",
-        ":reference-grpc-orders:check",
     )
 }
 

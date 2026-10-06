@@ -1,110 +1,75 @@
 # Spring Integration
 
-This example adds Codes at the HTTP boundary while the application keeps its existing exception and domain model.
+`codes-spring` converts a reusable Codes `ProblemType` into Spring Framework's native `ProblemDetail`.
 
-## 1. Add the adapter
+## Dependency
 
 ```kotlin
 dependencies {
-    implementation("io.github.aalsanie:codes-spring:0.4.0-RC1")
+    implementation("io.github.aalsanie:codes-spring:0.4.0")
 }
 ```
 
-The adapter supports the declared Spring 6 and Spring 7 compatibility lines.
+The application supplies Spring Web. `codes-spring` does not impose a Spring Framework version transitively.
 
-## 2. Define the stable application outcome
+## Define problem types
 
 ```java
-final class PaymentOutcomes {
-    static final OutcomeDefinition PAYMENT_DECLINED = OutcomeDefinition.custom(
-        "com.example.payments",
-        "PAYMENT_DECLINED",
-        OutcomeState.FAILED,
-        "The payment was declined."
+final class OrderProblems {
+    static final ProblemType ORDER_NOT_FOUND = ProblemType.of(
+        URI.create("https://api.example.com/problems/order-not-found"),
+        404,
+        "Order not found"
     );
 
-    private PaymentOutcomes() {
+    private OrderProblems() {
     }
 }
 ```
 
-`com.example.payments:PAYMENT_DECLINED` is the identity. HTTP 422 is a boundary decision.
-
-## 3. Configure the HTTP boundary explicitly
+## Create a problem occurrence
 
 ```java
-HttpOutcomeMapper http = HttpOutcomeMapper.standard()
-    .withMapping(PaymentOutcomes.PAYMENT_DECLINED, HttpStatusCode.of(422));
-
-OutcomeProblemDetailMapper problems = new OutcomeProblemDetailMapper(
-    new SpringHttpStatusMapper(http),
-    SpringOutcomeExposure.publicErrors(),
-    SpringProblemTypeUriMapper.empty().withMapping(
-        PaymentOutcomes.PAYMENT_DECLINED,
-        URI.create("https://api.example.com/problems/payment-declined")
-    )
+ProblemDetail problem = ProblemDetails.forType(
+    OrderProblems.ORDER_NOT_FOUND
 );
 ```
 
-The URI above belongs to the example application. Codes does not invent or own problem-type URIs.
-
-`publicErrors()` exposes the reusable outcome message and structured issues but not occurrence `detail`. Use `safeDefaults()` when even those fields should remain hidden.
-
-## 4. Use it from the application's existing exception boundary
+For an occurrence-specific detail:
 
 ```java
-@RestControllerAdvice
-final class PaymentExceptionHandler {
-    private final OutcomeProblemDetailMapper problems;
-
-    PaymentExceptionHandler(OutcomeProblemDetailMapper problems) {
-        this.problems = problems;
-    }
-
-    @ExceptionHandler(PaymentDeclinedException.class)
-    ResponseEntity<ProblemDetail> paymentDeclined() {
-        Outcome outcome = Outcome.of(PaymentOutcomes.PAYMENT_DECLINED);
-        ProblemDetail problem = problems.map(outcome).orNull();
-
-        if (problem == null) {
-            throw new IllegalStateException("PAYMENT_DECLINED has no HTTP mapping");
-        }
-
-        return ResponseEntity.status(problem.getStatus()).body(problem);
-    }
-}
-```
-
-The application decides which exception maps to which outcome.
-
-## Result
-
-A rendered response is an RFC 9457 problem document with the stable Codes identity:
-
-```json
-{
-  "type": "https://api.example.com/problems/payment-declined",
-  "title": "The payment was declined.",
-  "status": 422,
-  "code": "com.example.payments:PAYMENT_DECLINED"
-}
-```
-
-Occurrence detail is absent unless the application explicitly opts into it.
-
-## Validation issues
-
-```java
-Outcome invalid = Outcome.of(
-    StandardOutcomes.INVALID_ARGUMENT,
-    null,
-    List.of(
-        Issue.at("email", "Invalid email address."),
-        Issue.at("quantity", "Must be greater than zero.")
-    )
+ProblemDetail problem = ProblemDetails.forTypeAndDetail(
+    OrderProblems.ORDER_NOT_FOUND,
+    "Order o-123 was not found."
 );
 ```
 
-With `SpringOutcomeExposure.publicErrors()`, those issues are emitted as structured `issues` while `code` remains `io.github.aalsanie.codes.standard:INVALID_ARGUMENT`.
+The bridge sets only `type`, `status`, `title`, and the explicitly supplied `detail`.
 
-That is the complete integration: stable outcome definition, explicit protocol mapping, explicit exposure policy, existing application boundary.
+Do not populate `detail` from `exception.getMessage()` unless that message was explicitly designed for public API consumption. Internal exception text can expose implementation details, identifiers, or other sensitive information.
+
+The bridge does not set the request-specific `instance`, add extension properties, map exceptions, or register controller advice.
+
+## Exception handlers
+
+Different internal exceptions can intentionally expose the same public problem type:
+
+```java
+@ExceptionHandler(OrderNotFoundException.class)
+ProblemDetail handleOrderNotFound(OrderNotFoundException ex) {
+    return ProblemDetails.forTypeAndDetail(
+        OrderProblems.ORDER_NOT_FOUND,
+        "Order " + ex.orderId() + " was not found."
+    );
+}
+
+@ExceptionHandler(ArchivedOrderNotFoundException.class)
+ProblemDetail handleArchivedOrderNotFound(ArchivedOrderNotFoundException ex) {
+    return ProblemDetails.forTypeAndDetail(
+        OrderProblems.ORDER_NOT_FOUND,
+        "Archived order " + ex.orderId() + " was not found."
+    );
+}
+```
+
+Spring remains responsible for rendering the `ProblemDetail` through MVC or WebFlux.

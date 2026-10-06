@@ -1,5 +1,5 @@
 name: Change request
-description: Propose a core semantic, mapping, or integration change.
+description: Propose a problem type or Spring integration change.
 title: "request: "
 labels: [enhancement]
 body:
@@ -13,7 +13,7 @@ body:
   - type: textarea
     id: current
     attributes:
-      label: Current integration
+      label: Current approach
       description: Show how the problem is handled without the proposed change.
     validations:
       required: true
@@ -28,5 +28,7 @@ body:
     attributes:
       label: Contract impact
       options:
-        - label: This changes the standard outcome catalog, state semantics, or a built-in mapping.
+        - label: This changes ProblemType validation or semantics.
         - label: This changes the public Java API.
+        - label: This changes Spring ProblemDetail conversion behavior.
+        - label: This changes compatibility, dependency, or publication behavior.
