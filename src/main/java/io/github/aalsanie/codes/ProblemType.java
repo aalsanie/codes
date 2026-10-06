@@ -3,6 +3,9 @@ package io.github.aalsanie.codes;
 import java.net.URI;
 import java.util.Objects;
 
+/**
+ * Immutable definition of a reusable RFC 9457 problem type.
+ */
 public final class ProblemType {
     private static final String ABOUT_SCHEME = "about";
     private static final String BLANK_SCHEME_SPECIFIC_PART = "blank";
@@ -17,6 +20,16 @@ public final class ProblemType {
         this.title = title;
     }
 
+    /**
+     * Creates a problem type.
+     *
+     * @param type absolute problem type URI; must not be {@code about:blank}
+     * @param status HTTP status from 100 through 599
+     * @param title non-blank human-readable title
+     * @return the problem type
+     * @throws NullPointerException if {@code type} or {@code title} is {@code null}
+     * @throws IllegalArgumentException if an argument violates the problem type contract
+     */
     public static ProblemType of(URI type, int status, String title) {
         Objects.requireNonNull(type, "type");
         Objects.requireNonNull(title, "title");
@@ -37,14 +50,23 @@ public final class ProblemType {
         return new ProblemType(type, status, title);
     }
 
+    /**
+     * Returns the stable machine-readable problem type URI.
+     */
     public URI getType() {
         return type;
     }
 
+    /**
+     * Returns the HTTP status associated with this problem type.
+     */
     public int getStatus() {
         return status;
     }
 
+    /**
+     * Returns the human-readable title for this problem type.
+     */
     public String getTitle() {
         return title;
     }

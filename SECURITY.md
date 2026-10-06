@@ -13,10 +13,10 @@ Do not use a public issue as a fallback.
 Please include, when applicable:
 
 - affected Codes version
-- affected artifact: `codes`, `codes-spring`, or `codes-grpc-java`
-- affected surface: core API, Spring boundary, gRPC boundary, publication, or build tooling
+- affected artifact: `codes` or `codes-spring`
+- affected surface: core API, Spring bridge, publication, or build tooling
 - Java and Kotlin versions
-- Spring or gRPC version
+- Spring version when `codes-spring` is involved
 - Gradle or Maven version
 - operating system
 - minimal reproduction steps
@@ -32,16 +32,16 @@ Please avoid public disclosure until a fix or coordinated disclosure date is ava
 
 Security fixes target the latest stable release line.
 
-Pre-release versions may receive a fix through a newer release candidate or the final release rather than a patch to the affected pre-release.
+Older release lines and pre-release versions are not guaranteed to receive security fixes.
 
-Older release lines are not guaranteed to receive security fixes.
+## Application-controlled problem data
 
-## Boundary data
+Codes does not sanitize or redact application-provided problem data.
 
-Codes can carry application-controlled occurrence `detail` and structured `Issue` content.
+`ProblemType` stores the type URI, status, and title supplied by the application. `ProblemDetails.forTypeAndDetail(...)` copies the supplied detail into Spring's `ProblemDetail`.
 
-The Spring and gRPC adapters use conservative defaults and do not expose protected occurrence detail unless the application explicitly opts in.
+Treat titles and occurrence details as client-visible data. Do not expose exception messages, credentials, tokens, internal identifiers, stack traces, or other sensitive implementation details unless they are explicitly safe for the public API.
 
-A case where safe defaults expose protected data is security-relevant and should be reported privately.
+A case where Codes changes, corrupts, or unexpectedly exposes data beyond the values supplied through its public API is security-relevant and should be reported privately.
 
-Suspected compromise of a published artifact, signature, or release process should also be reported privately.
+Suspected compromise of a published artifact, signature, dependency metadata, or release process should also be reported privately.
