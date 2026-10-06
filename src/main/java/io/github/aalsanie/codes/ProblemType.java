@@ -1,16 +1,75 @@
 package io.github.aalsanie.codes;
 
 import java.net.URI;
+import java.util.Objects;
 
-public interface ProblemType {
+public final class ProblemType {
+    private static final String ABOUT_SCHEME = "about";
+    private static final String BLANK_SCHEME_SPECIFIC_PART = "blank";
 
-    URI getType();
+    private final URI type;
+    private final int status;
+    private final String title;
 
-    int getStatus();
+    private ProblemType(URI type, int status, String title) {
+        this.type = type;
+        this.status = status;
+        this.title = title;
+    }
 
-    String getTitle();
+    public static ProblemType of(URI type, int status, String title) {
+        Objects.requireNonNull(type, "type");
+        Objects.requireNonNull(title, "title");
 
-    static ProblemType of(URI type, int status, String title) {
-        return DefaultProblemType.create(type, status, title);
+        if (!type.isAbsolute()) {
+            throw new IllegalArgumentException("type must be an absolute URI");
+        }
+        if (isAboutBlank(type)) {
+            throw new IllegalArgumentException("type must not be about:blank");
+        }
+        if (status < 100 || status > 599) {
+            throw new IllegalArgumentException("status must be between 100 and 599");
+        }
+        if (title.isBlank()) {
+            throw new IllegalArgumentException("title must not be blank");
+        }
+
+        return new ProblemType(type, status, title);
+    }
+
+    public URI getType() {
+        return type;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return this == other
+            || (other instanceof ProblemType that
+                && status == that.status
+                && type.equals(that.type)
+                && title.equals(that.title));
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, status, title);
+    }
+
+    @Override
+    public String toString() {
+        return "ProblemType(type=" + type + ", status=" + status + ", title=" + title + ")";
+    }
+
+    private static boolean isAboutBlank(URI type) {
+        return ABOUT_SCHEME.equalsIgnoreCase(type.getScheme())
+            && BLANK_SCHEME_SPECIFIC_PART.equalsIgnoreCase(type.getSchemeSpecificPart());
     }
 }

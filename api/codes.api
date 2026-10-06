@@ -1,5 +1,5 @@
-public abstract interface io.github.aalsanie.codes.ProblemType
-  method public abstract int getStatus()
-  method public abstract java.lang.String getTitle()
-  method public abstract java.net.URI getType()
+public final class io.github.aalsanie.codes.ProblemType
+  method public int getStatus()
+  method public java.lang.String getTitle()
+  method public java.net.URI getType()
   method public static io.github.aalsanie.codes.ProblemType of(java.net.URI, int, java.lang.String)
