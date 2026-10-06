@@ -15,7 +15,8 @@ The `0.4.x` line is verified with:
 * Java 17, 21, and 25;
 * Spring Framework 6.0.0 and 7.0.9;
 * Kotlin 1.9.24 and 2.4.10;
-* Gradle and Maven consumers.
+* Gradle and Maven consumers;
+* published consumers on Windows and macOS in addition to the primary Linux CI environment.
 
 Spring Framework 6.0.0 is the compatibility floor. Spring Framework 7.0.9 is the current verification baseline.
 

@@ -14,5 +14,9 @@
       "2.4.10"
     ],
     "spring": "6.0.0"
-  }
+  },
+  "os": [
+    "windows-latest",
+    "macos-latest"
+  ]
 }

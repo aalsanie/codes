@@ -13,7 +13,46 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  matrix:
+    name: CI matrix policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      runtime_jdks: ${{ steps.matrix.outputs.runtime_jdks }}
+      kotlin: ${{ steps.matrix.outputs.kotlin }}
+      os: ${{ steps.matrix.outputs.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Verify compatibility policy
+        run: python scripts/verify-compatibility-matrix.py
+
+      - id: matrix
+        name: Export required check matrices
+        shell: bash
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+
+          matrix = json.loads(Path("compatibility/matrix.json").read_text(encoding="utf-8"))
+          compact = lambda value: json.dumps(value, separators=(",", ":"))
+
+          print("runtime_jdks=" + compact({
+              "java": [version for version in matrix["java"] if version != "17"]
+          }))
+          print("kotlin=" + compact({
+              "kotlin": matrix["kotlin"]["versions"]
+          }))
+          print("os=" + compact({
+              "os": matrix["os"]
+          }))
+          PY
+
   verify:
+    needs: [matrix]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -29,9 +68,6 @@ jobs:
       - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92
         with:
           cache-provider: basic
-
-      - name: Verify compatibility policy
-        run: python scripts/verify-compatibility-matrix.py
 
       - name: Verify library and reference application
         run: ./gradlew clean verifyAll --stacktrace
@@ -76,3 +112,130 @@ jobs:
             codes-spring/build/reports/jacoco
           if-no-files-found: warn
           retention-days: 14
+
+  kotlin-consumers:
+    needs: [matrix]
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix.outputs.kotlin) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92
+        with:
+          cache-provider: basic
+
+      - name: Publish clean compatibility artifacts
+        run: sh scripts/prepare-compatibility-repository.sh build/compatibility-maven
+
+      - name: Verify Kotlin consumer
+        env:
+          MAVEN_REPO_LOCAL: ${{ github.workspace }}/build/compatibility-maven
+        run: sh scripts/verify-kotlin-nullability.sh "${{ matrix.kotlin }}"
+
+  kotlin-consumers-gate:
+    name: Kotlin consumers gate
+    if: always()
+    needs: [matrix, kotlin-consumers]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require Kotlin consumer matrix
+        shell: bash
+        env:
+          MATRIX_RESULT: ${{ needs.matrix.result }}
+          KOTLIN_RESULT: ${{ needs.kotlin-consumers.result }}
+        run: |
+          set -euo pipefail
+          test "$MATRIX_RESULT" = "success"
+          test "$KOTLIN_RESULT" = "success"
+
+  runtime-jdks:
+    needs: [matrix]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix.outputs.runtime_jdks) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92
+        with:
+          cache-provider: basic
+
+      - name: Publish clean compatibility artifacts
+        run: sh scripts/prepare-compatibility-repository.sh build/compatibility-maven
+
+      - name: Verify Java consumer on runtime JDK
+        run: >-
+          ./gradlew
+          -p smoke-test-java
+          -Dmaven.repo.local=${{ github.workspace }}/build/compatibility-maven
+          -PconsumerJavaVersion=${{ matrix.java }}
+          clean check
+          --stacktrace
+
+  operating-systems:
+    needs: [matrix]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix.outputs.os) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92
+        with:
+          cache-provider: basic
+
+      - name: Verify published consumers on Unix
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sh scripts/prepare-compatibility-repository.sh build/compatibility-maven
+
+          ./gradlew             -p smoke-test-java             "-Dmaven.repo.local=${GITHUB_WORKSPACE}/build/compatibility-maven"             clean check             --stacktrace
+
+          ./gradlew             -p smoke-test-kotlin             "-Dmaven.repo.local=${GITHUB_WORKSPACE}/build/compatibility-maven"             clean check             --stacktrace
+
+      - name: Verify published consumers on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $repo = Join-Path $env:GITHUB_WORKSPACE "build\compatibility-maven"
+
+          .\gradlew.bat "-Dmaven.repo.local=$repo" :publishToMavenLocal :codes-spring:publishToMavenLocal --stacktrace
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          .\gradlew.bat -p smoke-test-java "-Dmaven.repo.local=$repo" clean check --stacktrace
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          .\gradlew.bat -p smoke-test-kotlin "-Dmaven.repo.local=$repo" clean check --stacktrace
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

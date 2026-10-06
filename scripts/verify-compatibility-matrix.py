@@ -27,6 +27,7 @@ expected = {
         "versions": ["1.9.24", "2.4.10"],
         "spring": "6.0.0",
     },
+    "os": ["windows-latest", "macos-latest"],
 }
 
 if matrix != expected:

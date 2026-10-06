@@ -7,7 +7,8 @@ The matrix covers:
 * Java 17, 21, and 25;
 * Spring Framework 6.0.0 and 7.0.9;
 * Kotlin 1.9.24 and 2.4.10;
-* Gradle and Maven consumers.
+* Gradle and Maven consumers;
+* Windows and macOS published-consumer checks.
 
 The checks also verify that:
 
