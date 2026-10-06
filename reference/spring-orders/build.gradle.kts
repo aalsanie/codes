@@ -23,6 +23,8 @@ dependencies {
 
     testImplementation(platform("org.junit:junit-bom:${providers.gradleProperty("junitVersion").get()}"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.springframework.boot:spring-boot-starter-test:${providers.gradleProperty("springBootVersion").get()}")
+    testImplementation("org.springframework.boot:spring-boot-starter-webflux:${providers.gradleProperty("springBootVersion").get()}")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
