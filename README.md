@@ -4,7 +4,7 @@
 [![CI](https://github.com/aalsanie/codes/actions/workflows/ci.yml/badge.svg)](https://github.com/aalsanie/codes/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-Codes is a lightweight Java library for reusable RFC 9457 problem type definitions.
+Codes is a lightweight Java library for reusable RFC 9457 problem type definitions with a dependency free core.
 
 Spring provides `ProblemDetail` for an individual error occurrence. Codes provides the stable definition that can be reused across controllers, exception handlers, tests, and documentation.
 
