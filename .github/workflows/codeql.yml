@@ -41,6 +41,10 @@ jobs:
           :testClasses
           :codes-spring:testClasses
           :reference-spring-orders:testClasses
+          --rerun-tasks
+          --no-build-cache
+          --no-configuration-cache
+          --no-daemon
           --stacktrace
 
       - uses: github/codeql-action/analyze@5595ccaf912efad79be6eef63a5619ff05969be3
