@@ -7,6 +7,7 @@ on:
       - "!v*.*.*-*"
 
 permissions:
+  actions: read
   contents: read
 
 concurrency:
@@ -14,7 +15,33 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  preflight:
+    name: Release preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify required CI approver
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/environments/ci-approved" --jq \
+            'if .can_admins_bypass == false then [.protection_rules[] | select(.type == "required_reviewers" and .prevent_self_review == false and (.reviewers | length) == 1 and .reviewers[0].type == "User" and .reviewers[0].reviewer.id == 22101794)] | length else 0 end' \
+            | grep -qx '1'
+
+  authorize:
+    name: Approve release CI
+    needs: preflight
+    runs-on: ubuntu-latest
+    environment:
+      name: ci-approved
+      deployment: false
+    steps:
+      - run: echo "Release CI approved"
+
   publish:
+    needs: authorize
     runs-on: ubuntu-latest
     timeout-minutes: 90
 
