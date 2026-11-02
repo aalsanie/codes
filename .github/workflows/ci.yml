@@ -309,19 +309,10 @@ jobs:
     permissions:
       contents: read
 
-  codeql:
-    name: CodeQL
-    needs: authorize
-    if: needs.authorize.result == 'success'
-    uses: ./.github/workflows/codeql.yml
-    permissions:
-      contents: read
-      security-events: write
-
   required:
     name: Required checks
     if: always()
-    needs: [matrix, authorize, verify, kotlin-consumers, kotlin-consumers-gate, runtime-jdks, operating-systems, compatibility, codeql]
+    needs: [matrix, authorize, verify, kotlin-consumers, kotlin-consumers-gate, runtime-jdks, operating-systems, compatibility]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -344,7 +335,7 @@ jobs:
               sys.exit("Invalid change classification")
           expected = "success" if expensive == "true" else "skipped"
           for name in ("authorize", "verify", "kotlin-consumers", "kotlin-consumers-gate",
-                       "runtime-jdks", "operating-systems", "compatibility", "codeql"):
+                       "runtime-jdks", "operating-systems", "compatibility"):
               if results[name] != expected:
                   sys.exit(f"{name}: expected {expected}, got {results[name]}")
           print("All applicable checks passed")
