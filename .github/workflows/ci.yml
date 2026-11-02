@@ -6,6 +6,7 @@ on:
     branches: [main]
 
 permissions:
+  actions: read
   contents: read
 
 concurrency:
@@ -14,20 +15,65 @@ concurrency:
 
 jobs:
   matrix:
-    name: CI matrix policy
+    name: Preflight
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
+      expensive: ${{ steps.changes.outputs.expensive }}
       runtime_jdks: ${{ steps.matrix.outputs.runtime_jdks }}
       kotlin: ${{ steps.matrix.outputs.kotlin }}
       os: ${{ steps.matrix.outputs.os }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          fetch-depth: 0
           persist-credentials: false
+
+      - uses: gradle/actions/wrapper-validation@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
 
       - name: Verify compatibility policy
         run: python scripts/verify-compatibility-matrix.py
+
+      - name: Classify changes
+        id: changes
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import os
+          import subprocess
+
+          expensive = True
+          if os.environ["GITHUB_EVENT_NAME"] == "pull_request":
+              base, head = os.environ["BASE_SHA"], os.environ["HEAD_SHA"]
+              changed = subprocess.check_output([
+                  "git", "diff", "--no-renames", "--name-only", "-z", f"{base}...{head}"
+              ])
+              paths = [p for p in changed.decode("utf-8", "surrogateescape").split("\0") if p]
+              def trivial(path):
+                  return (
+                      path in ("README.md", "CHANGELOG.md")
+                      or (path.startswith("docs/") and path.endswith((".md", ".png", ".jpg", ".jpeg", ".svg", ".webp")))
+                      or (path.startswith(".github/ISSUE_TEMPLATE/") and path.endswith(".md"))
+                  )
+              expensive = not (paths and all(map(trivial, paths)))
+              subprocess.run(["git", "diff", "--check", f"{base}...{head}"], check=True)
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
+              out.write(f"expensive={str(expensive).lower()}\n")
+          PY
+
+      - name: Verify required CI approver
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/environments/ci-approved" --jq \
+            'if .can_admins_bypass == false then [.protection_rules[] | select(.type == "required_reviewers" and .prevent_self_review == false and (.reviewers | length) == 1 and .reviewers[0].type == "User" and .reviewers[0].reviewer.id == 22101794)] | length else 0 end' \
+            | grep -qx '1'
 
       - id: matrix
         name: Export required check matrices
@@ -51,8 +97,20 @@ jobs:
           }))
           PY
 
+  authorize:
+    name: Approve expensive CI
+    needs: matrix
+    if: needs.matrix.outputs.expensive == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: ci-approved
+      deployment: false
+    steps:
+      - run: echo "CI approved"
+
   verify:
-    needs: [matrix]
+    needs: [matrix, authorize]
+    if: needs.authorize.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -114,7 +172,8 @@ jobs:
           retention-days: 14
 
   kotlin-consumers:
-    needs: [matrix]
+    needs: [matrix, authorize]
+    if: needs.authorize.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
@@ -144,8 +203,8 @@ jobs:
 
   kotlin-consumers-gate:
     name: Kotlin consumers gate
-    if: always()
-    needs: [matrix, kotlin-consumers]
+    if: always() && needs.authorize.result == 'success'
+    needs: [matrix, authorize, kotlin-consumers]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -160,7 +219,8 @@ jobs:
           test "$KOTLIN_RESULT" = "success"
 
   runtime-jdks:
-    needs: [matrix]
+    needs: [matrix, authorize]
+    if: needs.authorize.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
@@ -193,7 +253,8 @@ jobs:
           --stacktrace
 
   operating-systems:
-    needs: [matrix]
+    needs: [matrix, authorize]
+    if: needs.authorize.result == 'success'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
@@ -239,3 +300,43 @@ jobs:
 
           .\gradlew.bat -p smoke-test-kotlin "-Dmaven.repo.local=$repo" clean check --stacktrace
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+  compatibility:
+    name: Compatibility
+    needs: authorize
+    if: needs.authorize.result == 'success'
+    uses: ./.github/workflows/compatibility.yml
+    permissions:
+      contents: read
+
+  required:
+    name: Required checks
+    if: always()
+    needs: [matrix, authorize, verify, kotlin-consumers, kotlin-consumers-gate, runtime-jdks, operating-systems, compatibility]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify required jobs
+        shell: bash
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import sys
+
+          needs = json.loads(os.environ["NEEDS_JSON"])
+          results = {name: job["result"] for name, job in needs.items()}
+          if results["matrix"] != "success":
+              sys.exit("Preflight failed")
+          expensive = needs["matrix"]["outputs"].get("expensive")
+          if expensive not in ("true", "false"):
+              sys.exit("Invalid change classification")
+          expected = "success" if expensive == "true" else "skipped"
+          for name in ("authorize", "verify", "kotlin-consumers", "kotlin-consumers-gate",
+                       "runtime-jdks", "operating-systems", "compatibility"):
+              if results[name] != expected:
+                  sys.exit(f"{name}: expected {expected}, got {results[name]}")
+          print("All applicable checks passed")
+          PY
