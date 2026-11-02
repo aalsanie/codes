@@ -1,49 +1,20 @@
 # Semantic contract
 
-Codes models reusable RFC 9457 problem type definitions.
+A `ProblemType` is a reusable [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457.html) problem type definition containing:
 
-A `ProblemType` contains:
-
-* an absolute type URI;
-* an HTTP status between 100 and 599;
+* an absolute type URI other than `about:blank`;
+* an HTTP status from 100 to 599;
 * a non-blank human-readable title.
 
-`about:blank` is not a Codes problem type. It represents a status-only problem with no additional semantics beyond the HTTP status and is handled directly by HTTP frameworks such as Spring.
-
-The type URI is the stable machine-readable identity of the problem type.
-
-```java
-ProblemType ORDER_NOT_FOUND = ProblemType.of(
-    URI.create("https://api.example.com/problems/order-not-found"),
-    404,
-    "Order not found"
-);
-```
+These are Codes validation rules. RFC 9457 also permits relative type URI references, but Codes requires absolute URIs. `about:blank` represents a status-only problem with no additional semantics; use the HTTP framework's native support for it (for example, Spring's `ProblemDetail.forStatus(...)`).
 
 ## Definition and occurrence
 
-`ProblemType` represents stable definition metadata.
+The type URI is the stable machine-readable identity of the problem. The title summarizes the type and normally remains stable across occurrences, except for localization.
 
-It does not contain occurrence-specific information such as:
+`ProblemType` holds only definition metadata. The `detail`, `instance`, request or exception information, traces, and extension properties belong to each occurrence. For Spring, `codes-spring` copies the definition into a new `ProblemDetail`; the application and Spring own the rest of the response lifecycle.
 
-* detail;
-* instance;
-* request data;
-* exception data;
-* trace information;
-* extension properties.
-
-Those values belong to the individual RFC 9457 problem occurrence.
-
-For Spring applications, `codes-spring` copies the stable definition into a native Spring `ProblemDetail`. Spring and the application remain responsible for the rest of the response lifecycle.
-
-## Identity
-
-Changing a problem type URI changes the public machine identity of the problem.
-
-Changing the Java exception or controller path that produces the problem does not require changing the problem type URI.
-
-The title is a stable human-readable summary. Applications may localize it at the occurrence layer when required.
+Changing a type URI changes the public problem identity. Changing the Java exception or controller that produces it does not require a new URI.
 
 ## Scope
 
