@@ -50,3 +50,5 @@ Codes requires an absolute type URI other than `about:blank`, an HTTP status fro
 [Spring integration](docs/integration-spring.md) · [Problem type contract](docs/semantic-contract.md) · [Compatibility](docs/compatibility-policy.md) · [Contributing](CONTRIBUTING.md)
 
 [Apache-2.0](LICENSE).
+
+**NOTE:** If an application only creates one or two `ProblemDetail` instances directly, a local helper may be simpler.
